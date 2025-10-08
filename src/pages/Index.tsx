@@ -321,7 +321,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Products Section Figures - Oriental Style */}
+      {/* Products Section Figures */}
       <section id="figures" className="py-16 bg-gradient-to-b from-primary to-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
