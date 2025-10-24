@@ -161,3 +161,48 @@
 .flex:hover {
   animation-play-state: paused;
 }
+
+/* No seu arquivo CSS global (index.css, globals.css, etc) */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: white;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #ec4899; /* rosa-500 */
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #db2777; /* rosa-600 */
+}
+
+/* Para Firefox */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: #ec4899 white;
+}
+
+@keyframes spin-slow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin-slow {
+  animation: spin-slow 2s linear infinite;
+}
+
+/* Efeito de brilho neon */
+.group:hover {
+  box-shadow: 
+    0 0 20px rgba(34, 211, 238, 0.6),
+    0 0 40px rgba(192, 38, 211, 0.4),
+    0 0 60px rgba(236, 72, 153, 0.2);
+}

@@ -1,117 +1,84 @@
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { Instagram, MessageCircle, Sparkles, Package, Heart, Zap, Search, Menu, X } from "lucide-react";
-import { Input } from "@/components/ui/input";
+import { Instagram, MessageCircle, Package, Heart, Zap, Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
-import { useState } from "react";
-import heroBackground from "@/assets/hero-background.jpg";
-import productFigure1 from "@/assets/figure-1.png";
-import productFigure2 from "@/assets/figure-2.png";
-import productFigure4 from "@/assets/figure-3.png";
-import productFigure3 from "@/assets/figure-4.png";
-import productAccessories from "@/assets/product-accessories.jpg";
+import Autoplay from "embla-carousel-autoplay";
+import StyledWrapper from "@/components/ui/buttonPlay";
+import { ProductOfertaCard } from "@/components/ProductOfertaCard";
+import { CountdownTimer } from "@/components/CountdownTimer";
+import { db } from "@/firebaseConfig"; // 🔥 Firestore
+import { collection, getDocs } from "firebase/firestore"; // 🔥 Firestore
+
+// Banners
 import banner1 from "@/assets/banner-1.png";
 import banner2 from "@/assets/banner-2.png";
 import banner3 from "@/assets/banner-3.png";
 import banner4 from "@/assets/banner-4.png";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
-import Autoplay from 'embla-carousel-autoplay';
-import StyledWrapper from "@/components/ui/buttonPlay";
-import StaticLogoCloud from "@/components/ui/StaticLogoCloud";
 
+// Ofertas locais (pode depois migrar para Firestore também)
+import oferta1 from "@/assets/oferta1.png";
+import oferta2 from "@/assets/oferta2.png";
 
 const Index = () => {
-  const [searchQuery, setSearchQuery] = useState("");
+  const [figures, setFigures] = useState([]); // 🔥 State para produtos vindos do Firestore
+  const [loading, setLoading] = useState(true);
 
   const banners = [
     { image: banner1, alt: "Friren-Banner" },
     { image: banner2, alt: "Promocao-Banner" },
     { image: banner3, alt: "Jujutsu Figure-Banner" },
-    { image: banner4, alt: "Marin Camiseta-Banner" }
+    { image: banner4, alt: "Marin Camiseta-Banner" },
   ];
 
-
-  const figures = [
+  const ofertaEspecial = [
     {
-      image: productFigure1,
-      title: "Frieren Desktop Cute - Taito",
-      price: "R$ 189,90",
-      category: "Figure"
+      image: oferta1,
+      title: "Choso - Shibuya Incident",
+      price: "R$ 350",
+      category: "Figure",
     },
     {
-      image: productFigure2,
-      title: "Marin Desktop Cute - Taito",
-      price: "R$ 249,90",
-      category: "Figure"
+      image: oferta2,
+      title: "Toji - Fushiguro Encounter",
+      price: "R$ 350",
+      category: "Figure",
     },
-    {
-      image: productFigure3,
-      title: "Camiseta Anime Character - 100% Algodão",
-      price: "R$ 79,90",
-      category: "Roupa"
-    },
-    {
-      image: productFigure4,
-      title: "Gundam Mecha Figure - Articulável Premium",
-      price: "R$ 299,90",
-      category: "Figure"
-    },
-    {
-      image: productAccessories,
-      title: "Kit Chaveiros Anime - 10 Peças Exclusivas",
-      price: "R$ 59,90",
-      category: "Acessório"
-    },
-    {
-      image: productAccessories,
-      title: "Kit Chaveiros Anime - 10 Peças Exclusivas",
-      price: "R$ 59,90",
-      category: "Acessório"
-    },
-    {
-      image: productAccessories,
-      title: "Kit Chaveiros Anime - 10 Peças Exclusivas",
-      price: "R$ 59,90",
-      category: "Acessório"
-    }
-  ];
-
-  const products = [
-    {
-      image: productFigure1,
-      title: "Action Figure Anime Premium - Edição Limitada",
-      price: "R$ 189,90",
-      category: "Figure"
-    },
-    {
-      image: productFigure2,
-      title: "Coleção Mangás Populares - Box Completo",
-      price: "R$ 249,90",
-      category: "Mangá"
-    },
-    {
-      image: productFigure3,
-      title: "Camiseta Anime Character - 100% Algodão",
-      price: "R$ 79,90",
-      category: "Roupa"
-    },
-    {
-      image: productFigure4,
-      title: "Gundam Mecha Figure - Articulável Premium",
-      price: "R$ 299,90",
-      category: "Figure"
-    }
   ];
 
   const whatsappLink = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
+  const whatsappLink3 = "https://wa.me/5571997020168?text=Vim do site. Gostaria de saber sobre a oferta especial!";
+  const whatsappLink2 = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria fazer um orçamento!";
   const instagramLink = "https://instagram.com/kitsuystore";
+
+  // 🔥 Firestore - Buscar products
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const productsRef = collection(db, "products");
+        const snapshot = await getDocs(productsRef);
+        const data = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setFigures(data);
+      } catch (error) {
+        console.error("Erro ao buscar produtos:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
       {/* Header / Navigation - Asian Style */}
-      <header className="sticky top-0 h-25 z-50 bg-card/98 bg-white">
+      <header className="sticky top-0 h-[6.5rem] border z-50 bg-card/98 bg-white shadow-md rounded-b-[24px]">
         <nav className="container mx-auto px-4 py-3">
           <div className="flex justify-between items-center gap-4">
             {/* Logo */}
@@ -121,7 +88,7 @@ const Index = () => {
                 alt="Kitsuy Icon"
                 className="w-24 h-24 object-contain animate-float"
               />
-              <h1 className="text-2xl md:text-3xl font-display font-bold bg-gradient-to-r from-pink-500 via-pink-400 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
+              <h1 className="text-2xl md:text-4xl font-display font-bold bg-gradient-to-r from-pink-500 via-pink-400 to-pink-600 bg-clip-text text-transparent animate-gradient-x hover:cursor-default hover:scale-105 transition-transform duration-200">
                 KITSUY STORE
               </h1>
             </div>
@@ -132,28 +99,28 @@ const Index = () => {
                   <div className="flex items-center justify-center space-x-6 w-full">
                     <button
                       onClick={() => document.getElementById('sobre')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors duration-200"
+                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
                     >
                       Sobre
                     </button>
                     
                     <button
                       onClick={() => document.getElementById('figures')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors duration-200"
+                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
                     >
                       Figures
                     </button>
                     
                     <button
                       onClick={() => document.getElementById('camisetas')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors duration-200"
+                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
                     >
                       Camisetas
                     </button>
                     
                     <button
                       onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="text-sm font-medium text-gray-700 hover:text-pink-600 transition-colors duration-200"
+                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
                     >
                       Contato
                     </button>
@@ -210,29 +177,6 @@ const Index = () => {
                       <Package className="h-5 w-5" />
                       Ver Produtos
                     </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start gap-3 h-12"
-                      onClick={() => window.open(whatsappLink, '_blank')}
-                    >
-                      <Heart className="h-5 w-5" />
-                      Produtos Favoritos
-                    </Button>
-                  </div>
-                  
-                  {/* Mobile Search in Menu */}
-                  <div className="mt-6 md:hidden">
-                    <label className="text-sm font-medium mb-2 block">Buscar</label>
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                      <Input 
-                        type="text" 
-                        placeholder="Buscar produtos..." 
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
                   </div>
                 </SheetContent>
               </Sheet>
@@ -249,7 +193,7 @@ const Index = () => {
             className="w-full" 
             plugins={[
               Autoplay({ 
-                delay: 3000,
+                delay: 3500,
                 stopOnInteraction: false,
                 stopOnMouseEnter: true,
               })
@@ -265,14 +209,14 @@ const Index = () => {
                     <img
                       src={banner.image}
                       alt={banner.alt}
-                      className="w-full h-full object-cover rounded-2xl"
+                      className="w-full h-full object-contain rounded-2xl"
                     />
                   </div>
                 </CarouselItem>
               ))}
             </CarouselContent>
-            <CarouselPrevious className="left-2 bg-background/90 backdrop-blur-sm border-2 border-primary/40 hover:bg-primary hover:text-primary-foreground transition-all" />
-            <CarouselNext className="right-2 bg-background/90 backdrop-blur-sm border-2 border-primary/40 hover:bg-primary hover:text-primary-foreground transition-all" />
+            <CarouselPrevious className="text-white left-2 bg-primary/90 backdrop-blur-sm border-2 border-background hover:bg-background hover:text-primary transition-all" />
+            <CarouselNext className="text-white right-2 bg-primary/90 backdrop-blur-sm border-2 border-background hover:bg-background hover:text-primary transition-all" />
           </Carousel>
         </div>
       </section>
@@ -321,14 +265,72 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Products Section Figures OFERTA ESPECIAL */}
+      <section id="oferta" className="py-16 rounded-[64px] bg-black mx-4 md:m-10">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
+              OFERTA ESPECIAL
+            </h2>
+            <p className="text-lg font-bold font-japanese text-white mb-6">Oportunidade com tempo limitado!</p>
+            
+            {/* Timer de Oferta */}
+            <CountdownTimer></CountdownTimer>
+          </div>
+
+          {/* Container dos produtos centralizados */}
+          <div className="flex justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
+              {ofertaEspecial.map((ofertaEspecial, index) => (
+                <div 
+                  key={index} 
+                  className="transform hover:scale-105 transition-transform duration-300"
+                  style={{ animationDelay: `${index * 0.1}s` }}
+                >
+                  {/* Card com destaque especial */}
+                  <div className="relative">
+                    <div className="absolute -top-3 -right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10 animate-pulse">
+                      ⚡ OFERTA
+                    </div>
+                    <ProductOfertaCard 
+                      {...ofertaEspecial}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Texto de urgência */}
+          <div className="text-center mt-12">
+            <div className="flex justify-center gap-4 flex-wrap">
+            <button className="relative bg-black-700 text-white text-[24px] font-bold py-3 px-8 rounded-3xl transition-all duration-500 transform hover:scale-105 overflow-hidden group shadow-lg shadow-cyan-500/30 active:scale-95"
+            onClick={() => window.open(whatsappLink3, '_blank')}>
+              
+              {/* Borda neon constante */}
+              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 opacity-100 animate-pulse">
+                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 animate-spin" style={{animationDuration: '4s'}}></div>
+              </div>
+              
+              {/* Efeito de ripple no clique */}
+              <div className="absolute inset-0 rounded-3xl bg-white opacity-0 group-active:opacity-20 group-active:animate-ripple transition-opacity duration-100"></div>
+              
+              <div className="absolute inset-[3px] rounded-3xl bg-black group-hover:transition-colors duration-100"></div>
+              
+              <span className="relative z-10">R$640</span>
+            </button>
+          </div>
+          </div>
+        </div>
+      </section>
+
       {/* Products Section Figures */}
-      <section id="figures" className="py-16 bg-gradient-to-b from-primary to-white">
+      <section id="figures" className="py-16 m-10 bg-gradient-to-b from-primary to-[#E994CF] rounded-[64px]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
               ACTION FIGURES
             </h2>
-            <p className="text-lg font-bold font-japanese text-white mb-4">Nossos Tesouros</p>
             <p className="text-lg text-white text-foreground">
               Figures Originais Disponiveis no Estoque! 
             </p>
@@ -336,46 +338,11 @@ const Index = () => {
 
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {products.map((figures, index) => (
+            {figures.map((figures, index) => (
               <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
                 <ProductCard {...figures} />
               </div>
             ))}
-          </div>
-        </div>
-      </section>
-          
-      {/* Products Section Camisetas - Oriental Style */}
-      <section id="camisetas" className="py-16 bg-gradient-to-b from-white to-primary">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              CAMISETAS
-            </h2>
-            <p className="text-lg font-bold font-japanese text-primary mb-4">- Sua identidade visual!</p>
-            <p className="text-lg font-bold text-foreground">
-              Camisetas 100% Algodão, com estampas autênticas.
-            </p>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {products.map((product, index) => (
-              <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
-                <ProductCard {...product} />
-              </div>
-            ))}
-          </div>
-
-          <div className="text-center">
-            <h1 className="text-white font-bold mb-4">Bora tentar achar sua figure dos sonhos?</h1>
-            <Button 
-              variant="default" 
-              size="lg"
-              className="text-white font-bold border-4 border-white bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-lg py-6 px-8 rounded-lg transition-all duration-300 shadow-lg hover:shadow-xl hover:scale-105"
-              onClick={() => window.open(whatsappLink, '_blank')}
-            >
-              Venhas fazer sua cotação com a gente!
-            </Button>
           </div>
         </div>
       </section>
@@ -438,7 +405,7 @@ const Index = () => {
             狐の精神を持つ店
           </p>
           <p className="text-sm opacity-80 mb-4">
-            Figures, Camisetas e coleciona
+            Figures, Camisetas e colecionaveis!
           </p>
           <div className="flex justify-center gap-4 mb-4">
             <Button 
