@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { Instagram, MessageCircle, Package, Heart, Zap, Menu } from "lucide-react";
+import { Instagram, MessageCircle, Package, Heart, Zap, Menu, Search } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
@@ -26,6 +27,7 @@ import oferta2 from "@/assets/oferta2.png";
 const Index = () => {
   const [figures, setFigures] = useState([]); // 🔥 State para produtos vindos do Firestore
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState(""); // Estado para pesquisa
 
   const banners = [
     { image: banner1, alt: "Friren-Banner" },
@@ -74,6 +76,11 @@ const Index = () => {
 
     fetchProducts();
   }, []);
+
+  // Filtrar produtos baseado na pesquisa
+  const filteredFigures = figures.filter((figure) =>
+    figure.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -331,18 +338,48 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
               ACTION FIGURES
             </h2>
-            <p className="text-lg text-white text-foreground">
+            <p className="text-lg text-white text-foreground mb-6">
               Figures Originais Disponiveis no Estoque! 
             </p>
+            
+            {/* Barra de Pesquisa */}
+            <div className="max-w-md mx-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  type="text"
+                  placeholder="Pesquisar produtos..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
+                />
+              </div>
+              {searchQuery && (
+                <p className="text-white text-sm mt-2">
+                  {filteredFigures.length} {filteredFigures.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
+                </p>
+              )}
+            </div>
           </div>
 
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {figures.map((figures, index) => (
-              <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
-                <ProductCard {...figures} />
+            {filteredFigures.length > 0 ? (
+              filteredFigures.map((figure, index) => (
+                <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
+                  <ProductCard {...figure} />
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-white text-xl font-semibold">
+                  Nenhum produto encontrado para "{searchQuery}"
+                </p>
+                <p className="text-white/80 mt-2">
+                  Tente pesquisar com outros termos
+                </p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </section>
