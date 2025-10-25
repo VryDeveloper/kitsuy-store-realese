@@ -17,7 +17,7 @@ export const CountdownTimer = () => {
 
   const calculateTimeLeft = (): TimeLeft => {
     // ⏰ DEFINA AQUI A DATA FINAL DA OFERTA
-    const offerEndDate = new Date('2025-10-20T23:59:59').getTime();
+    const offerEndDate = new Date('2025-11-15T23:59:59').getTime();
     const now = new Date().getTime();
     const difference = offerEndDate - now;
 
@@ -58,7 +58,7 @@ export const CountdownTimer = () => {
 
   return (
     <div className="flex justify-center items-center gap-4 mb-8">
-      <div className="bg-red-600 text-white px-6 py-3 rounded-2xl shadow-lg">
+      <div className="bg-primary text-white px-6 py-3 rounded-2xl shadow-lg">
         <div className="text-sm font-semibold mb-1">OFERTA TERMINA EM:</div>
         <div className="flex gap-3 text-2xl font-bold">
           <div className="flex flex-col items-center">

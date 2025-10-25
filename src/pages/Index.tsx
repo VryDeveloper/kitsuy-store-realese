@@ -12,6 +12,19 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { db } from "@/firebaseConfig"; // 🔥 Firestore
 import { collection, getDocs } from "firebase/firestore"; // 🔥 Firestore
 
+// 🎯 Interface para definir a estrutura dos produtos
+interface Product {
+  id: string;
+  title: string;
+  inStock: string;
+  price: string;
+  image: string;
+  displayOrder?: number; 
+  description?: string;
+  stock?: number;
+  featured?: boolean;
+}
+
 // Banners
 import banner1 from "@/assets/banner-1.png";
 import banner2 from "@/assets/banner-2.png";
@@ -25,7 +38,7 @@ import oferta1 from "@/assets/oferta1.png";
 import oferta2 from "@/assets/oferta2.png";
 
 const Index = () => {
-  const [figures, setFigures] = useState([]); // 🔥 State para produtos vindos do Firestore
+  const [figures, setFigures] = useState<Product[]>([]); // 🔥 State para produtos vindos do Firestore
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(""); // Estado para pesquisa
 
@@ -39,20 +52,20 @@ const Index = () => {
   const ofertaEspecial = [
     {
       image: oferta1,
-      title: "Choso - Shibuya Incident",
+      title: "Choso - Shibuya Incident  ̶R̶$̶3̶5̶0̶",
       price: "R$ 350",
       category: "Figure",
     },
     {
       image: oferta2,
-      title: "Toji - Fushiguro Encounter",
+      title: "Toji - Fushiguro Encounter  ̶R̶$̶3̶5̶0̶",
       price: "R$ 350",
       category: "Figure",
     },
   ];
 
   const whatsappLink = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
-  const whatsappLink3 = "https://wa.me/5571997020168?text=Vim do site. Gostaria de saber sobre a oferta especial!";
+  const whatsappLink3 = "https://wa.me/5571997020168?text=Vim do site. Gostaria de saber sobre a oferta double!";
   const whatsappLink2 = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria fazer um orçamento!";
   const instagramLink = "https://instagram.com/kitsuystore";
 
@@ -65,8 +78,17 @@ const Index = () => {
         const data = snapshot.docs.map((doc) => ({
           id: doc.id,
           ...doc.data(),
-        }));
-        setFigures(data);
+        } as Product));
+        
+        // Ordenar produtos por displayOrder (ordem personalizada)
+        // Se o campo displayOrder não existir, o produto vai para o final
+        const sortedData = data.sort((a, b) => {
+          const orderA = a.displayOrder ?? 999999;
+          const orderB = b.displayOrder ?? 999999;
+          return orderA - orderB;
+        });
+        
+        setFigures(sortedData);
       } catch (error) {
         console.error("Erro ao buscar produtos:", error);
       } finally {
@@ -105,14 +127,26 @@ const Index = () => {
                 <div className="hidden md:flex flex-1 max-w-md mx-4">
                   <div className="flex items-center justify-center space-x-6 w-full">
                     <button
-                      onClick={() => document.getElementById('sobre')?.scrollIntoView({ behavior: 'smooth' })}
+                      onClick={() => {
+                        const section = document.getElementById('sobre');
+                        if (section) {
+                          const y = section.getBoundingClientRect().top + window.scrollY - 80; // 80px = altura do header
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }}
                       className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
                     >
                       Sobre
                     </button>
                     
                     <button
-                      onClick={() => document.getElementById('figures')?.scrollIntoView({ behavior: 'smooth' })}
+                      onClick={() => {
+                        const section = document.getElementById('figures');
+                        if (section) {
+                          const y = section.getBoundingClientRect().top + window.scrollY - 80; // 80px = altura do header
+                          window.scrollTo({ top: y, behavior: 'smooth' });
+                        }
+                      }}
                       className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
                     >
                       Figures
@@ -273,13 +307,13 @@ const Index = () => {
       </section>
 
       {/* Products Section Figures OFERTA ESPECIAL */}
-      <section id="oferta" className="py-16 rounded-[64px] bg-black mx-4 md:m-10">
+      <section id="oferta" className="py-16 rounded-[64px] mx-4 md:m-10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
-              OFERTA ESPECIAL
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
+              OFERTA DOUBLE!
             </h2>
-            <p className="text-lg font-bold font-japanese text-white mb-6">Oportunidade com tempo limitado!</p>
+            <p className="text-lg font-bold font-japanese text-primary mb-6">Oportunidade com tempo limitado!</p>
             
             {/* Timer de Oferta */}
             <CountdownTimer></CountdownTimer>
@@ -297,7 +331,7 @@ const Index = () => {
                   {/* Card com destaque especial */}
                   <div className="relative">
                     <div className="absolute -top-3 -right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10 animate-pulse">
-                      ⚡ OFERTA
+                       Exclusivo
                     </div>
                     <ProductOfertaCard 
                       {...ofertaEspecial}
@@ -324,7 +358,7 @@ const Index = () => {
               
               <div className="absolute inset-[3px] rounded-3xl bg-black group-hover:transition-colors duration-100"></div>
               
-              <span className="relative z-10">R$640</span>
+              <span className="relative z-10">R$600</span>
             </button>
           </div>
           </div>
@@ -332,13 +366,13 @@ const Index = () => {
       </section>
 
       {/* Products Section Figures */}
-      <section id="figures" className="py-16 m-10 bg-gradient-to-b from-primary to-[#E994CF] rounded-[64px]">
+      <section id="figures" className="py-16 m-10 rounded-[64px]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-gradient-to-r from-white to-white bg-clip-text text-transparent">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
               ACTION FIGURES
             </h2>
-            <p className="text-lg text-white text-foreground mb-6">
+            <p className="text-lg bg-primary bg-clip-text text-transparent text-foreground mb-6">
               Figures Originais Disponiveis no Estoque! 
             </p>
             
@@ -412,7 +446,7 @@ const Index = () => {
               className="bg-white text-primary hover:bg-white/90 shadow-lg hover:text-black hover:shadow-xl"
             >
               <MessageCircle className="mr-2 h-5 w-5" />
-              WhatsApp
+              Grupo do WhatsApp
             </Button>
             <Button 
               variant="outline" 
@@ -428,7 +462,7 @@ const Index = () => {
       </section>
 
       {/* Footer - Traditional Style */}
-      <footer className="bg-foreground text-background py-8 border-t-4 border-white">
+      <footer id="contato" className="bg-foreground text-background py-8 border-t-4 border-white">
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-4">
             <img
@@ -449,7 +483,7 @@ const Index = () => {
               variant="ghost" 
               size="icon"
               onClick={() => window.open(whatsappLink, '_blank')}
-              className="text-background hover:text-primary"
+              className="text-background hover:text-white"
             >
               <MessageCircle className="h-5 w-5" />
             </Button>
@@ -457,7 +491,7 @@ const Index = () => {
               variant="ghost" 
               size="icon"
               onClick={() => window.open(instagramLink, '_blank')}
-              className="text-background hover:text-primary"
+              className="text-background hover:text-white"
             >
               <Instagram className="h-5 w-5" />
             </Button>

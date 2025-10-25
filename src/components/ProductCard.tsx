@@ -6,16 +6,16 @@ interface ProductCardProps {
   image: string;
   title: string;
   price: string;
-  category: string;
+  inStock: string;
 }
 
-export const ProductCard = ({ image, title, price, category }: ProductCardProps) => {
+export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) => {
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title}${price}`;
   const whatsappLink = `https://wa.me/5571997020168?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
       <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col h-[485px]">
-        <div className="relative overflow-hidden bg-black h-[500px]">
+        <div className="relative overflow-hidden bg-black h-max">
           <img
             src={image}
             alt={title}
@@ -23,7 +23,7 @@ export const ProductCard = ({ image, title, price, category }: ProductCardProps)
           />
           <div className="absolute top-3 right-3">
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
-              {category}
+              {inStock}
             </span>
           </div>
         </div>
