@@ -117,7 +117,7 @@ const Index = () => {
                 alt="Kitsuy Icon"
                 className="w-24 h-24 object-contain animate-float"
               />
-              <h1 className="text-2xl md:text-4xl font-display font-bold bg-gradient-to-r from-pink-500 via-pink-400 to-pink-600 bg-clip-text text-transparent animate-gradient-x hover:cursor-default hover:scale-105 transition-transform duration-200">
+              <h1 className="text-2xl md:text-4xl font-display font-bold bg-[#FF9AB4] bg-clip-text text-transparent hover:cursor-default hover:scale-105 transition-transform duration-200">
                 KITSUY STORE
               </h1>
             </div>
@@ -279,7 +279,7 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-gradient-to-r from-pink-500 via-pink-400 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
               KITSUY STORE
             </h2>
-            <p className="text-sm font-japanese text-muted-foreground mb-6">狐の店</p>
+            <p className="text-sm font-japanese text-muted-foreground mb-6"></p>
             <p className="text-lg text-foreground leading-relaxed mb-8 font-japanese">
               Encontre as melhores Action Figures na 
               <span className="text-primary font-semibold"> Kitsuy Store</span>!
