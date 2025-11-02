@@ -52,8 +52,8 @@ const Index = () => {
   const ofertaEspecial = [
     {
       image: oferta1,
-      title: "Choso - Shibuya Incident  ̶R̶$̶3̶5̶0̶",
-      price: "R$ 350",
+      title: "Choso - Shibuya Incident  ̶R̶$̶400̶",
+      price: "R$ 400",
       category: "Figure",
     },
     {

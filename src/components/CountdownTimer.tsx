@@ -17,7 +17,7 @@ export const CountdownTimer = () => {
 
   const calculateTimeLeft = (): TimeLeft => {
     // ⏰ DEFINA AQUI A DATA FINAL DA OFERTA
-    const offerEndDate = new Date('2025-11-15T23:59:59').getTime();
+    const offerEndDate = new Date('2025-11-30T23:59:59').getTime();
     const now = new Date().getTime();
     const difference = offerEndDate - now;
 
