@@ -281,9 +281,8 @@ const Index = () => {
             </h2>
             <p className="text-sm font-japanese text-muted-foreground mb-6">狐の店</p>
             <p className="text-lg text-foreground leading-relaxed mb-8 font-japanese">
-              Somos apaixonados por cultura tradicional e pop japonesa! Na Kitsuy Store você encontra os melhores 
-              <span className="text-primary font-semibold"> action figures, mangás, camisetas </span> 
-              e artigos colecionáveis animes. 
+              Encontre as melhores Action Figures na 
+              <span className="text-primary font-semibold"> Kitsuy Store</span>!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
               <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
