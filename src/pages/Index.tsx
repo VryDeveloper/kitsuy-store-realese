@@ -357,7 +357,7 @@ const Index = () => {
               
               <div className="absolute inset-[3px] rounded-3xl bg-black group-hover:transition-colors duration-100"></div>
               
-              <span className="relative z-10">R$600</span>
+              <span className="relative z-10">R$640</span>
             </button>
           </div>
           </div>
