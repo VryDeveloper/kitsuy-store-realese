@@ -206,3 +206,9 @@ html {
     0 0 40px rgba(192, 38, 211, 0.4),
     0 0 60px rgba(236, 72, 153, 0.2);
 }
+
+button:focus, button:active {
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}

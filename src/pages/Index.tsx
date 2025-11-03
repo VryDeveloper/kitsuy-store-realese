@@ -152,13 +152,24 @@ const Index = () => {
                       Figures
                     </button>
                     
-                    <button
-                      onClick={() => document.getElementById('camisetas')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
-                    >
-                      Camisetas
-                    </button>
-                    
+                    <div className="relative group">
+                      <button
+                        onClick={() => document.getElementById('camisetas')?.scrollIntoView({ behavior: 'smooth' })}
+                        className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md outline-none focus:outline-none focus:ring-0 focus:border-none"
+                        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
+                      >
+                        Camisetas
+                      </button>
+                      
+                      {/* Tooltip que aparece no hover */}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                        <div className="bg-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-lg whitespace-nowrap">
+                          Em breve!
+                        </div>
+                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-pink-500 rotate-45"></div>
+                      </div>
+                    </div>
+
                     <button
                       onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })}
                       className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
@@ -281,24 +292,24 @@ const Index = () => {
             </h2>
             <p className="text-sm font-japanese text-muted-foreground mb-6"></p>
             <p className="text-lg text-foreground leading-relaxed mb-8 font-japanese">
-              Encontre as melhores Action Figures na 
-              <span className="text-primary font-semibold"> Kitsuy Store</span>!
+              Aqui você encontra <span className="text-primary font-semibold">Action Figures 100% originas</span>, trazidas diretamente do Japão, com envio rápido e atendimento dedicado.
+              Nossa missão é ajudar você a completar sua coleção!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
               <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
                 <Package className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Produtos 100% Originais</h3>
-                <p className="text-sm text-muted-foreground">Figures originais e de alta qualidade</p>
+                <p className="text-sm text-muted-foreground">Figures autênticas e licenciadas pelas marcas japonesas mais renomadas.</p>
               </div>
               <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
                 <Zap className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Entrega Rápida</h3>
-                <p className="text-sm text-muted-foreground">Receba seus produtos com agilidade</p>
+                <p className="text-sm text-muted-foreground">Envio imediato para todo o Brasil com rastreamento atualizado.</p>
               </div>
               <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
                 <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Atendimento Dedicado</h3>
-                <p className="text-sm text-muted-foreground">Pode contar com a gente!</p>
+                <p className="text-sm text-muted-foreground">Suporte personalizado via WhatsApp e Instagram.</p>
               </div>
             </div>
           </div>
@@ -312,7 +323,8 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
               OFERTA DOUBLE!
             </h2>
-            <p className="text-lg font-bold font-japanese text-primary mb-6">Oportunidade com tempo limitado!</p>
+            <p className="text-lg font-bold font-japanese text-primary mb-1">A oportunidade perfeita para ampliar sua coleção!</p>
+            <p className="text-lg font-bold font-japanese text-primary mb-6">Figures exclusivas com descontos por tempo limitado — Garanta antes que acabe!</p>
             
             {/* Timer de Oferta */}
             <CountdownTimer></CountdownTimer>
@@ -372,7 +384,7 @@ const Index = () => {
               ACTION FIGURES
             </h2>
             <p className="text-lg bg-primary bg-clip-text text-transparent text-foreground mb-6">
-              Figures Originais Disponiveis no Estoque! 
+              Figures Originais Disponiveis! 
             </p>
             
             {/* Barra de Pesquisa */}
@@ -429,13 +441,13 @@ const Index = () => {
         </div>
         <div className="container mx-auto px-4 text-center relative z-10 animate-slide-up">
           <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">
-            今すぐ手に入れよう！
+            Não achou oque queria?
           </h2>
           <p className="text-2xl font-japanese mb-6">
-            VEM COM A GENTE!
+            Fala com a gente!
           </p>
           <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Entre no nosso grupo, e seja o primero a saber de ofertas Exclusivas e Novidades!
+            Entre no nosso chat, e consulte o item que você deseja!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
@@ -445,7 +457,7 @@ const Index = () => {
               className="bg-white text-primary hover:bg-white/90 shadow-lg hover:text-black hover:shadow-xl"
             >
               <MessageCircle className="mr-2 h-5 w-5" />
-              Grupo do WhatsApp
+              WhatsApp
             </Button>
             <Button 
               variant="outline" 
@@ -456,6 +468,17 @@ const Index = () => {
               <Instagram className="mr-2 h-5 w-5" />
               Instagram
             </Button>
+          </div>
+          <div className="p-2">
+            <Button 
+                variant="secondary" 
+                size="xl"
+                onClick={() => window.location.href = "mailto:kitsuystore@gmail.com"}
+                className="bg-white text-primary hover:bg-white/90 shadow-lg hover:text-black hover:shadow-xl"
+              >
+                <MessageCircle className="mr-2 h-5 w-5" />
+                kitsuystore@gmail.com
+              </Button>
           </div>
         </div>
       </section>
@@ -472,7 +495,7 @@ const Index = () => {
             <h3 className="text-xl font-display font-bold">KITSUY STORE</h3>
           </div>
           <p className="text-sm opacity-80 mb-2 font-japanese">
-            狐の精神を持つ店
+            Obrigado Por Vir!
           </p>
           <p className="text-sm opacity-80 mb-4">
             Figures, Camisetas e colecionaveis!
@@ -495,6 +518,9 @@ const Index = () => {
               <Instagram className="h-5 w-5" />
             </Button>
           </div>
+          <p className="text-xs opacity-60">
+            Site em Contrução! Envie seu Feedback para kitsuystore@gmail.com
+          </p>
           <p className="text-xs opacity-60">
             © 2025 Kitsuy Store. Todos os direitos reservados.
           </p>
