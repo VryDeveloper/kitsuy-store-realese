@@ -11,6 +11,7 @@ import { ProductOfertaCard } from "@/components/ProductOfertaCard";
 import { CountdownTimer } from "@/components/CountdownTimer";
 import { db } from "@/firebaseConfig"; // 🔥 Firestore
 import { collection, getDocs } from "firebase/firestore"; // 🔥 Firestore
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 // 🎯 Interface para definir a estrutura dos produtos
 interface Product {
