@@ -435,7 +435,7 @@ const Index = () => {
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-full h-full" 
             style={{ 
-              backgroundImage: 'radial-gradient(circle at 20px 20px, white 2px, transparent 0)',
+              backgroundImage: 'radial-gradient(circle at 20px 20px, white 4px, transparent 0)',
               backgroundSize: '40px 40px'
             }}
           />
