@@ -171,6 +171,13 @@ const Index = () => {
                       </div>
                     </div>
 
+                    <a
+                      href="/faqs"
+                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
+                    >
+                      FAQs
+                    </a>
+
                     <button
                       onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })}
                       className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
