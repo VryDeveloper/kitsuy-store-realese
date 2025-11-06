@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { Instagram, MessageCircle, Package, Heart, Zap, Menu, Search } from "lucide-react";
+import { Instagram, MessageCircle, Package, Heart, Zap, Menu, Search, BugIcon, MessageCircleQuestion } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
@@ -37,6 +37,7 @@ import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
 // Ofertas locais (pode depois migrar para Firestore também)
 import oferta1 from "@/assets/oferta1.png";
 import oferta2 from "@/assets/oferta2.png";
+import { useNavigate, useNavigation } from "react-router-dom";
 
 const Index = () => {
   const [figures, setFigures] = useState<Product[]>([]); // 🔥 State para produtos vindos do Firestore
@@ -228,6 +229,14 @@ const Index = () => {
                     >
                       <Instagram className="h-5 w-5" />
                       Seguir no Instagram
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start gap-3 h-12"
+                      onClick={() => window.location.href = '/faqs'}
+                    >
+                      <MessageCircleQuestion className="h-5 w-5" />
+                      FAQS
                     </Button>
                     <Button 
                       variant="outline" 
