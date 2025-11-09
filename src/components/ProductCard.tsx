@@ -14,7 +14,7 @@ export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) 
   const whatsappLink = `https://wa.me/5571997020168?text=${encodeURIComponent(whatsappMessage)}`;
 
   return (
-      <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col h-[600px] sm:h-[450px] md:h-[485px]">
+      <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col h-[6npm 00px] sm:h-[450px] md:h-[485px]">
         <div className="relative overflow-hidden bg-black h-max">
           <img
             src={image}
@@ -27,12 +27,12 @@ export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) 
             </span>
           </div>
         </div>
-        <div className="flex flex-col flex-1">
-          <CardContent className="p-4 flex-1">
+        <div className="flex flex-col justify-between flex-1">
+          <CardContent className="p-4">
             <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
             <p className="text-2xl font-bold text-primary">{price}</p>
           </CardContent>
-          <CardFooter className="p-4 pt-0 flex gap-2 mt-auto">
+          <CardFooter className="p-4 pt-0 flex gap-2">
             <Button 
               variant="default" 
               size="sm" 
