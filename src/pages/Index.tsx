@@ -304,7 +304,7 @@ const Index = () => {
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center animate-fade-in ">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-gradient-to-r from-pink-500 via-pink-400 to-pink-600 bg-clip-text text-transparent animate-gradient-x">
+            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent animate-gradient-x">
               KITSUY STORE
             </h2>
             <p className="text-sm font-japanese text-muted-foreground mb-6"></p>
@@ -313,17 +313,17 @@ const Index = () => {
               Nossa missão é ajudar você a completar sua coleção!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#FDC9FC] hover:border-[#F094FA] transition-all hover:shadow-oriental">
                 <Package className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Produtos 100% Originais</h3>
                 <p className="text-sm text-muted-foreground">Figures autênticas e licenciadas pelas marcas japonesas mais renomadas.</p>
               </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#FDC9FC] hover:border-[#F094FA] transition-all hover:shadow-oriental">
                 <Zap className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Entrega Rápida</h3>
                 <p className="text-sm text-muted-foreground">Envio imediato para todo o Brasil com rastreamento atualizado.</p>
               </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-accent/20 hover:border-accent/50 transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#FDC9FC] hover:border-[#F094FA] transition-all hover:shadow-oriental">
                 <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Atendimento Dedicado</h3>
                 <p className="text-sm text-muted-foreground">Suporte personalizado via WhatsApp e Instagram.</p>
@@ -340,8 +340,8 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
               OFERTA DOUBLE!
             </h2>
-            <p className="text-lg font-bold font-japanese text-primary mb-1">A oportunidade perfeita para ampliar sua coleção!</p>
-            <p className="text-lg font-bold font-japanese text-primary mb-6">Figures exclusivas com descontos por tempo limitado — Garanta antes que acabe!</p>
+            <p className="text-lg font-md font-japanese text-secondary mb-1">A oportunidade perfeita para ampliar sua coleção!</p>
+            <p className="text-lg font-md font-japanese text-secondary mb-6">Figures exclusivas com descontos por tempo limitado — Garanta antes que acabe!</p>
             
             {/* Timer de Oferta */}
             <CountdownTimer></CountdownTimer>
@@ -400,7 +400,7 @@ const Index = () => {
             <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
               ACTION FIGURES
             </h2>
-            <p className="text-lg bg-primary bg-clip-text text-transparent text-foreground mb-6">
+            <p className="text-lg bg-secondary bg-clip-text text-transparent text-foreground mb-6">
               Figures Originais Disponiveis! 
             </p>
             
