@@ -16,11 +16,11 @@ const FAQs = () => {
     },
     {
       question: "Como funciona o envio?",
-      answer: "Realizamos envios para todo o Brasil através dos Correios. Pronta-Entregas tem o prazo de entrega varia de acordo com sua região, geralmente entre 5 a 15 dias úteis. Você receberá o código de rastreamento assim que o produto for postado! Em caso de cotação, o produto vem diretamente do Japão,"
+      answer: "Realizamos enavios para todo o Brasil através dos Correios ou transportadoras (jadlog ou loggi). Você receberá o código de rastreamento assim que o produto for postado! Em caso de encomenda, o produto vem diretamente do Japão, e após chegar no estoque será enviado diretamente para você!"
     },
     {
       question: "Qual é o prazo de entrega?",
-      answer: "O prazo de entrega varia de acordo com sua localização. Para capitais, geralmente leva de 5 a 10 dias úteis. Para demais localidades, pode levar até 15 dias úteis. Enviamos o código de rastreamento para você acompanhar sua encomenda. Se a sua compra for uma cotação, o item demora de 30 a 65 dias uteis para chegar do Japão!"
+      answer: "Para pedidos a pronta-entrega o envio é em até 4 dias utéis, o prazo de entrega varia de acordo com sua localização. Enviamos o código de rastreamento para você acompanhar sua encomenda. Para encomendas o prazo é de 30 a 65 dias uteis após a compra!"
     },
     {
       question: "Vocês trabalham com pré-venda?",
@@ -32,7 +32,7 @@ const FAQs = () => {
     },
     {
       question: "Como posso pagar?",
-      answer: "Aceitamos várias formas de pagamento: PIX (possibilidade de desconto), cartão de crédito, débito e transferência bancária. Entre em contato pelo WhatsApp para negociar a melhor forma de pagamento para você."
+      answer: "Aceitamos várias formas de pagamento: PIX (possibilidade de desconto), cartão de crédito (com taxas), OLX PAY. Entre em contato pelo WhatsApp para negociar a melhor forma de pagamento para você."
     },
     {
       question: "Vocês têm loja física?",
@@ -40,7 +40,7 @@ const FAQs = () => {
     },
     {
       question: "Como sei que meu pedido foi confirmado?",
-      answer: "Assim que recebermos seu pagamento e confirmarmos o pedido, você receberá uma mensagem no WhatsApp com todos os detalhes, incluindo previsão de envio e código de rastreamento quando disponível."
+      answer: "Assim que recebermos seu pagamento e confirmarmos o pedido, você receberá uma mensagem no WhatsApp com todos os detalhes, incluindo previsão de envio e código de rastreamento quando disponível. Nas encomendas internacionais você receberá fotos dos itens assim que eles chegarem no armazém do Japão"
     },
     {
       question: "Vocês têm o produto X em estoque?",
@@ -48,12 +48,21 @@ const FAQs = () => {
     },
     {
       question: "Posso fazer encomendas especiais?",
-      answer: "Sim! Se você procura uma figure específica ou algum produto colecionavel (cartas Pokémon, gachapon, banners, etc) que não está em nosso catálogo, podemos tentar encomendar para você. Entre em contato e nos informe o que está procurando. Faremos o possível para encontrar!"
+      answer: "Sim! Se você procura uma figure específica ou algum produto colecionavel (cartas Pokémon, gachapon, banners, mangas, etc) que não está em nosso catálogo, podemos tentar encomendar para você. Entre em contato e nos informe o que está procurando. Faremos o possível para encontrar!"
     },
     {
       question: "As figures vêm montadas?",
       answer: "Depende do modelo. Algumas figures vêm totalmente montadas, enquanto outras podem precisar de montagem simples (encaixe de partes). Todas vêm com instruções claras quando necessário."
+    },
+    {
+      question: "Como fazer um orçamento?",
+      answer: "Para realizar um orçamento basta enviar a imagem ou nome do item que deseja! Nós iremos buscar o melhor preço pra você!"
+    },
+    {
+      question: "Como funciona a encomenda?",
+      answer: "Para realizar uma encomenda, é necessário o pagamento de 50% do orçamento (que garante a reserva do produto junto ao fornecedor). O valor restante do orçamento será pago na chegada do item ao nosso estoque, juntamente com o pagamento do frete do seu pedido até a sua residencia. Esse valor não é reembolsável em caso de desistência da compra, pois o item é encomendado exclusivamente para você."
     }
+
   ];
 
   return (
