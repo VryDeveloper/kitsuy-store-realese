@@ -12,6 +12,9 @@ interface ProductCardProps {
 export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) => {
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title}${price}`;
   const whatsappLink = `https://wa.me/5571997020168?text=${encodeURIComponent(whatsappMessage)}`;
+  
+  // Verifica se o produto está indisponível
+  const isOutOfStock = inStock.toLowerCase() === 'indisponível';
 
   return (
       <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col h-[6npm 00px] sm:h-[450px] md:h-[485px]">
@@ -19,7 +22,9 @@ export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) 
           <img
             src={image}
             alt={title}
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 ${
+              isOutOfStock ? 'grayscale' : ''
+            }`}
           />
           <div className="absolute top-3 right-3">
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">

@@ -82,9 +82,18 @@ const Index = () => {
           ...doc.data(),
         } as Product));
         
-        // Ordenar produtos por displayOrder (ordem personalizada)
-        // Se o campo displayOrder não existir, o produto vai para o final
+        // Ordenar produtos: primeiro por disponibilidade, depois por displayOrder
         const sortedData = data.sort((a, b) => {
+          // Verifica disponibilidade
+          const aOutOfStock = a.inStock?.toLowerCase() === 'indisponível';
+          const bOutOfStock = b.inStock?.toLowerCase() === 'indisponível';
+          
+          // Se um está disponível e outro não, prioriza o disponível
+          if (aOutOfStock !== bOutOfStock) {
+            return aOutOfStock ? 1 : -1;
+          }
+          
+          // Se ambos têm o mesmo status de estoque, ordena por displayOrder
           const orderA = a.displayOrder ?? 999999;
           const orderB = b.displayOrder ?? 999999;
           return orderA - orderB;
