@@ -18,6 +18,7 @@ interface Product {
   id: string;
   title: string;
   inStock: string;
+  discount: string;
   price: string;
   image: string;
   displayOrder?: number; 

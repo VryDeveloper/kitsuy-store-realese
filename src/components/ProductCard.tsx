@@ -7,9 +7,10 @@ interface ProductCardProps {
   title: string;
   price: string;
   inStock: string;
+  discount: string;
 }
 
-export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) => {
+export const ProductCard = ({ image, title, price, inStock, discount }: ProductCardProps) => {
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title}${price}`;
   const whatsappLink = `https://wa.me/5571997020168?text=${encodeURIComponent(whatsappMessage)}`;
   
@@ -35,6 +36,7 @@ export const ProductCard = ({ image, title, price, inStock }: ProductCardProps) 
         <div className="flex flex-col justify-between flex-1">
           <CardContent className="p-4">
             <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
+            <h4 className="text-lg line-through text-primary">{discount}</h4>
             <p className="text-2xl font-bold text-primary">{price}</p>
           </CardContent>
           <CardFooter className="p-4 pt-0 flex gap-2">
