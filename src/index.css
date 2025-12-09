@@ -207,3 +207,35 @@ html {
     0 0 60px rgba(236, 72, 153, 0.2);
 }
 
+@font-face {
+  font-family: oregano;
+  src: url(".\assets\fonts\Organo.ttf");
+}
+@font-face {
+  font-family: fredoka;
+  src: url("./assets/fonts/FredokaOne-Regular.ttf");
+}
+@font-face {
+  font-family: typo;
+  src: url("./assets/fonts/Typo_Round_Regular_Demo.otf");
+}
+@font-face {
+  font-family: alba;
+  src: url("./assets/fonts/ALBA____.TTF");
+}
+.alba {
+  font-family: 'alba';
+}
+
+.fredoka {
+  font-family: 'fredoka';
+}
+
+.oregano {
+  font-family: oregano;
+}
+
+.typo {
+  font-family: 'typo';
+}
+

@@ -31,13 +31,12 @@ interface Product {
 import banner1 from "@/assets/banner-1.png";
 import banner2 from "@/assets/banner-2.png";
 import banner3 from "@/assets/banner-3.png";
-import banner4 from "@/assets/banner-4.png";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
 
 // Ofertas locais (pode depois migrar para Firestore também)
-import oferta1 from "@/assets/oferta1.png";
-import oferta2 from "@/assets/oferta2.png";
+import oferta1 from "@/assets/oferta1.webp";
+import oferta2 from "@/assets/oferta2.webp";
 import { useNavigate, useNavigation } from "react-router-dom";
 
 const Index = () => {
@@ -48,21 +47,20 @@ const Index = () => {
   const banners = [
     { image: banner1, alt: "Friren-Banner" },
     { image: banner2, alt: "Promocao-Banner" },
-    { image: banner3, alt: "Jujutsu Figure-Banner" },
-    { image: banner4, alt: "Marin Camiseta-Banner" },
+    { image: banner3, alt: "Jujutsu Figure-Banner" }
   ];
 
   const ofertaEspecial = [
     {
       image: oferta1,
-      title: "Choso - Shibuya Incident  ̶R̶$̶400̶",
-      price: "R$ 400",
+      title: "Tobi - Vibration Stars",
+      price: "R$ 216",
       category: "Figure",
     },
     {
       image: oferta2,
-      title: "Toji - Fushiguro Encounter  ̶R̶$̶3̶5̶0̶",
-      price: "R$ 350",
+      title: "Itachi - EFFECTREME",
+      price: "R$ 260",
       category: "Figure",
     },
   ];
@@ -129,7 +127,7 @@ const Index = () => {
                 alt="Kitsuy Icon"
                 className="w-24 h-24 object-contain animate-float"
               />
-              <h1 className="text-2xl md:text-4xl font-display font-bold bg-[#FF9AB4] bg-clip-text text-transparent hover:cursor-default hover:scale-105 transition-transform duration-200">
+              <h1 className="fredoka text-2xl md:text-4xl font-display font-bold bg-[#FF9AB4] bg-clip-text text-transparent hover:cursor-default hover:scale-105 transition-transform duration-200">
                 KITSUY STORE
               </h1>
             </div>
@@ -314,12 +312,11 @@ const Index = () => {
         </div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center animate-fade-in ">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent animate-gradient-x">
+            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent animate-gradient-x">
               KITSUY STORE
             </h2>
-            <p className="text-sm font-japanese text-muted-foreground mb-6"></p>
-            <p className="text-lg text-foreground leading-relaxed mb-8 font-japanese">
-              Aqui você encontra <span className="text-primary font-semibold">Action Figures 100% originas</span>, trazidas diretamente do Japão, com envio rápido e atendimento dedicado.
+            <p className="fredoka font-normal text-lg text-foreground leading-relaxed mb-8">
+              Aqui você encontra <span className="font-semibold text-primary font-semibold">Action Figures 100% originas</span>, trazidas diretamente do Japão, com envio rápido e atendimento dedicado.
               Nossa missão é ajudar você a completar sua coleção!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
@@ -347,11 +344,11 @@ const Index = () => {
       <section id="oferta" className="py-16 rounded-[64px] mx-4 md:m-10">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
+            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
               OFERTA DOUBLE!
             </h2>
-            <p className="text-lg font-md font-japanese text-secondary mb-1">A oportunidade perfeita para ampliar sua coleção!</p>
-            <p className="text-lg font-md font-japanese text-secondary mb-6">Figures exclusivas com descontos por tempo limitado — Garanta antes que acabe!</p>
+            <p className="fredoka text-lg font-md font-japanese text-secondary mb-1">A oportunidade perfeita para ampliar sua coleção!</p>
+            <p className="fredoka text-lg font-md font-japanese text-secondary mb-6">Figures exclusivas com descontos por tempo limitado — Garanta antes que acabe!</p>
             
             {/* Timer de Oferta */}
             <CountdownTimer></CountdownTimer>
@@ -396,7 +393,7 @@ const Index = () => {
               
               <div className="absolute inset-[3px] rounded-3xl bg-black group-hover:transition-colors duration-100"></div>
               
-              <span className="relative z-10">R$640</span>
+              <span className="relative z-10">R$475</span>
             </button>
           </div>
           </div>
@@ -407,10 +404,10 @@ const Index = () => {
       <section id="figures" className="py-16 m-10 rounded-[64px]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
+            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
               ACTION FIGURES
             </h2>
-            <p className="text-lg bg-secondary bg-clip-text text-transparent text-foreground mb-6">
+            <p className="fredoka text-lg bg-secondary bg-clip-text text-transparent text-foreground mb-6">
               Figures Originais Disponiveis! 
             </p>
             
@@ -467,13 +464,13 @@ const Index = () => {
           />
         </div>
         <div className="container mx-auto px-4 text-center relative z-10 animate-slide-up">
-          <h2 className="text-4xl md:text-5xl font-display font-bold mb-4">
+          <h2 className="oregano text-4xl md:text-5xl font-display font-bold mb-4">
             Não achou oque queria?
           </h2>
-          <p className="text-2xl font-japanese mb-6">
+          <p className="fredoka text-2xl font-japanese mb-6">
             Fala com a gente!
           </p>
-          <p className="text-xl mb-8 max-w-2xl mx-auto opacity-90">
+          <p className="fredoka text-xl mb-8 max-w-2xl mx-auto opacity-90">
             Entre no nosso chat, e consulte o item que você deseja!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
