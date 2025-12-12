@@ -25,6 +25,7 @@ interface Product {
   description?: string;
   stock?: number;
   featured?: boolean;
+  source?: string; // 🔥 identifica a coleção
 }
 
 // Banners
@@ -71,47 +72,80 @@ const Index = () => {
   const instagramLink = "https://instagram.com/kitsuystore";
 
   // 🔥 Firestore - Buscar products
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const productsRef = collection(db, "products");
-        const snapshot = await getDocs(productsRef);
-        const data = snapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        } as Product));
-        
-        // Ordenar produtos: primeiro por disponibilidade, depois por displayOrder
-        const sortedData = data.sort((a, b) => {
-          // Verifica disponibilidade
-          const aOutOfStock = a.inStock?.toLowerCase() === 'indisponível';
-          const bOutOfStock = b.inStock?.toLowerCase() === 'indisponível';
-          
-          // Se um está disponível e outro não, prioriza o disponível
-          if (aOutOfStock !== bOutOfStock) {
-            return aOutOfStock ? 1 : -1;
-          }
-          
-          // Se ambos têm o mesmo status de estoque, ordena por displayOrder
-          const orderA = a.displayOrder ?? 999999;
-          const orderB = b.displayOrder ?? 999999;
-          return orderA - orderB;
-        });
-        
-        setFigures(sortedData);
-      } catch (error) {
-        console.error("Erro ao buscar produtos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
+    useEffect(() => {
+      const fetchAllProducts = async () => {
+        try {
+          const productsRef = collection(db, "products");
+          const masterpieceRef = collection(db, "masterpiece");
 
-    fetchProducts();
-  }, []);
+          const [productsSnap, masterpieceSnap] = await Promise.all([
+            getDocs(productsRef),
+            getDocs(masterpieceRef),
+          ]);
+
+          const productsData = productsSnap.docs.map((doc) => ({
+            id: doc.id,
+            source: "products",      // 🔥 identifica a coleção
+            ...doc.data(),
+          })) as Product[];
+
+          const masterpieceData = masterpieceSnap.docs.map((doc) => ({
+            id: doc.id,
+            source: "masterpiece",   // 🔥 identifica a coleção
+            ...doc.data(),
+          })) as Product[];
+
+          const allFigures = [...productsData, ...masterpieceData];
+
+          const sortedData = allFigures.sort((a, b) => {
+            const aOut = a.inStock?.toLowerCase() === "indisponível";
+            const bOut = b.inStock?.toLowerCase() === "indisponível";
+
+            if (aOut !== bOut) return aOut ? 1 : -1;
+
+            const orderA = Number(a.displayOrder) || 999999;
+            const orderB = Number(b.displayOrder) || 999999;
+
+            return orderA - orderB;
+          });
+
+          setFigures(sortedData);
+        } catch (error) {
+          console.error("Erro ao carregar as coleções:", error);
+        }
+      };
+
+      fetchAllProducts();
+    }, []);
 
   // Filtrar produtos baseado na pesquisa
-  const filteredFigures = figures.filter((figure) =>
-    figure.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  
+  const masterpieceFigures = figures.filter(
+    (fig) => fig.source === "masterpiece"
+  );
+
+  const stockFigures = figures.filter(
+    (fig) => fig.source === "products"
+  );
+
+  const filteredAll = figures.filter((fig) =>
+    fig.title?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  /*const filteredStock = filteredAll.filter((fig) => fig.source === "products");
+  const filteredMasterpiece = filteredAll.filter((fig) => fig.source === "masterpiece");*/
+
+  const [searchStock, setSearchStock] = useState("");
+  const [searchMasterpiece, setSearchMasterpiece] = useState("");
+
+
+
+  const filteredStock = stockFigures.filter((fig) =>
+    fig.title.toLowerCase().includes(searchStock.toLowerCase())
+  );
+
+  const filteredMasterpiece = masterpieceFigures.filter((fig) =>
+    fig.title.toLowerCase().includes(searchMasterpiece.toLowerCase())
   );
 
   return (
@@ -401,14 +435,85 @@ const Index = () => {
       </section>
 
       {/* Products Section Figures */}
-      <section id="figures" className="py-16 m-10 rounded-[64px]">
+        <section id="figures" className="py-16 m-10 rounded-[64px]">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12 animate-fade-in">
+              <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
+                SOB ENCOMENDA
+              </h2>
+
+              <p className="fredoka text-lg bg-secondary bg-clip-text text-transparent mb-6">
+                Figures Originais Disponíveis para Encomenda!
+              </p>
+
+              {/* Barra de Pesquisa */}
+              <div className="max-w-md mx-auto">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <Input
+                    type="text"
+                    placeholder="Pesquisar produtos..."
+                    value={searchMasterpiece}
+                    onChange={(e) => setSearchMasterpiece(e.target.value)}
+                    className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
+                  />
+                </div>
+
+                {searchMasterpiece && (
+                  <p className="text-black font-bold text-md mt-2">
+                    {filteredMasterpiece.length}{" "}
+                    {filteredMasterpiece.length === 1
+                      ? "produto encontrado"
+                      : "produtos encontrados"}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* CARROSSEL HORIZONTAL */}
+            <div className="overflow-x-auto scrollbar-hide">
+              <div className="flex gap-8 px-4 py-4">
+                {filteredMasterpiece.map((fig, index) => (
+                  <div
+                    key={index}
+                    className="w-[220px] md:w-[260px] min-w-[220px] md:min-w-[260px] bg-white rounded-3xl shadow-xl p-4 flex flex-col transition-all hover:scale-[1.03]"
+                  >
+                    <img
+                      src={fig.image}
+                      alt={fig.title}
+                      className="w-full h-70 object-cover object-md rounded-2xl mb-3"
+                    />
+
+                    <h3 className="text-xl font-bold text-black mb-1">
+                      {fig.title.length > 30 ? fig.title.slice(0, 30) + "..." : fig.title}
+                    </h3>
+
+                    {/* </div>p className="text-secondary text-lg mb-3">{fig.price}</p> */}
+
+                    <button
+                      className="w-full px-4 py-2 rounded-xl bg-primary text-white font-semibold hover:opacity-90 mt-auto"
+                    >
+                      Ver Detalhes
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+
+      
+
+      {/* Products Section Figures */}
+      <section id="figures" className="py-16 m-5 rounded-[64px]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
             <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
               ACTION FIGURES
             </h2>
             <p className="fredoka text-lg bg-secondary bg-clip-text text-transparent text-foreground mb-6">
-              Figures Originais Disponiveis! 
+              Figures Originais Disponiveis no Estoque!
             </p>
             
             {/* Barra de Pesquisa */}
@@ -418,14 +523,14 @@ const Index = () => {
                 <Input
                   type="text"
                   placeholder="Pesquisar produtos..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  value={searchStock}
+                  onChange={(e) => setSearchStock(e.target.value)}
                   className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
                 />
               </div>
-              {searchQuery && (
-                <p className="text-white text-sm mt-2">
-                  {filteredFigures.length} {filteredFigures.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
+              {searchStock && (
+                <p className="text-black font-md text-sm mt-2">
+                  {filteredStock.length} {filteredStock.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
                 </p>
               )}
             </div>
@@ -433,8 +538,8 @@ const Index = () => {
 
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {filteredFigures.length > 0 ? (
-              filteredFigures.map((figure, index) => (
+            {filteredStock.length > 0 ? (
+              filteredStock.map((figure, index) => (
                 <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
                   <ProductCard {...figure} />
                 </div>
@@ -452,6 +557,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      
 
       {/* CTA Section - Traditional Japanese Style */}
       <section id="sobre" className="py-20 bg-primary text-white relative overflow-hidden">
