@@ -497,6 +497,7 @@ const Index = () => {
 
                     <button
                       className="w-full px-4 py-2 rounded-xl bg-primary text-white font-semibold hover:opacity-90 mt-auto"
+                      onClick={() => window.open(whatsappLink, '_blank')}
                     >
                       Ver Detalhes
                     </button>
