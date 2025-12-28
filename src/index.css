@@ -239,3 +239,48 @@ html {
   font-family: 'typo';
 }
 
+.overlayFigure{
+  display: hidden;
+}
+
+@keyframes worm {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+.worm-letter {
+  display: inline-block;
+  animation: worm 0.9s ease-in-out infinite;
+}
+
+@keyframes rainbow-move {
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
+}
+
+.rainbow-text {
+  background: linear-gradient(
+    90deg,
+    #ff004c,
+    #ff7a00,
+    #ffe600,
+    #37ff00,
+    #00e5ff,
+    #6a00ff,
+    #ff00d4,
+    #ff004c
+  );
+  background-size: 200% 200%;
+  animation: rainbow-move 4s linear infinite;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}

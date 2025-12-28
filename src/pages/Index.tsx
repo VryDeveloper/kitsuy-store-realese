@@ -12,6 +12,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { db } from "@/firebaseConfig"; // 🔥 Firestore
 import { collection, getDocs } from "firebase/firestore"; // 🔥 Firestore
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import TituloWorm from "@/components/TituloWorm";
 
 // 🎯 Interface para definir a estrutura dos produtos
 interface Product {
@@ -138,8 +139,6 @@ const Index = () => {
   const [searchStock, setSearchStock] = useState("");
   const [searchMasterpiece, setSearchMasterpiece] = useState("");
 
-
-
   const filteredStock = stockFigures.filter((fig) =>
     fig.title.toLowerCase().includes(searchStock.toLowerCase())
   );
@@ -147,6 +146,8 @@ const Index = () => {
   const filteredMasterpiece = masterpieceFigures.filter((fig) =>
     fig.title.toLowerCase().includes(searchMasterpiece.toLowerCase())
   );
+
+  const [selectedImage, setSelectedImage] = useState(null);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-background to-muted">
@@ -338,9 +339,8 @@ const Index = () => {
         <div className="absolute inset-0 opacity-5">
           <div className="absolute bottom-0 w-full h-32" 
             style={{ 
-              backgroundImage: 'radial-gradient(circle at 50% 100%, currentColor 25%, transparent 26%)',
-              backgroundSize: '60px 30px',
-              backgroundPosition: '0 0, 30px 15px'
+              backgroundImage: 'radial-gradient(circle at 20px 20px, gray 4px, transparent 0)',
+              backgroundSize: '40px 40px'
             }}
           />
         </div>
@@ -354,17 +354,17 @@ const Index = () => {
               Nossa missão é ajudar você a completar sua coleção!
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <div className="p-6 rounded-lg bg-card border-2 border-[#FDC9FC] hover:border-[#F094FA] transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#F094FA] transition-all hover:shadow-oriental">
                 <Package className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Produtos 100% Originais</h3>
                 <p className="text-sm text-muted-foreground">Figures autênticas e licenciadas pelas marcas japonesas mais renomadas.</p>
               </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-[#FDC9FC] hover:border-[#F094FA] transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#F094FA] transition-all hover:shadow-oriental">
                 <Zap className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Entrega Rápida</h3>
                 <p className="text-sm text-muted-foreground">Envio imediato para todo o Brasil com rastreamento atualizado.</p>
               </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-[#FDC9FC] hover:border-[#F094FA] transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#F094FA] transition-all hover:shadow-oriental">
                 <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Atendimento Dedicado</h3>
                 <p className="text-sm text-muted-foreground">Suporte personalizado via WhatsApp e Instagram.</p>
@@ -375,7 +375,7 @@ const Index = () => {
       </section>
 
       {/* Products Section Figures OFERTA ESPECIAL */}
-      <section id="oferta" className="py-16 rounded-[64px] mx-4 md:m-10">
+      <section id="oferta" className="py-16 rounded-[64px] mx-4 md:m-10" style={{ display: "none" }}>
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
             <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
@@ -434,8 +434,11 @@ const Index = () => {
         </div>
       </section>
 
+
       {/* Products Section Figures */}
-        <section id="figures" className="py-16 m-10 rounded-[64px]">
+        <section id="figures" 
+        className="py-16 m-10 rounded-[64px]"
+        >
           <div className="container mx-auto px-4">
             <div className="text-center mb-12 animate-fade-in">
               <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
@@ -481,11 +484,13 @@ const Index = () => {
                     <img
                       src={fig.image}
                       alt={fig.title}
-                      className="w-full h-70 object-cover object-md rounded-2xl mb-3"
+                      draggable={false}
+                      onClick={() => setSelectedImage(fig.image)}
+                      className="w-full h-70 object-cover rounded-2xl mb-3"
                     />
 
                     <h3 className="text-xl font-bold text-black mb-1">
-                      {fig.title.length > 30 ? fig.title.slice(0, 30) + "..." : fig.title}
+                      {fig.title.length > 50 ? fig.title.slice(0, 50) + "..." : fig.title}
                     </h3>
 
                     {/* </div>p className="text-secondary text-lg mb-3">{fig.price}</p> */}
@@ -499,7 +504,22 @@ const Index = () => {
                 ))}
               </div>
             </div>
+
+            {selectedImage && (
+              <div 
+                className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
+                onClick={() => setSelectedImage(null)} 
+                >
+                <img
+                  src={selectedImage}
+                  alt="Imagem Ampliada"
+                  draggable={false}
+                  className="max-w-full max-h-full m-4 rounded-lg shadow-lg select-none"
+                />
           </div>
+            )}
+          </div>
+
         </section>
 
 
@@ -509,12 +529,20 @@ const Index = () => {
       <section id="figures" className="py-16 m-5 rounded-[64px]">
         <div className="container mx-auto px-4">
           <div className="text-center mb-12 animate-fade-in">
-            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
-              ACTION FIGURES
-            </h2>
-            <p className="fredoka text-lg bg-secondary bg-clip-text text-transparent text-foreground mb-6">
-              Figures Originais Disponiveis no Estoque!
+            <TituloWorm/>
+            <p
+              className="
+                max-w-3xl mx-auto fredoka text-lg mb-6 
+                text-transparent bg-clip-text 
+                bg-[linear-gradient(90deg,#ff004c,#ff7a00,#ffe600,#37ff00,#00e5ff,#6a00ff,#ff00d4,#ff004c)]
+                bg-[length:200%_200%]
+                animate-[rainbow-move_6s_linear_infinite]
+              "
+            >
+              Figures Originais com até 50% OFF. Últimas unidades em queima de estoque!
             </p>
+
+
             
             {/* Barra de Pesquisa */}
             <div className="max-w-md mx-auto">
