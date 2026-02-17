@@ -18,6 +18,9 @@
     --primary: 336 80% 58%;
     --primary-foreground: 0 0% 100%;
 
+    --primary-light: 336 70% 70%;
+    --primary-light-foreground: 0 0% 100%;
+
     /* Secondary - Soft Black */
     --secondary: 240 10% 10%;
     --secondary-foreground: 0 0% 100%;
@@ -195,6 +198,18 @@ html {
   }
 }
 
+@keyframes zomm {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
 .animate-spin-slow {
   animation: spin-slow 2s linear infinite;
 }
@@ -209,7 +224,7 @@ html {
 
 @font-face {
   font-family: oregano;
-  src: url(".\assets\fonts\Organo.ttf");
+  src: url("./assets/fonts/Organo.ttf");
 }
 @font-face {
   font-family: fredoka;
@@ -283,4 +298,9 @@ html {
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
+}
+
+@keyframes rainbow-border {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }

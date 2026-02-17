@@ -22,7 +22,8 @@ export const ProductCard = ({ image, title, price, inStock, discount }: ProductC
   return (
     <>
       {/* Card de Produto */}
-      <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col h-[600px] sm:h-[450px] md:h-[485px]">
+      <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col 
+h-auto sm:h-[450px] md:h-[485px]">
         <div className="relative overflow-hidden bg-black h-max">
           <img
             src={image}

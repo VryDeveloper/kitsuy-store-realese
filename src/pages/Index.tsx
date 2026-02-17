@@ -12,6 +12,7 @@ import { CountdownTimer } from "@/components/CountdownTimer";
 import { db } from "@/firebaseConfig"; // 🔥 Firestore
 import { collection, getDocs } from "firebase/firestore"; // 🔥 Firestore
 import { SpeedInsights } from "@vercel/speed-insights/next"
+import { CarouselSection } from "@/components/CarouselSection.tsx";
 import TituloWorm from "@/components/TituloWorm";
 
 // 🎯 Interface para definir a estrutura dos produtos
@@ -43,6 +44,8 @@ import { useNavigate, useNavigation } from "react-router-dom";
 
 const Index = () => {
   const [figures, setFigures] = useState<Product[]>([]); // 🔥 State para produtos vindos do Firestore
+  const [lancamentosFigures, setLancamentosFigures] = useState<Product[]>([]); // 🔥 State para lançamentos
+  const [premiumFigures, setPremiumFigures] = useState<Product[]>([]); // 🔥 State para premium
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState(""); // Estado para pesquisa
 
@@ -78,10 +81,14 @@ const Index = () => {
         try {
           const productsRef = collection(db, "products");
           const masterpieceRef = collection(db, "masterpiece");
+          const lancamentosRef = collection(db, "lancamentos");
+          const premiumRef = collection(db, "premium");
 
-          const [productsSnap, masterpieceSnap] = await Promise.all([
+          const [productsSnap, masterpieceSnap, lancamentosSnap, premiumSnap] = await Promise.all([
             getDocs(productsRef),
             getDocs(masterpieceRef),
+            getDocs(lancamentosRef),
+            getDocs(premiumRef),
           ]);
 
           const productsData = productsSnap.docs.map((doc) => ({
@@ -93,6 +100,18 @@ const Index = () => {
           const masterpieceData = masterpieceSnap.docs.map((doc) => ({
             id: doc.id,
             source: "masterpiece",   // 🔥 identifica a coleção
+            ...doc.data(),
+          })) as Product[];
+
+          const lancamentosData = lancamentosSnap.docs.map((doc) => ({
+            id: doc.id,
+            source: "lancamentos",   // 🔥 identifica a coleção
+            ...doc.data(),
+          })) as Product[];
+
+          const premiumData = premiumSnap.docs.map((doc) => ({
+            id: doc.id,
+            source: "premium",       // 🔥 identifica a coleção
             ...doc.data(),
           })) as Product[];
 
@@ -111,6 +130,8 @@ const Index = () => {
           });
 
           setFigures(sortedData);
+          setLancamentosFigures(lancamentosData);
+          setPremiumFigures(premiumData);
         } catch (error) {
           console.error("Erro ao carregar as coleções:", error);
         }
@@ -344,27 +365,27 @@ const Index = () => {
             }}
           />
         </div>
-        <div className="container mx-auto px-4 relative z-10">
+        <div className="container mx-auto px-4 py-6 relative z-10">
           <div className="max-w-3xl mx-auto text-center animate-fade-in ">
             <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent animate-gradient-x">
-              KITSUY STORE
+              QUEM SOMOS?
             </h2>
-            <p className="fredoka font-normal text-lg text-foreground leading-relaxed mb-8">
-              Aqui você encontra <span className="font-semibold text-primary font-semibold">Action Figures 100% originas</span>, trazidas diretamente do Japão, com envio rápido e atendimento dedicado.
-              Nossa missão é ajudar você a completar sua coleção!
+            <p className="fredoka text-primaryLight font-normal text-lg text-foreground leading-relaxed mb-8">
+              Aqui você encontra Action Figures 100% originais do Japão!, escolhidas com carinho para verdadeiros colecionadores.  
+Também buscamos a figure dos seus sonhos sob encomenda, com orçamento personalizado, trazendo cada peça com segurança, atenção e todo o cuidado que a sua coleção merece.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#F094FA] transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#FF8FBC] hover:scale-105 transition-all hover:shadow-oriental">
                 <Package className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Produtos 100% Originais</h3>
                 <p className="text-sm text-muted-foreground">Figures autênticas e licenciadas pelas marcas japonesas mais renomadas.</p>
               </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#F094FA] transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#FF8FBC] hover:scale-105 transition-all hover:shadow-oriental">
                 <Zap className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Entrega Rápida</h3>
                 <p className="text-sm text-muted-foreground">Envio imediato para todo o Brasil com rastreamento atualizado.</p>
               </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#F094FA] transition-all hover:shadow-oriental">
+              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#FF8FBC] hover:scale-105 transition-all hover:shadow-oriental">
                 <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="font-bold text-lg mb-2 font-japanese">Atendimento Dedicado</h3>
                 <p className="text-sm text-muted-foreground">Suporte personalizado via WhatsApp e Instagram.</p>
@@ -434,8 +455,61 @@ const Index = () => {
         </div>
       </section>
 
-
       {/* Products Section Figures */}
+      <section id="figures" className="py-10 m-5 rounded-[64px]">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 animate-fade-in">
+            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
+              EM ESTOQUE NO BRASIL! 
+              </h2>
+            <p className="fredoka text-primaryLight text-lg bg-secondary bg-clip-text mb-6">
+              Figures Disponiveis no Estoque!
+            </p>
+
+
+            {/* Barra de Pesquisa */}
+            <div className="max-w-md mx-auto">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                <Input
+                  type="text"
+                  placeholder="Pesquisar produtos..."
+                  value={searchStock}
+                  onChange={(e) => setSearchStock(e.target.value)}
+                  className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
+                />
+              </div>
+              {searchStock && (
+                <p className="text-black font-md text-sm mt-2">
+                  {filteredStock.length} {filteredStock.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
+                </p>
+              )}
+            </div>
+          </div>
+
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
+            {filteredStock.length > 0 ? (
+              filteredStock.map((figure, index) => (
+                <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
+                  <ProductCard {...figure} />
+                </div>
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-black text-xl font-semibold">
+                  Nenhum produto encontrado para "{searchQuery}"
+                </p>
+                <p className="text-black/80 mt-2">
+                  Tente pesquisar com outros termos
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+            {/* Products Section Figures */}
         <section id="figures" 
         className="py-16 m-10 rounded-[64px]"
         >
@@ -445,7 +519,7 @@ const Index = () => {
                 SOB ENCOMENDA
               </h2>
 
-              <p className="fredoka text-lg bg-secondary bg-clip-text text-transparent mb-6">
+              <p className="fredoka text-lg bg-secondary bg-clip-text text-primaryLight mb-6">
                 Figures Originais Disponíveis para Encomenda!
               </p>
 
@@ -520,73 +594,7 @@ const Index = () => {
           </div>
             )}
           </div>
-
         </section>
-
-
-      
-
-      {/* Products Section Figures */}
-      <section id="figures" className="py-16 m-5 rounded-[64px]">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
-            <TituloWorm/>
-            <p
-              className="
-                max-w-3xl mx-auto fredoka text-lg mb-6 
-                text-transparent bg-clip-text 
-                bg-[linear-gradient(90deg,#ff004c,#ff7a00,#ffe600,#37ff00,#00e5ff,#6a00ff,#ff00d4,#ff004c)]
-                bg-[length:200%_200%]
-                animate-[rainbow-move_6s_linear_infinite]
-              "
-            >
-              Figures Originais com até 50% OFF. Últimas unidades em queima de estoque!
-            </p>
-
-
-            
-            {/* Barra de Pesquisa */}
-            <div className="max-w-md mx-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  type="text"
-                  placeholder="Pesquisar produtos..."
-                  value={searchStock}
-                  onChange={(e) => setSearchStock(e.target.value)}
-                  className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
-                />
-              </div>
-              {searchStock && (
-                <p className="text-black font-md text-sm mt-2">
-                  {filteredStock.length} {filteredStock.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
-                </p>
-              )}
-            </div>
-          </div>
-
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {filteredStock.length > 0 ? (
-              filteredStock.map((figure, index) => (
-                <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
-                  <ProductCard {...figure} />
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-white text-xl font-semibold">
-                  Nenhum produto encontrado para "{searchQuery}"
-                </p>
-                <p className="text-white/80 mt-2">
-                  Tente pesquisar com outros termos
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-      
 
       {/* CTA Section - Traditional Japanese Style */}
       <section id="sobre" className="py-20 bg-primary text-white relative overflow-hidden">
