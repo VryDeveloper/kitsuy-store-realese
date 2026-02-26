@@ -1,5 +1,28 @@
 {
+  "buildCommand": "npm run build",
+  "framework": "vite",
+  "functions": {
+    "api/create-payment.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    },
+    "api/webhook.ts": {
+      "memory": 1024,
+      "maxDuration": 10
+    }
+  },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/api/create-payment",
+      "destination": "/api/create-payment.ts"
+    },
+    {
+      "source": "/api/webhook",
+      "destination": "/api/webhook.ts"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
 }
