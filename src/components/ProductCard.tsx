@@ -1,9 +1,11 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, MessageCircle } from "lucide-react";
+import { ShoppingCart, MessageCircle, Eye } from "lucide-react";
 
 interface ProductCardProps {
+  id: string;
   image: string;
   title: string;
   price: string;
@@ -11,7 +13,8 @@ interface ProductCardProps {
   discount: string;
 }
 
-export const ProductCard = ({ image, title, price, inStock, discount }: ProductCardProps) => {
+export const ProductCard = ({ id, image, title, price, inStock, discount }: ProductCardProps) => {
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState<string | null>(null); // Estado para controlar o overlay
 
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title} ${price}`;
@@ -23,7 +26,7 @@ export const ProductCard = ({ image, title, price, inStock, discount }: ProductC
     <>
       {/* Card de Produto */}
       <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col 
-h-auto sm:h-[450px] md:h-[485px]">
+h-auto sm:h-[450px] md:h-[525px]">
         <div className="relative overflow-hidden bg-black h-max">
           <img
             src={image}
@@ -39,20 +42,29 @@ h-auto sm:h-[450px] md:h-[485px]">
           </div>
         </div>
         <div className="flex flex-col justify-between flex-1">
-          <CardContent className="p-4">
-            <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
+          <CardContent className="p-4 cursor-pointer" onClick={() => navigate(`/produto/${id}`)}>
+            <h3 className="font-semibold text-lg mb-2 line-clamp-2 hover:text-primary transition-colors">
+              {title}
+            </h3>
             <h4 className="text-lg line-through text-primary">{discount}</h4>
             <p className="text-2xl font-bold text-primary">{price}</p>
           </CardContent>
           <CardFooter className="p-4 pt-0 flex gap-2">
             <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/produto/${id}`)}
+              className="flex-1"
+            >
+              <Eye className="mr-2 h-4 w-4" />
+              Ver Detalhes
+            </Button>
+            <Button
               variant="default"
               size="sm"
-              className="flex-1"
               onClick={() => window.open(whatsappLink, '_blank')}
             >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Comprar
+              <ShoppingCart className="h-4 w-4" />
             </Button>
             <Button
               variant="outline"
