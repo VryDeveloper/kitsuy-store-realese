@@ -18,7 +18,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { processPayment } from "@/services/paymentService";
+import { processPayment, PaymentError, getPaymentErrorMessage } from "@/services/paymentService";
 import { useToast } from "@/hooks/use-toast";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
@@ -53,6 +53,7 @@ const ProductDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [imageModalOpen, setImageModalOpen] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
 
   const { toast } = useToast();
   const whatsappLink = "https://wa.me/5571997020168";
@@ -127,9 +128,10 @@ const ProductDetail = () => {
   const handlePayment = async () => {
     if (!product) return;
 
-    try {
-      setIsProcessingPayment(true);
+    setIsProcessingPayment(true);
+    setPaymentError(null);
 
+    try {
       toast({
         title: "Processando...",
         description: "Redirecionando para o pagamento seguro",
@@ -141,16 +143,29 @@ const ProductDetail = () => {
         collectionName: product.source || 'products',
         quantity: quantity,
       });
+      // Se chegou aqui, o redirect aconteceu — não há mais código a executar
 
-    } catch (error) {
-      console.error('Erro ao processar pagamento:', error);
-      
+    } catch (err) {
+      const message = getPaymentErrorMessage(err);
+      setPaymentError(message);
+
       toast({
         title: "Erro ao processar pagamento",
-        description: error instanceof Error ? error.message : "Tente novamente ou entre em contato conosco",
+        description: message,
         variant: "destructive",
       });
-      
+
+      // Log detalhado para debug (não aparece para o usuário)
+      if (err instanceof PaymentError) {
+        console.error('[ProductDetail] PaymentError', { 
+          code: err.code, 
+          status: err.statusCode, 
+          message: err.message 
+        });
+      } else {
+        console.error('[ProductDetail] Erro inesperado no pagamento:', err);
+      }
+    } finally {
       setIsProcessingPayment(false);
     }
   };
@@ -430,6 +445,13 @@ const ProductDetail = () => {
 
               {/* Botões de Ação */}
               <div className="space-y-3 pt-4">
+                {/* Mensagem de erro de pagamento */}
+                {paymentError && (
+                  <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                    {paymentError}
+                  </div>
+                )}
+
                 {/* Botão Mercado Pago - Destaque */}
                 <Button
                   variant="default"
@@ -438,12 +460,17 @@ const ProductDetail = () => {
                   onClick={handlePayment}
                   disabled={isOutOfStock || isProcessingPayment}
                 >
-                  <CreditCard className="mr-2 h-6 w-6" />
-                  {isProcessingPayment 
-                    ? "Processando..." 
-                    : isOutOfStock 
-                    ? "Produto Indisponível" 
-                    : "Pagar com Mercado Pago"}
+                  {isProcessingPayment ? (
+                    <span className="flex items-center gap-2">
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                      Processando...
+                    </span>
+                  ) : (
+                    <>
+                      <CreditCard className="mr-2 h-6 w-6" />
+                      {isOutOfStock ? "Produto Indisponível" : "Pagar com Mercado Pago"}
+                    </>
+                  )}
                 </Button>
 
                 {/* Descrição do Mercado Pago */}

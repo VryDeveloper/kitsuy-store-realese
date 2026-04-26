@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import FAQs from "./pages/FAQs";
 import ProductDetail from "./pages/ProductDetail";
+import CheckoutPage from "./pages/CheckoutPage";
 import PaymentSuccess from "./pages/PaymentSuccess";
 import PaymentPending from "./pages/PaymentPending";
 import PaymentFailure from "./pages/PaymentFailure";
@@ -23,6 +24,8 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/faqs" element={<FAQs />} />
           <Route path="/produto/:id" element={<ProductDetail />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/pedido-confirmado" element={<PaymentSuccess />} />
           <Route path="/pagamento/sucesso" element={<PaymentSuccess />} />
           <Route path="/pagamento/pendente" element={<PaymentPending />} />
           <Route path="/pagamento/falha" element={<PaymentFailure />} />

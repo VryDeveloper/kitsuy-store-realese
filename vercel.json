@@ -1,24 +1,35 @@
 {
   "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "framework": "vite",
+  "devCommand": "vite --port $PORT",
   "functions": {
-    "api/create-payment.ts": {
-      "memory": 1024,
-      "maxDuration": 10
-    },
-    "api/webhook.ts": {
+    "api/**/*.ts": {
+      "runtime": "nodejs20.x",
       "memory": 1024,
       "maxDuration": 10
     }
   },
   "rewrites": [
     {
-      "source": "/api/create-payment",
-      "destination": "/api/create-payment.ts"
+      "source": "/api/calcular-frete",
+      "destination": "/api/calcular-frete.ts"
+    },
+    {
+      "source": "/api/criar-preferencia",
+      "destination": "/api/criar-preferencia.ts"
+    },
+    {
+      "source": "/api/verificar-pagamento",
+      "destination": "/api/verificar-pagamento.ts"
     },
     {
       "source": "/api/webhook",
       "destination": "/api/webhook.ts"
+    },
+    {
+      "source": "/api/create-payment",
+      "destination": "/api/create-payment.ts"
     },
     {
       "source": "/(.*)",
