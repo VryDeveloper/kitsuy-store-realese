@@ -127,6 +127,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ success: false, message: 'Pedido não encontrado' });
     }
 
+    const pedidoData = pedidoDoc.data()!;
     const { orderStatus, paymentStatus } = mapMPStatus(paymentInfo.status ?? undefined);
 
     // ── Atualizar pedido no Firebase ───────────────────────────────────────
@@ -140,6 +141,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         'pagamento.metodo': paymentInfo.payment_type_id ?? null,
         'pagamento.parcelas': paymentInfo.installments ?? null,
       });
+
+    // ── SE O PAGAMENTO FOI APROVADO, MARCAR PRODUTO COMO INDISPONÍVEL ─────
+    if (orderStatus === 'paid') {
+      const { id: produtoId, collectionName } = pedidoData.produto || {};
+      
+      // Alguns pedidos podem vir de rotas antigas que usam nomes de campos diferentes
+      const finalProdutoId = produtoId || pedidoData.productId;
+      const finalCollectionName = collectionName || pedidoData.collectionName;
+
+      if (finalProdutoId && finalCollectionName) {
+        try {
+          await db
+            .collection(finalCollectionName)
+            .doc(finalProdutoId)
+            .update({
+              inStock: 'Indisponível',
+              stock: 0, // Garante que o contador de estoque também zere
+              atualizadoEm: new Date(),
+            });
+          console.log(`[webhook] 📦 Produto ${finalProdutoId} marcado como Indisponível`);
+        } catch (err) {
+          console.error(`[webhook] ❌ Erro ao atualizar estoque do produto ${finalProdutoId}:`, err);
+        }
+      }
+    }
 
     // Atualizar registro do webhook com referência ao pedido
     await db

@@ -1,12 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const ALLOWED_ORIGINS = [
-  process.env.VITE_SITE_URL || 'http://localhost:8081',
+  process.env.VITE_SITE_URL,
   'http://localhost:8081',
   'http://localhost:5173',
   'https://kitsuy-store.vercel.app',
   'https://kitsuy-store-realese.vercel.app',
-];
+].filter(Boolean) as string[];
 
 export function setCORSHeaders(req: VercelRequest, res: VercelResponse): void {
   const origin = req.headers.origin ?? '';
