@@ -73,15 +73,17 @@ const server = http.createServer(async (req: IncomingMessage, res: ServerRespons
   console.log(`[${new Date().toISOString()}] ${req.method} ${rawUrl}`);
 
   try {
-    if (url.pathname.startsWith('/api/create-payment')) {
-      const mod = await import('./api/create-payment.js');
+    const apiPath = url.pathname.replace('/api/', '');
+    const filePath = resolve(process.cwd(), 'api', `${apiPath}.ts`);
+    
+    // Se o arquivo existe na pasta api/, tenta carregar
+    try {
+      // Importa dinamicamente a função da API
+      const mod = await import(`./api/${apiPath}.js`);
       await mod.default(vReq as never, vRes as never);
-
-    } else if (url.pathname.startsWith('/api/webhook')) {
-      const mod = await import('./api/webhook.js');
-      await mod.default(vReq as never, vRes as never);
-
-    } else {
+      return;
+    } catch (e) {
+      console.warn(`[server-dev] Rota /api/${apiPath} não encontrada ou erro no arquivo.`);
       res.statusCode = 404;
       res.setHeader('Content-Type', 'application/json');
       res.end(JSON.stringify({ error: `Rota não encontrada: ${rawUrl}` }));

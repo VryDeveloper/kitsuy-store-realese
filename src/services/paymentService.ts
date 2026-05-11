@@ -3,13 +3,11 @@
 // ─── Config ───────────────────────────────────────────────────────────────────
 
 /**
- * Em dev (npm run dev:test), o Vite roda na porta 8081 mas as Vercel Functions
- * rodam em outra porta. VITE_API_URL aponta para onde o backend está.
- * Em produção na Vercel, frontend e functions compartilham a mesma origem,
- * então VITE_API_URL deve ser vazio (path relativo funciona).
+ * Em dev (npm run dev:full), o Vite roda na porta 8081 mas as Vercel Functions
+ * rodam em outra porta. No entanto, o Vercel Dev cuida do proxy.
+ * Usar path relativo ('') é a forma mais segura de evitar erros de CORS.
  */
-const API_BASE =
-  (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') ?? '';
+const API_BASE = '';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -116,11 +114,8 @@ export async function processPayment(data: CreatePaymentData): Promise<void> {
 
   const isDev = import.meta.env.DEV;
 
-  // Preferir sandboxInitPoint em dev, mas fallback para initPoint se não vier
-  const checkoutUrl =
-    isDev && paymentResponse.sandboxInitPoint
-      ? paymentResponse.sandboxInitPoint
-      : paymentResponse.initPoint;
+  // SEMPRE usar initPoint para testes reais de produção
+    const checkoutUrl = paymentResponse.initPoint;
 
   if (!checkoutUrl) {
     throw new PaymentError(
