@@ -1,21 +1,45 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
-import { Instagram, MessageCircle, Package, Heart, Zap, Menu, Search, BugIcon, MessageCircleQuestion } from "lucide-react";
+import {
+  Instagram,
+  MessageCircle,
+  Package,
+  Heart,
+  Search,
+  Menu,
+  MessageCircleQuestion,
+  MapPin,
+  Star,
+  ChevronRight,
+  Truck,
+  ShieldCheck,
+  Clock,
+  ArrowRight,
+  CheckCircle2,
+} from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import StyledWrapper from "@/components/ui/buttonPlay";
 import { ProductOfertaCard } from "@/components/ProductOfertaCard";
 import { CountdownTimer } from "@/components/CountdownTimer";
-import { db } from "@/firebaseConfig"; // 🔥 Firestore
-import { collection, getDocs } from "firebase/firestore"; // 🔥 Firestore
-import { SpeedInsights } from "@vercel/speed-insights/next"
-import { CarouselSection } from "@/components/CarouselSection.tsx";
-import TituloWorm from "@/components/TituloWorm";
+import { db } from "@/firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
 
-// 🎯 Interface para definir a estrutura dos produtos
+// ─── Interfaces ────────────────────────────────────────────────────────────────
 interface Product {
   id: string;
   title: string;
@@ -23,674 +47,816 @@ interface Product {
   discount: string;
   price: string;
   image: string;
-  displayOrder?: number; 
+  displayOrder?: number;
   description?: string;
   stock?: number;
   featured?: boolean;
-  source?: string; // 🔥 identifica a coleção
+  source?: string;
 }
 
-// Banners
+// ─── Assets ────────────────────────────────────────────────────────────────────
 import banner1 from "@/assets/banner-1.png";
 import banner2 from "@/assets/banner-2.png";
 import banner3 from "@/assets/banner-3.png";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
+import figure1 from "@/assets/figure-1.png";
+import figure2 from "@/assets/figure-2.png";
+import figure3 from "@/assets/figure-3.png";
+import figure4 from "@/assets/figure-4.png";
+import figure5 from "@/assets/figure-5.png";
+import figure6 from "@/assets/figure-6.png";
+import figure7 from "@/assets/figure-7.png";
 
-// Ofertas locais (pode depois migrar para Firestore também)
-import oferta1 from "@/assets/oferta1.webp";
-import oferta2 from "@/assets/oferta2.webp";
-import { useNavigate, useNavigation } from "react-router-dom";
+// ─── Dados estáticos ───────────────────────────────────────────────────────────
+const DEPOIMENTOS = [
+  {
+    nome: "Ana Lima",
+    texto:
+      "Recebi minha figure da Frieren em perfeito estado! O atendimento foi super atencioso, me mandaram fotos antes de enviar. Recomendo muito!",
+    estrelas: 5,
+    figura: "Frieren — SPM Figure",
+  },
+  {
+    nome: "Carlos Mendes",
+    texto:
+      "Pedi uma figure rara que não tinha em nenhum lugar no Brasil. A Kitsuy encontrou em menos de 2 dias e o preço ficou ótimo. Chegou lacrada do Japão.",
+    estrelas: 5,
+    figura: "Jujutsu Kaisen — Gojo Satoru",
+  },
+  {
+    nome: "Beatriz Santos",
+    texto:
+      "Atendimento pelo WhatsApp é 10/10. Tirei todas as dúvidas antes de fechar e eles são super honestos sobre prazos. Já fiz 3 pedidos.",
+    estrelas: 5,
+    figura: "Demon Slayer — Nezuko",
+  },
+  {
+    nome: "Rafael Costa",
+    texto:
+      "Não sabia que existia esse tipo de serviço. Você faz um pedido, eles buscam no Japão e entregam no seu endereço. Simples assim. Figura perfeita.",
+    estrelas: 5,
+    figura: "One Piece — Zoro",
+  },
+];
 
+const GALERIA = [figure1, figure2, figure3, figure4, figure5, figure6, figure7];
+
+// ─── Componente ────────────────────────────────────────────────────────────────
 const Index = () => {
-  const [figures, setFigures] = useState<Product[]>([]); // 🔥 State para produtos vindos do Firestore
-  const [lancamentosFigures, setLancamentosFigures] = useState<Product[]>([]); // 🔥 State para lançamentos
-  const [premiumFigures, setPremiumFigures] = useState<Product[]>([]); // 🔥 State para premium
+  const [figures, setFigures] = useState<Product[]>([]);
+  const [lancamentosFigures, setLancamentosFigures] = useState<Product[]>([]);
+  const [premiumFigures, setPremiumFigures] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState(""); // Estado para pesquisa
+  const [searchStock, setSearchStock] = useState("");
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const banners = [
     { image: banner1, alt: "Friren-Banner" },
     { image: banner2, alt: "Promocao-Banner" },
-    { image: banner3, alt: "Jujutsu Figure-Banner" }
+    { image: banner3, alt: "Jujutsu Figure-Banner" },
   ];
 
-  const ofertaEspecial = [
-    {
-      image: oferta1,
-      title: "Tobi - Vibration Stars",
-      price: "R$ 216",
-      category: "Figure",
-    },
-    {
-      image: oferta2,
-      title: "Itachi - EFFECTREME",
-      price: "R$ 260",
-      category: "Figure",
-    },
-  ];
-
-  const whatsappLink = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
-  const whatsappLink3 = "https://wa.me/5571997020168?text=Vim do site. Gostaria de saber sobre a oferta double!";
-  const whatsappLink2 = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria fazer um orçamento!";
+  const whatsappLink =
+    "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
+  const whatsappOrcamento =
+    "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de fazer um orçamento de encomenda!";
+  const whatsappEstoque =
+    "https://wa.me/5571997020168?text=Olá! Vim do site e quero saber sobre as figures disponíveis no estoque!";
   const instagramLink = "https://instagram.com/kitsuystore";
 
-  // 🔥 Firestore - Buscar products
-    useEffect(() => {
-      const fetchAllProducts = async () => {
-        try {
-          const productsRef = collection(db, "products");
-          const masterpieceRef = collection(db, "masterpiece");
-          const lancamentosRef = collection(db, "lancamentos");
-          const premiumRef = collection(db, "premium");
+  // ─── Firestore ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const fetchAllProducts = async () => {
+      try {
+        const productsRef = collection(db, "products");
+        const masterpieceRef = collection(db, "masterpiece");
+        const lancamentosRef = collection(db, "lancamentos");
+        const premiumRef = collection(db, "premium");
 
-          const [productsSnap, masterpieceSnap, lancamentosSnap, premiumSnap] = await Promise.all([
+        const [productsSnap, masterpieceSnap, lancamentosSnap, premiumSnap] =
+          await Promise.all([
             getDocs(productsRef),
             getDocs(masterpieceRef),
             getDocs(lancamentosRef),
             getDocs(premiumRef),
           ]);
 
-          const productsData = productsSnap.docs.map((doc) => ({
-            id: doc.id,
-            source: "products",      // 🔥 identifica a coleção
-            ...doc.data(),
-          })) as Product[];
+        const productsData = productsSnap.docs.map((doc) => ({
+          id: doc.id,
+          source: "products",
+          ...doc.data(),
+        })) as Product[];
 
-          const masterpieceData = masterpieceSnap.docs.map((doc) => ({
-            id: doc.id,
-            source: "masterpiece",   // 🔥 identifica a coleção
-            ...doc.data(),
-          })) as Product[];
+        const masterpieceData = masterpieceSnap.docs.map((doc) => ({
+          id: doc.id,
+          source: "masterpiece",
+          ...doc.data(),
+        })) as Product[];
 
-          const lancamentosData = lancamentosSnap.docs.map((doc) => ({
-            id: doc.id,
-            source: "lancamentos",   // 🔥 identifica a coleção
-            ...doc.data(),
-          })) as Product[];
+        const lancamentosData = lancamentosSnap.docs.map((doc) => ({
+          id: doc.id,
+          source: "lancamentos",
+          ...doc.data(),
+        })) as Product[];
 
-          const premiumData = premiumSnap.docs.map((doc) => ({
-            id: doc.id,
-            source: "premium",       // 🔥 identifica a coleção
-            ...doc.data(),
-          })) as Product[];
+        const premiumData = premiumSnap.docs.map((doc) => ({
+          id: doc.id,
+          source: "premium",
+          ...doc.data(),
+        })) as Product[];
 
-          const allFigures = [...productsData, ...masterpieceData];
+        const allFigures = [...productsData, ...masterpieceData];
+        const sortedData = allFigures.sort((a, b) => {
+          const aOut = a.inStock?.toLowerCase() === "indisponível";
+          const bOut = b.inStock?.toLowerCase() === "indisponível";
+          if (aOut !== bOut) return aOut ? 1 : -1;
+          const orderA = Number(a.displayOrder) || 999999;
+          const orderB = Number(b.displayOrder) || 999999;
+          return orderA - orderB;
+        });
 
-          const sortedData = allFigures.sort((a, b) => {
-            const aOut = a.inStock?.toLowerCase() === "indisponível";
-            const bOut = b.inStock?.toLowerCase() === "indisponível";
+        setFigures(sortedData);
+        setLancamentosFigures(lancamentosData);
+        setPremiumFigures(premiumData);
+      } catch (error) {
+        console.error("Erro ao carregar as coleções:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchAllProducts();
+  }, []);
 
-            if (aOut !== bOut) return aOut ? 1 : -1;
-
-            const orderA = Number(a.displayOrder) || 999999;
-            const orderB = Number(b.displayOrder) || 999999;
-
-            return orderA - orderB;
-          });
-
-          setFigures(sortedData);
-          setLancamentosFigures(lancamentosData);
-          setPremiumFigures(premiumData);
-        } catch (error) {
-          console.error("Erro ao carregar as coleções:", error);
-        }
-      };
-
-      fetchAllProducts();
-    }, []);
-
-  // Filtrar produtos baseado na pesquisa
-  
-  const masterpieceFigures = figures.filter(
-    (fig) => fig.source === "masterpiece"
-  );
-
-  const stockFigures = figures.filter(
-    (fig) => fig.source === "products"
-  );
-
-  const filteredAll = figures.filter((fig) =>
-    fig.title?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  /*const filteredStock = filteredAll.filter((fig) => fig.source === "products");
-  const filteredMasterpiece = filteredAll.filter((fig) => fig.source === "masterpiece");*/
-
-  const [searchStock, setSearchStock] = useState("");
-  const [searchMasterpiece, setSearchMasterpiece] = useState("");
-
+  const stockFigures = figures.filter((fig) => fig.source === "products");
   const filteredStock = stockFigures.filter((fig) =>
-    fig.title.toLowerCase().includes(searchStock.toLowerCase())
+    fig.title.toLowerCase().includes(searchStock.toLowerCase()),
   );
 
-  const filteredMasterpiece = masterpieceFigures.filter((fig) =>
-    fig.title.toLowerCase().includes(searchMasterpiece.toLowerCase())
-  );
-
-  const [selectedImage, setSelectedImage] = useState(null);
-
+  // ─── JSX ─────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-muted">
-      {/* Header / Navigation - Asian Style */}
-      <header className="sticky top-0 h-[6.5rem] border z-50 bg-card/98 bg-white shadow-md rounded-b-[24px]">
-        <nav className="container mx-auto px-4 py-3">
-          <div className="flex justify-between items-center gap-4">
-            {/* Logo */}
-            <div className="flex items-center gap-2 min-w-fit">
-              <img
-                src={kitsuyIcon}
-                alt="Kitsuy Icon"
-                className="w-24 h-24 object-contain animate-float"
-              />
-              <h1 className="fredoka text-2xl md:text-4xl font-display font-bold bg-[#FF9AB4] bg-clip-text text-transparent hover:cursor-default hover:scale-105 transition-transform duration-200">
-                KITSUY STORE
-              </h1>
-            </div>
-            {/* Search Bar */}
-            <div className="hidden md:flex flex-1 max-w-md mx-4">
-              <div className="relative w-full">
-                <div className="hidden md:flex flex-1 max-w-md mx-4">
-                  <div className="flex items-center justify-center space-x-6 w-full">
-                    <button
-                      onClick={() => {
-                        const section = document.getElementById('sobre');
-                        if (section) {
-                          const y = section.getBoundingClientRect().top + window.scrollY - 80; // 80px = altura do header
-                          window.scrollTo({ top: y, behavior: 'smooth' });
-                        }
-                      }}
-                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
-                    >
-                      Sobre
-                    </button>
-                    
-                    <button
-                      onClick={() => {
-                        const section = document.getElementById('figures');
-                        if (section) {
-                          const y = section.getBoundingClientRect().top + window.scrollY - 80; // 80px = altura do header
-                          window.scrollTo({ top: y, behavior: 'smooth' });
-                        }
-                      }}
-                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
-                    >
-                      Figures
-                    </button>
-                    
-                    <div className="relative group">
-                      <button
-                        onClick={() => document.getElementById('camisetas')?.scrollIntoView({ behavior: 'smooth' })}
-                        className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md outline-none focus:outline-none focus:ring-0 focus:border-none"
-                        style={{ outline: 'none', border: 'none', boxShadow: 'none' }}
-                      >
-                        Camisetas
-                      </button>
-                      
-                      {/* Tooltip que aparece no hover */}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
-                        <div className="bg-pink-500 text-white text-xs font-semibold px-2 py-1 rounded-md shadow-lg whitespace-nowrap">
-                          Em breve!
-                        </div>
-                        <div className="absolute -top-1 left-1/2 transform -translate-x-1/2 w-2 h-2 bg-pink-500 rotate-45"></div>
-                      </div>
-                    </div>
+    <div className="min-h-screen bg-white">
+      {/* ══════════════════════════════════════════════════
+          HEADER
+      ══════════════════════════════════════════════════ */}
+      <header className="sticky top-0 z-50 bg-white border-b border-pink-100 shadow-sm">
+        <nav className="container mx-auto px-4 h-20 flex justify-between items-center gap-4">
+          {/* Logo */}
+          <a href="/" className="flex items-center gap-2 min-w-fit">
+            <img
+              src={kitsuyIcon}
+              alt="Kitsuy Icon"
+              className="w-14 h-14 object-contain animate-float"
+            />
+            <span className="fredoka text-2xl md:text-3xl font-bold text-[#EA3E83]">
+              KITSUY STORE
+            </span>
+          </a>
 
-                    <a
-                      href="/faqs"
-                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
-                    >
-                      FAQs
-                    </a>
+          {/* Nav desktop */}
+          <div className="hidden md:flex items-center gap-6">
+            {[
+              { label: "Como Funciona", id: "como-funciona" },
+              { label: "Figures", id: "galeria" },
+              { label: "Estoque", href: "/estoque" },
+              { label: "FAQs", href: "/faqs" },
+              { label: "Contato", id: "contato" },
+            ].map((item) =>
+              item.href ? (
+                <a
+                  key={item.label}
+                  href={item.href}
+                  className="text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
+                >
+                  {item.label}
+                </a>
+              ) : (
+                <button
+                  key={item.label}
+                  onClick={() => {
+                    const el = document.getElementById(item.id!);
+                    if (el) {
+                      const y =
+                        el.getBoundingClientRect().top + window.scrollY - 84;
+                      window.scrollTo({ top: y, behavior: "smooth" });
+                    }
+                  }}
+                  className="text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
+                >
+                  {item.label}
+                </button>
+              ),
+            )}
+          </div>
 
-                    <button
-                      onClick={() => document.getElementById('contato')?.scrollIntoView({ behavior: 'smooth' })}
-                      className="text-sm font-bold text-gray-700 hover:text-pink-600 transition-colors duration-200 hover:-translate-y-1 transition-transform duration-200 hover:shadow-md p-1 rounded-md"
+          {/* Ações */}
+          <div className="flex gap-2 items-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => window.open(instagramLink, "_blank")}
+              className="hidden sm:flex hover:bg-pink-50 hover:text-[#EA3E83]"
+            >
+              <Instagram className="h-5 w-5" />
+            </Button>
+            <Button
+              onClick={() => window.open(whatsappLink, "_blank")}
+              className="hidden sm:flex bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2"
+              size="sm"
+            >
+              <MessageCircle className="h-4 w-4" />
+              WhatsApp
+            </Button>
+
+            {/* Menu mobile */}
+            <Sheet>
+              <SheetTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="md:hidden gap-2 border-[#EA3E83] text-[#EA3E83]"
+                >
+                  <Menu className="h-4 w-4" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-[280px]">
+                <SheetHeader>
+                  <SheetTitle className="text-[#EA3E83] fredoka text-xl">
+                    Menu
+                  </SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-3">
+                  {[
+                    {
+                      icon: MessageCircle,
+                      label: "WhatsApp",
+                      action: () => window.open(whatsappLink, "_blank"),
+                    },
+                    {
+                      icon: Instagram,
+                      label: "Instagram",
+                      action: () => window.open(instagramLink, "_blank"),
+                    },
+                    {
+                      icon: MessageCircleQuestion,
+                      label: "FAQs",
+                      action: () => (window.location.href = "/faqs"),
+                    },
+                    {
+                      icon: Package,
+                      label: "Ver Estoque",
+                      action: () => (window.location.href = "/estoque"),
+                    },
+                  ].map(({ icon: Icon, label, action }) => (
+                    <Button
+                      key={label}
+                      variant="outline"
+                      className="w-full justify-start gap-3 h-12"
+                      onClick={action}
                     >
-                      Contato
-                    </button>
-                  </div>
+                      <Icon className="h-5 w-5" />
+                      {label}
+                    </Button>
+                  ))}
                 </div>
-              </div>
-            </div>
-
-            {/* Actions Menu & Social */}
-            <div className="flex gap-2 items-center">
-              <Button 
-                variant="ghost" 
-                size="icon"
-                onClick={() => window.open(instagramLink, '_blank')}
-                className="hidden sm:flex hover:scale-110 hover:text-white hover:bg-black"
-              >
-                <Instagram className="h-5 w-5" />
-              </Button>
-              
-              {/* Quick Actions Menu - Accordion Style */}
-              <Sheet>
-                <SheetTrigger asChild>
-                  <Button variant="outline" size="sm" className="gap-2 bg-primary text-white border-primary hover:bg-black hover:border-black w-auto h-10">
-                    <Menu className="h-4 w-4" />
-                    <span className="hidden sm:inline ">Menu</span>
-                  </Button>
-                </SheetTrigger>
-                <SheetContent className="w-[300px] sm:w-[400px]">
-                  <SheetHeader>
-                    <SheetTitle className="font-japanese text-xl">Ações Rápidas</SheetTitle>
-                  </SheetHeader>
-                  <div className="mt-6 space-y-4">
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start gap-3 h-12"
-                      onClick={() => window.open(whatsappLink, '_blank')}
-                    >
-                      <MessageCircle className="h-5 w-5" />
-                      Atendimento WhatsApp
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start gap-3 h-12"
-                      onClick={() => window.open(instagramLink, '_blank')}
-                    >
-                      <Instagram className="h-5 w-5" />
-                      Seguir no Instagram
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start gap-3 h-12"
-                      onClick={() => window.location.href = '/faqs'}
-                    >
-                      <MessageCircleQuestion className="h-5 w-5" />
-                      FAQS
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      className="w-full justify-start gap-3 h-12"
-                      onClick={() => document.getElementById('produtos')?.scrollIntoView({ behavior: 'smooth' })}
-                    >
-                      <Package className="h-5 w-5" />
-                      Ver Produtos
-                    </Button>
-                  </div>
-                </SheetContent>
-              </Sheet>
-            </div>
+              </SheetContent>
+            </Sheet>
           </div>
         </nav>
       </header>
 
-      {/* Banner Carousel - Hero Section */}
-      
-      <section className="w-full overflow-hidden" style={{ paddingTop: '24px' }}>
-        <div className="w-full rounded" style={{ paddingLeft: '24px', paddingRight: '24px' }}>
-          <Carousel 
-            className="w-full" 
-            plugins={[
-              Autoplay({ 
-                delay: 3500,
-                stopOnInteraction: false,
-                stopOnMouseEnter: true,
-              })
-            ]}
-            opts={{ 
-              loop: true,
-            }}
-          >
-            <CarouselContent>
-              {banners.map((banner, index) => (
-                <CarouselItem key={index}>
-                  <div className="relative aspect-[16/9] md:aspect-[21/7] overflow-hidden rounded-none">
-                    <img
-                      src={banner.image}
-                      alt={banner.alt}
-                      className="w-full h-full object-contain rounded-2xl"
-                    />
-                  </div>
-                </CarouselItem>
-              ))}
-            </CarouselContent>
-            <CarouselPrevious className="text-white left-2 bg-primary/90 backdrop-blur-sm border-2 border-background hover:bg-background hover:text-primary transition-all" />
-            <CarouselNext className="text-white right-2 bg-primary/90 backdrop-blur-sm border-2 border-background hover:bg-background hover:text-primary transition-all" />
-          </Carousel>
-        </div>
-      </section>
-
-      {/* About Section - Japanese Style */}
-      <section id="sobre" className="py-16 bg-gradient-to-b from-white to-light-gray relative overflow-hidden">
-        {/* Traditional Wave Pattern Background */}
-        <div className="absolute inset-0 opacity-5">
-          <div className="absolute bottom-0 w-full h-32" 
-            style={{ 
-              backgroundImage: 'radial-gradient(circle at 20px 20px, gray 4px, transparent 0)',
-              backgroundSize: '40px 40px'
-            }}
-          />
-        </div>
-        <div className="container mx-auto px-4 py-6 relative z-10">
-          <div className="max-w-3xl mx-auto text-center animate-fade-in ">
-            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent animate-gradient-x">
-              QUEM SOMOS?
-            </h2>
-            <p className="fredoka text-primaryLight font-normal text-lg text-foreground leading-relaxed mb-8">
-              Aqui você encontra Action Figures 100% originais do Japão!, escolhidas com carinho para verdadeiros colecionadores.  
-Também buscamos a figure dos seus sonhos sob encomenda, com orçamento personalizado, trazendo cada peça com segurança, atenção e todo o cuidado que a sua coleção merece.
-            </p>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#FF8FBC] hover:scale-105 transition-all hover:shadow-oriental">
-                <Package className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="font-bold text-lg mb-2 font-japanese">Produtos 100% Originais</h3>
-                <p className="text-sm text-muted-foreground">Figures autênticas e licenciadas pelas marcas japonesas mais renomadas.</p>
-              </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#FF8FBC] hover:scale-105 transition-all hover:shadow-oriental">
-                <Zap className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="font-bold text-lg mb-2 font-japanese">Entrega Rápida</h3>
-                <p className="text-sm text-muted-foreground">Envio imediato para todo o Brasil com rastreamento atualizado.</p>
-              </div>
-              <div className="p-6 rounded-lg bg-card border-2 border-[#EA3E83] hover:border-[#FF8FBC] hover:scale-105 transition-all hover:shadow-oriental">
-                <Heart className="h-12 w-12 text-primary mx-auto mb-4" />
-                <h3 className="font-bold text-lg mb-2 font-japanese">Atendimento Dedicado</h3>
-                <p className="text-sm text-muted-foreground">Suporte personalizado via WhatsApp e Instagram.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Products Section Figures OFERTA ESPECIAL */}
-      <section id="oferta" className="py-16 rounded-[64px] mx-4 md:m-10" style={{ display: "none" }}>
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
-            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-4 bg-gradient-to-r from-primary to-[#FF4DA6] bg-clip-text text-transparent">
-              OFERTA DOUBLE!
-            </h2>
-            <p className="fredoka text-lg font-md font-japanese text-secondary mb-1">A oportunidade perfeita para ampliar sua coleção!</p>
-            <p className="fredoka text-lg font-md font-japanese text-secondary mb-6">Figures exclusivas com descontos por tempo limitado — Garanta antes que acabe!</p>
-            
-            {/* Timer de Oferta */}
-            <CountdownTimer></CountdownTimer>
-          </div>
-
-          {/* Container dos produtos centralizados */}
-          <div className="flex justify-center">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl">
-              {ofertaEspecial.map((ofertaEspecial, index) => (
-                <div 
-                  key={index} 
-                  className="transform hover:scale-105 transition-transform duration-300"
-                  style={{ animationDelay: `${index * 0.1}s` }}
-                >
-                  {/* Card com destaque especial */}
-                  <div className="relative">
-                    <div className="absolute -top-3 -right-3 bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold z-10 animate-pulse">
-                       Exclusivo
-                    </div>
-                    <ProductOfertaCard 
-                      {...ofertaEspecial}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Texto de urgência */}
-          <div className="text-center mt-12">
-            <div className="flex justify-center gap-4 flex-wrap">
-            <button className="relative bg-black-700 text-white text-[24px] font-bold py-3 px-8 rounded-3xl transition-all duration-500 transform hover:scale-105 overflow-hidden group shadow-lg shadow-cyan-500/30 active:scale-95"
-            onClick={() => window.open(whatsappLink3, '_blank')}>
-              
-              {/* Borda neon constante */}
-              <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 opacity-100 animate-pulse">
-                <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-cyan-400 via-purple-500 to-pink-500 animate-spin" style={{animationDuration: '4s'}}></div>
-              </div>
-              
-              {/* Efeito de ripple no clique */}
-              <div className="absolute inset-0 rounded-3xl bg-white opacity-0 group-active:opacity-20 group-active:animate-ripple transition-opacity duration-100"></div>
-              
-              <div className="absolute inset-[3px] rounded-3xl bg-black group-hover:transition-colors duration-100"></div>
-              
-              <span className="relative z-10">R$475</span>
-            </button>
-          </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Products Section Figures */}
-      <section id="figures" className="py-10 m-5 rounded-[64px]">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-12 animate-fade-in">
-            <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
-              EM ESTOQUE NO BRASIL! 
-              </h2>
-            <p className="fredoka text-primaryLight text-lg bg-secondary bg-clip-text mb-6">
-              Figures Disponiveis no Estoque!
-            </p>
-
-
-            {/* Barra de Pesquisa */}
-            <div className="max-w-md mx-auto">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                <Input
-                  type="text"
-                  placeholder="Pesquisar produtos..."
-                  value={searchStock}
-                  onChange={(e) => setSearchStock(e.target.value)}
-                  className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
-                />
-              </div>
-              {searchStock && (
-                <p className="text-black font-md text-sm mt-2">
-                  {filteredStock.length} {filteredStock.length === 1 ? 'produto encontrado' : 'produtos encontrados'}
-                </p>
-              )}
-            </div>
-          </div>
-
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-12">
-            {filteredStock.length > 0 ? (
-              filteredStock.map((figure, index) => (
-                <div key={index} style={{ animationDelay: `${index * 0.1}s` }}>
-                  <ProductCard {...figure} />
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-black text-xl font-semibold">
-                  Nenhum produto encontrado para "{searchQuery}"
-                </p>
-                <p className="text-black/80 mt-2">
-                  Tente pesquisar com outros termos
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-            {/* Products Section Figures */}
-        <section id="figures" 
-        className="py-16 m-10 rounded-[64px]"
+      {/* ══════════════════════════════════════════════════
+          BANNER CAROUSEL
+      ══════════════════════════════════════════════════ */}
+      <section className="w-full px-4 md:px-6 pt-6">
+        <Carousel
+          className="w-full"
+          plugins={[
+            Autoplay({
+              delay: 3500,
+              stopOnInteraction: false,
+              stopOnMouseEnter: true,
+            }),
+          ]}
+          opts={{ loop: true }}
         >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12 animate-fade-in">
-              <h2 className="fredoka text-4xl md:text-5xl font-display font-bold mb-2 bg-primary bg-clip-text text-transparent">
-                SOB ENCOMENDA
-              </h2>
-
-              <p className="fredoka text-lg bg-secondary bg-clip-text text-primaryLight mb-6">
-                Figures Originais Disponíveis para Encomenda!
-              </p>
-
-              {/* Barra de Pesquisa */}
-              <div className="max-w-md mx-auto">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <Input
-                    type="text"
-                    placeholder="Pesquisar produtos..."
-                    value={searchMasterpiece}
-                    onChange={(e) => setSearchMasterpiece(e.target.value)}
-                    className="pl-10 pr-4 py-6 text-lg bg-white border-2 border-white/20 focus:border-white focus:ring-2 focus:ring-white/50 rounded-xl shadow-lg"
+          <CarouselContent>
+            {banners.map((banner, index) => (
+              <CarouselItem key={index}>
+                <div className="relative aspect-[16/9] md:aspect-[21/7] overflow-hidden rounded-2xl">
+                  <img
+                    src={banner.image}
+                    alt={banner.alt}
+                    className="w-full h-full object-contain"
                   />
                 </div>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="left-3 bg-[#EA3E83] text-white border-none hover:bg-[#c72e6c]" />
+          <CarouselNext className="right-3 bg-[#EA3E83] text-white border-none hover:bg-[#c72e6c]" />
+        </Carousel>
+      </section>
 
-                {searchMasterpiece && (
-                  <p className="text-black font-bold text-md mt-2">
-                    {filteredMasterpiece.length}{" "}
-                    {filteredMasterpiece.length === 1
-                      ? "produto encontrado"
-                      : "produtos encontrados"}
-                  </p>
-                )}
+      {/* ══════════════════════════════════════════════════
+          HERO — O QUE É A KITSUY STORE
+      ══════════════════════════════════════════════════ */}
+      <section id="sobre" className="py-20 px-4 bg-white">
+        <div className="container mx-auto max-w-4xl text-center">
+          <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
+            Importação por Demanda do Japão
+          </span>
+          <h2 className="fredoka text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
+            Sua figure dos sonhos,{" "}
+            <span className="text-[#EA3E83]">direto do Japão</span> até você.
+          </h2>
+          <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
+            A Kitsuy Store é um serviço especializado em importação de figures e
+            colecionáveis japoneses. Você não precisa navegar em sites
+            japoneses, calcular frete internacional nem se preocupar com a
+            alfândega - <strong>a gente faz tudo isso por você! </strong>
+          </p>
+
+          {/* Diferenciais rápidos */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
+            {[
+              {
+                icon: ShieldCheck,
+                title: "100% Originais",
+                desc: "Só figures licenciadas e autênticas do Japão",
+              },
+              {
+                icon: MapPin,
+                title: "Buscamos pra você",
+                desc: "Pesquisamos nas melhores lojas japonesas",
+              },
+              {
+                icon: Heart,
+                title: "Atendimento humano",
+                desc: "Tudo resolvido pelo WhatsApp, sem robô",
+              },
+            ].map(({ icon: Icon, title, desc }) => (
+              <div
+                key={title}
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-pink-100 hover:border-[#EA3E83] hover:shadow-lg transition-all duration-300"
+              >
+                <div className="w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center">
+                  <Icon className="h-6 w-6 text-[#EA3E83]" />
+                </div>
+                <h3 className="fredoka font-bold text-gray-900">{title}</h3>
+                <p className="text-sm text-gray-500 text-center">{desc}</p>
               </div>
+            ))}
+          </div>
+
+          <Button
+            size="lg"
+            onClick={() => window.open(whatsappOrcamento, "_blank")}
+            className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 text-base px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+          >
+            <MessageCircle className="h-5 w-5" />
+            Pedir um orçamento grátis
+          </Button>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          COMO FUNCIONA — 4 PASSOS
+      ══════════════════════════════════════════════════ */}
+      <section
+        id="como-funciona"
+        className="py-20 px-4 bg-gradient-to-b from-pink-50 to-white"
+      >
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-14">
+            <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
+              Simples assim
+            </span>
+            <h2 className="fredoka text-4xl md:text-5xl font-bold text-gray-900">
+              Como funciona nossa loja
+            </h2>
+          </div>
+
+          <div className="relative">
+            {/* Linha conectora desktop */}
+            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-pink-200 z-0" />
+
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
+              {[
+                {
+                  step: "01",
+                  icon: MessageCircle,
+                  title: "Você pergunta",
+                  desc: "Manda uma mensagem no WhatsApp com o nome ou imagem da figure que você quer. Pode ser qualquer item colecionável japonês.",
+                },
+                {
+                  step: "02",
+                  icon: Search,
+                  title: "A gente busca",
+                  desc: "Pesquisamos nas lojas do Japão e encontramos o melhor preço disponível.",
+                },
+                {
+                  step: "03",
+                  icon: Package,
+                  title: "Passamos o preço",
+                  desc: "Te enviamos um orçamento com o valor total: produto + frete internacional + nossa taxa de serviço. Sem surpresas.",
+                },
+                {
+                  step: "04",
+                  icon: Truck,
+                  title: "Você recebe",
+                  desc: "Confirmado o pedido, importamos e enviamos direto para nosso estoque no Brasil onde preparamos e enviamos diretamente para o seu endereço!.",
+                },
+              ].map(({ step, icon: Icon, title, desc }) => (
+                <div
+                  key={step}
+                  className="flex flex-col items-center text-center gap-4"
+                >
+                  <div className="relative">
+                    <div className="w-24 h-24 bg-white border-4 border-[#EA3E83] rounded-full flex items-center justify-center shadow-md">
+                      <Icon className="h-9 w-9 text-[#EA3E83]" />
+                    </div>
+                    <span className="absolute -top-1 -right-1 bg-[#EA3E83] text-white text-xs font-black w-7 h-7 rounded-full flex items-center justify-center">
+                      {step}
+                    </span>
+                  </div>
+                  <h3 className="fredoka text-xl font-bold text-gray-900">
+                    {title}
+                  </h3>
+                  <p className="text-sm text-gray-500 leading-relaxed">
+                    {desc}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* CTA central */}
+          <div className="mt-14 text-center">
+            <div className="inline-flex flex-col sm:flex-row gap-4 items-center bg-white border-2 border-pink-200 rounded-2xl px-8 py-6 shadow-sm">
+              <div className="text-left">
+                <p className="font-bold text-gray-900">Pronto para começar?</p>
+                <p className="text-sm text-gray-500">
+                  Atendemos de segunda a sábado via WhatsApp
+                </p>
+              </div>
+              <Button
+                onClick={() => window.open(whatsappOrcamento, "_blank")}
+                className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 whitespace-nowrap"
+              >
+                <MessageCircle className="h-4 w-4" />
+                Quero minha figure
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          GALERIA DE FIGURES
+          ⚠️  Substitua as imagens em src/assets/figure-*.png
+              pelas fotos que você quiser exibir aqui.
+      ══════════════════════════════════════════════════ */}
+      <section id="galeria" className="py-20 px-4 bg-white">
+        <div className="container mx-auto max-w-6xl">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
+              Galeria
+            </span>
+            <h2 className="fredoka text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+              Figures que já passaram por aqui
+            </h2>
+            <p className="text-gray-500 max-w-xl mx-auto">
+              Cada peça importada com cuidado. Clique para ampliar — e se quiser
+              uma dessas ou qualquer outra, é só chamar.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+            {GALERIA.map((img, i) => (
+              <div
+                key={i}
+                onClick={() => setSelectedImage(img)}
+                className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-[#EA3E83] transition-all duration-300 shadow-sm hover:shadow-xl"
+              >
+                <img
+                  src={img}
+                  alt={`Figure ${i + 1}`}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
+                  <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity text-sm">
+                    Ver maior
+                  </span>
+                </div>
+              </div>
+            ))}
+
+            {/* Card CTA dentro da galeria */}
+            <div
+              onClick={() => window.open(whatsappOrcamento, "_blank")}
+              className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-gradient-to-br from-[#EA3E83] to-[#FF8FBC] border-2 border-[#EA3E83] flex flex-col items-center justify-center gap-3 hover:shadow-xl transition-all duration-300"
+            >
+              <MessageCircle className="h-10 w-10 text-white" />
+              <p className="text-white font-bold text-center text-sm px-4 leading-tight">
+                Quer uma dessas? Chama no WhatsApp!
+              </p>
+              <ArrowRight className="h-5 w-5 text-white" />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Modal imagem ampliada */}
+      {selectedImage && (
+        <div
+          className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4"
+          onClick={() => setSelectedImage(null)}
+        >
+          <img
+            src={selectedImage}
+            alt="Figure ampliada"
+            draggable={false}
+            className="max-w-full max-h-[90vh] rounded-2xl shadow-2xl select-none"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button
+            onClick={() => setSelectedImage(null)}
+            className="absolute top-4 right-4 text-white bg-black/50 rounded-full w-10 h-10 flex items-center justify-center hover:bg-black/80 text-xl font-bold"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════
+          ESTOQUE — PREVIEW (3 cards) + LINK PARA /estoque
+      ══════════════════════════════════════════════════ */}
+      <section id="estoque-preview" className="py-20 px-4 bg-pink-50">
+        <div className="container mx-auto max-w-6xl">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
+            <div>
+              <span className="inline-block bg-pink-200 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-3 tracking-widest uppercase">
+                Pronta Entrega
+              </span>
+              <h2 className="fredoka text-4xl font-bold text-gray-900">
+                Figures no estoque no Brasil
+              </h2>
+              <p className="text-gray-500 mt-2">
+                Sem esperar importação — essas estão aqui e saem em até 4 dias
+                úteis.
+              </p>
+            </div>
+            <a
+              href="/estoque"
+              className="flex items-center gap-2 text-[#EA3E83] font-bold hover:underline whitespace-nowrap"
+            >
+              Ver todos <ChevronRight className="h-4 w-4" />
+            </a>
+          </div>
+
+          {loading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div
+                  key={i}
+                  className="h-[420px] bg-white rounded-2xl animate-pulse border border-pink-100"
+                />
+              ))}
+            </div>
+          ) : filteredStock.length > 0 ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+              {filteredStock.slice(0, 3).map((figure, index) => (
+                <div key={index}>
+                  <ProductCard {...figure} />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12 text-gray-400">
+              Nenhum produto disponível no momento.
+            </div>
+          )}
+
+          {/* CTA ver mais */}
+          <div className="mt-10 text-center flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/estoque">
+              <Button
+                variant="outline"
+                className="border-2 border-[#EA3E83] text-[#EA3E83] hover:bg-[#EA3E83] hover:text-white gap-2 px-8 py-6 text-base rounded-full"
+              >
+                <Package className="h-5 w-5" />
+                Ver todas as figures no estoque
+              </Button>
+            </a>
+            <Button
+              onClick={() => window.open(whatsappEstoque, "_blank")}
+              className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 px-8 py-6 text-base rounded-full"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Perguntar sobre disponibilidade
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          DEPOIMENTOS
+          ⚠️  Substitua os textos no array DEPOIMENTOS
+              pelos feedbacks reais dos seus clientes.
+      ══════════════════════════════════════════════════ */}
+      <section id="depoimentos" className="py-20 px-4 bg-white">
+        <div className="container mx-auto max-w-5xl">
+          <div className="text-center mb-12">
+            <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
+              Depoimentos
+            </span>
+            <h2 className="fredoka text-4xl md:text-5xl font-bold text-gray-900">
+              Quem já pediu, aprova
+            </h2>
+            <p className="text-gray-500 mt-3">
+              ⚠️{" "}
+              <em>
+                Substitua esses textos pelos feedbacks reais dos seus clientes.
+              </em>
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {DEPOIMENTOS.map(({ nome, texto, estrelas, figura }) => (
+              <div
+                key={nome}
+                className="bg-white border-2 border-pink-100 rounded-2xl p-6 hover:border-[#EA3E83] hover:shadow-lg transition-all duration-300"
+              >
+                <div className="flex gap-1 mb-3">
+                  {Array.from({ length: estrelas }).map((_, i) => (
+                    <Star
+                      key={i}
+                      className="h-4 w-4 fill-[#EA3E83] text-[#EA3E83]"
+                    />
+                  ))}
+                </div>
+                <p className="text-gray-700 leading-relaxed mb-4 italic">
+                  "{texto}"
+                </p>
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-gray-900">{nome}</span>
+                  <span className="text-xs text-gray-400 bg-pink-50 px-3 py-1 rounded-full">
+                    {figura}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          ENCOMENDA — CTA
+      ══════════════════════════════════════════════════ */}
+      <section className="py-20 px-4 bg-gradient-to-br from-[#EA3E83] to-[#c72e6c] text-white relative overflow-hidden">
+        {/* Padrão de fundo decorativo */}
+        <div
+          className="absolute inset-0 opacity-10"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 30px 30px, white 3px, transparent 0)",
+            backgroundSize: "60px 60px",
+          }}
+        />
+        <div className="container mx-auto max-w-4xl text-center relative z-10">
+          <h2 className="fredoka text-4xl md:text-6xl font-bold mb-4">
+            Não encontrou o que procura?
+          </h2>
+          <p className="text-xl opacity-90 mb-4 max-w-2xl mx-auto">
+            Se existe no Japão, a gente encontra. Manda o nome ou a foto da
+            figure e a gente já começa a pesquisar pra você —{" "}
+            <strong>sem compromisso.</strong>
+          </p>
+          <p className="text-base opacity-75 mb-10">
+            Atendemos via WhatsApp de segunda a sábado. Orçamento grátis, sem
+            robô.
+          </p>
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => window.open(whatsappOrcamento, "_blank")}
+              className="bg-white text-[#EA3E83] hover:bg-white gap-2 text-base px-8 py-6 rounded-full font-bold shadow-lg"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Pedir orçamento pelo WhatsApp
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => window.open(instagramLink, "_blank")}
+              className="border-2 border-white text-black hover:bg-white hover:text-[#EA3E83] gap-2 text-base px-8 py-6 rounded-full"
+            >
+              <Instagram className="h-5 w-5" />
+              Seguir no Instagram
+            </Button>
+          </div>
+
+          {/* Checklist de garantias */}
+          <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm">
+            {[
+              "Figures 100% originais",
+              "Orçamento sem compromisso",
+              "Rastreamento completo",
+              "Atendimento humano",
+              "Pagamento via PIX ou cartão",
+            ].map((item) => (
+              <div key={item} className="flex items-center gap-2 opacity-90">
+                <CheckCircle2 className="h-4 w-4" />
+                {item}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ══════════════════════════════════════════════════
+          FOOTER
+      ══════════════════════════════════════════════════ */}
+      <footer id="contato" className="bg-gray-950 text-white py-12">
+        <div className="container mx-auto px-4 max-w-5xl">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {/* Brand */}
+            <div>
+              <div className="flex items-center gap-2 mb-3">
+                <img
+                  src={kitsuyIconBlack}
+                  alt="Kitsuy"
+                  className="w-10 h-10 object-contain"
+                />
+                <span className="fredoka text-xl font-bold">KITSUY STORE</span>
+              </div>
+              <p className="text-sm text-gray-400 leading-relaxed">
+                Importação de figures e colecionáveis japoneses por demanda. Sua
+                coleção merece o original.
+              </p>
             </div>
 
-            {/* CARROSSEL HORIZONTAL */}
-            <div className="overflow-x-auto scrollbar-hide">
-              <div className="flex gap-8 px-4 py-4">
-                {filteredMasterpiece.map((fig, index) => (
-                  <div
-                    key={index}
-                    className="w-[220px] md:w-[260px] min-w-[220px] md:min-w-[260px] bg-white rounded-3xl shadow-xl p-4 flex flex-col transition-all hover:scale-[1.03]"
+            {/* Links */}
+            <div>
+              <h4 className="font-bold text-sm mb-3 text-gray-300 uppercase tracking-wider">
+                Navegação
+              </h4>
+              <div className="flex flex-col gap-2">
+                {[
+                  { label: "Como funciona", href: "#como-funciona" },
+                  { label: "Estoque", href: "/estoque" },
+                  { label: "FAQs", href: "/faqs" },
+                ].map(({ label, href }) => (
+                  <a
+                    key={label}
+                    href={href}
+                    className="text-sm text-gray-400 hover:text-white transition-colors"
                   >
-                    <img
-                      src={fig.image}
-                      alt={fig.title}
-                      draggable={false}
-                      onClick={() => setSelectedImage(fig.image)}
-                      className="w-full h-70 object-cover rounded-2xl mb-3"
-                    />
-
-                    <h3 className="text-xl font-bold text-black mb-1">
-                      {fig.title.length > 50 ? fig.title.slice(0, 50) + "..." : fig.title}
-                    </h3>
-
-                    {/* </div>p className="text-secondary text-lg mb-3">{fig.price}</p> */}
-
-                    <button
-                      className="w-full px-4 py-2 rounded-xl bg-primary text-white font-semibold hover:opacity-90 mt-auto"
-                      onClick={() => window.open(whatsappLink, '_blank')}
-                    >
-                      Ver Detalhes
-                    </button>
-                  </div>
+                    {label}
+                  </a>
                 ))}
               </div>
             </div>
 
-            {selectedImage && (
-              <div 
-                className="fixed inset-0 bg-black bg-opacity-70 flex items-center justify-center z-50"
-                onClick={() => setSelectedImage(null)} 
+            {/* Contato */}
+            <div>
+              <h4 className="font-bold text-sm mb-3 text-gray-300 uppercase tracking-wider">
+                Contato
+              </h4>
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => window.open(whatsappLink, "_blank")}
+                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors text-left"
                 >
-                <img
-                  src={selectedImage}
-                  alt="Imagem Ampliada"
-                  draggable={false}
-                  className="max-w-full max-h-full m-4 rounded-lg shadow-lg select-none"
-                />
+                  <MessageCircle className="h-4 w-4" />
+                  WhatsApp: (71) 99702-0168
+                </button>
+                <button
+                  onClick={() => window.open(instagramLink, "_blank")}
+                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors text-left"
+                >
+                  <Instagram className="h-4 w-4" />
+                  @kitsuystore
+                </button>
+                <button
+                  onClick={() =>
+                    (window.location.href = "mailto:kitsuystore@gmail.com")
+                  }
+                  className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors text-left"
+                >
+                  <Clock className="h-4 w-4" />
+                  kitsuystore@gmail.com
+                </button>
+              </div>
+            </div>
           </div>
-            )}
-          </div>
-        </section>
 
-      {/* CTA Section - Traditional Japanese Style */}
-      <section id="sobre" className="py-20 bg-primary text-white relative overflow-hidden">
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-full h-full" 
-            style={{ 
-              backgroundImage: 'radial-gradient(circle at 20px 20px, white 4px, transparent 0)',
-              backgroundSize: '40px 40px'
-            }}
-          />
-        </div>
-        <div className="container mx-auto px-4 text-center relative z-10 animate-slide-up">
-          <h2 className="oregano text-4xl md:text-5xl font-display font-bold mb-4">
-            Não achou oque queria?
-          </h2>
-          <p className="fredoka text-2xl font-japanese mb-6">
-            Fala com a gente!
-          </p>
-          <p className="fredoka text-xl mb-8 max-w-2xl mx-auto opacity-90">
-            Entre no nosso chat, e consulte o item que você deseja!
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button 
-              variant="secondary" 
-              size="xl"
-              onClick={() => window.open(whatsappLink, '_blank')}
-              className="bg-white text-primary hover:bg-white/90 shadow-lg hover:text-black hover:shadow-xl"
-            >
-              <MessageCircle className="mr-2 h-5 w-5" />
-              WhatsApp
-            </Button>
-            <Button 
-              variant="outline" 
-              size="xl"
-              onClick={() => window.open(instagramLink, '_blank')}
-              className="border-2 border-white text-primary hover:bg-white hover:text-black"
-            >
-              <Instagram className="mr-2 h-5 w-5" />
-              Instagram
-            </Button>
+          <div className="border-t border-gray-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-2 text-xs text-gray-600">
+            <span>© 2025 Kitsuy Store. Todos os direitos reservados.</span>
+            <span>Figures, Colecionáveis e muito mais do Japão.</span>
           </div>
-          <div className="p-2">
-            <Button 
-                variant="secondary" 
-                size="xl"
-                onClick={() => window.location.href = "mailto:kitsuystore@gmail.com"}
-                className="bg-white text-primary hover:bg-white/90 shadow-lg hover:text-black hover:shadow-xl"
-              >
-                <MessageCircle className="mr-2 h-5 w-5" />
-                kitsuystore@gmail.com
-              </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Footer - Traditional Style */}
-      <footer id="contato" className="bg-foreground text-background py-8 border-t-4 border-white">
-        <div className="container mx-auto px-4 text-center">
-          <div className="flex items-center justify-center gap-2 mb-4">
-            <img
-                src={kitsuyIconBlack}
-                alt="Kitsuy IconBlack"
-                className="w-12 h-12 object-contain"
-              />
-            <h3 className="text-xl font-display font-bold">KITSUY STORE</h3>
-          </div>
-          <p className="text-sm opacity-80 mb-2 font-japanese">
-            Obrigado Por Vir!
-          </p>
-          <p className="text-sm opacity-80 mb-4">
-            Figures, Camisetas e colecionaveis!
-          </p>
-          <div className="flex justify-center gap-4 mb-4">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => window.open(whatsappLink, '_blank')}
-              className="text-background hover:text-white"
-            >
-              <MessageCircle className="h-5 w-5" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="icon"
-              onClick={() => window.open(instagramLink, '_blank')}
-              className="text-background hover:text-white"
-            >
-              <Instagram className="h-5 w-5" />
-            </Button>
-          </div>
-          <p className="text-xs opacity-60">
-            Site em Contrução! Envie seu Feedback para kitsuystore@gmail.com
-          </p>
-          <p className="text-xs opacity-60">
-            © 2025 Kitsuy Store. Todos os direitos reservados.
-          </p>
         </div>
       </footer>
     </div>
