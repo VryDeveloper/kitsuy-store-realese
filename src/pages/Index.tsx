@@ -1,6 +1,9 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
+import DepoimentosCarousel from "@/components/DepoimentosCarousel";
+import TiltCard from "@/components/TiltCard";
+import BotaoAnimado from "@/components/BotaoAnimado";
 import {
   Instagram,
   MessageCircle,
@@ -208,7 +211,7 @@ const Index = () => {
               alt="Kitsuy Icon"
               className="w-14 h-14 object-contain animate-float"
             />
-            <span className="fredoka text-2xl md:text-3xl font-bold text-[#EA3E83]">
+            <span className="fredoka text-2xl md:text-3xl font-bold text-[#FF9AB4]">
               KITSUY STORE
             </span>
           </a>
@@ -364,47 +367,55 @@ const Index = () => {
       <section id="sobre" className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-4xl text-center">
           <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
-            Importação por Demanda do Japão
+            Sobre a Kitsuy Store
           </span>
           <h2 className="fredoka text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
             Sua figure dos sonhos,{" "}
             <span className="text-[#EA3E83]">direto do Japão</span> até você.
           </h2>
+          <div className="w-124 h-1 mx-auto mb-6 rounded-full bg-[#EA3E83]/20 overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#EA3E83] to-transparent animate-shimmer" />
+          </div>
           <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
-            A Kitsuy Store é um serviço especializado em importação de figures e
-            colecionáveis japoneses. Você não precisa navegar em sites
-            japoneses, calcular frete internacional nem se preocupar com a
-            alfândega - <strong>a gente faz tudo isso por você! </strong>
+            A Kitsuy Store é especializada em <strong>Action Figures</strong>{" "}
+            originais do <strong>Japão</strong>. Mais do que uma loja, nós
+            buscamos para você as melhores peças diretamente em sites japoneses,
+            cuidando de todo o processo de importação. Você não precisa se
+            preocupar em navegar em sites internacionais, calcular frete ou
+            lidar com a alfândega, trazendo cada peça com segurança, atenção e
+            todo o cuidado que a sua coleção merece! -{" "}
+            <strong>a gente faz tudo isso por você! </strong>
           </p>
-
           {/* Diferenciais rápidos */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
             {[
               {
                 icon: ShieldCheck,
                 title: "100% Originais",
-                desc: "Só figures licenciadas e autênticas do Japão",
+                desc: "Só figures licenciadas e autênticas do Japão, nada de réplicas ou falsificações. Garantia de qualidade pra sua coleção.",
               },
               {
                 icon: MapPin,
                 title: "Buscamos pra você",
-                desc: "Pesquisamos nas melhores lojas japonesas",
+                desc: "Orcamento personalizado para a figure que você quer, mesmo que seja rara ou esgotada no Brasil!",
               },
               {
                 icon: Heart,
                 title: "Atendimento humano",
-                desc: "Tudo resolvido pelo WhatsApp, sem robô",
+                desc: "Tudo resolvido pelo WhatsApp, sem chatbots. A gente responde suas dúvidas e te ajuda a escolher a melhor peça pra sua coleção.",
               },
             ].map(({ icon: Icon, title, desc }) => (
               <div
                 key={title}
-                className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-pink-100 hover:border-[#EA3E83] hover:shadow-lg transition-all duration-300"
+                className="flex flex-col items-center gap-3 p-6 rounded-2xl border-2 border-pink-100 hover:border-[#EA3E83] hover:shadow-lg transition-all duration-300 hover:translate-y-[-5px] cursor-pointer"
               >
-                <div className="w-12 h-12 bg-pink-50 rounded-full flex items-center justify-center">
+                <button onClick={() => window.open(whatsappLink, "_blank")}>
                   <Icon className="h-6 w-6 text-[#EA3E83]" />
-                </div>
-                <h3 className="fredoka font-bold text-gray-900">{title}</h3>
-                <p className="text-sm text-gray-500 text-center">{desc}</p>
+                </button>
+                <h3 className="fredoka font-light text-gray-900">{title}</h3>
+                <p className="text-sm text-gray-500 font-semibold text-center">
+                  {desc}
+                </p>
               </div>
             ))}
           </div>
@@ -425,21 +436,23 @@ const Index = () => {
       ══════════════════════════════════════════════════ */}
       <section
         id="como-funciona"
-        className="py-20 px-4 bg-gradient-to-b from-pink-50 to-white"
+        className="py-20 px-4 bg-gradient-to-b from-gray-50 to-white"
       >
         <div className="container mx-auto max-w-5xl">
           <div className="text-center mb-14">
             <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
-              Simples assim
+              Encomendas
             </span>
-            <h2 className="fredoka text-4xl md:text-5xl font-bold text-gray-900">
+            <h2 className="fredoka text-4xl md:text-5xl text-gray-900">
               Como funciona nossa loja
             </h2>
           </div>
 
           <div className="relative">
             {/* Linha conectora desktop */}
-            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-pink-200 z-0" />
+            <div className="hidden md:block absolute top-12 left-[12.5%] right-[12.5%] h-0.5 bg-pink-100 overflow-hidden z-0">
+              <div className="h-full bg-[#EA3E83] animate-line-flow" />
+            </div>
 
             <div className="grid grid-cols-1 md:grid-cols-4 gap-8 relative z-10">
               {[
@@ -473,17 +486,18 @@ const Index = () => {
                   className="flex flex-col items-center text-center gap-4"
                 >
                   <div className="relative">
-                    <div className="w-24 h-24 bg-white border-4 border-[#EA3E83] rounded-full flex items-center justify-center shadow-md">
+                    <div
+                      className="w-24 h-24 bg-white border-4 border-[#EA3E83] rounded-full flex items-center justify-center shadow-md step-bubble"
+                      style={{ animationDelay: `${(Number(step) - 1) * 2}s` }}
+                    >
                       <Icon className="h-9 w-9 text-[#EA3E83]" />
                     </div>
                     <span className="absolute -top-1 -right-1 bg-[#EA3E83] text-white text-xs font-black w-7 h-7 rounded-full flex items-center justify-center">
                       {step}
                     </span>
                   </div>
-                  <h3 className="fredoka text-xl font-bold text-gray-900">
-                    {title}
-                  </h3>
-                  <p className="text-sm text-gray-500 leading-relaxed">
+                  <h3 className="fredoka text-xl text-gray-900">{title}</h3>
+                  <p className="text-sm text-gray-500 font-semibold leading-relaxed">
                     {desc}
                   </p>
                 </div>
@@ -495,17 +509,22 @@ const Index = () => {
           <div className="mt-14 text-center">
             <div className="inline-flex flex-col sm:flex-row gap-4 items-center bg-white border-2 border-pink-200 rounded-2xl px-8 py-6 shadow-sm">
               <div className="text-left">
-                <p className="font-bold text-gray-900">Pronto para começar?</p>
+                <p className="font-bold text-gray-900">Feedbacks? Sim!</p>
                 <p className="text-sm text-gray-500">
-                  Atendemos de segunda a sábado via WhatsApp
+                  A gente adora ouvir nossos clientes! 🧡
                 </p>
               </div>
               <Button
-                onClick={() => window.open(whatsappOrcamento, "_blank")}
+                onClick={() =>
+                  scrollTo({
+                    top: document.getElementById("depoimentos")!.offsetTop - 84,
+                    behavior: "smooth",
+                  })
+                }
                 className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 whitespace-nowrap"
               >
                 <MessageCircle className="h-4 w-4" />
-                Quero minha figure
+                Quero dar minha opinião!
               </Button>
             </div>
           </div>
@@ -523,10 +542,10 @@ const Index = () => {
             <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
               Galeria
             </span>
-            <h2 className="fredoka text-4xl md:text-5xl font-bold text-gray-900 mb-3">
+            <h2 className="fredoka text-4xl md:text-5xl font-light text-gray-900 mb-3">
               Figures que já passaram por aqui
             </h2>
-            <p className="text-gray-500 max-w-xl mx-auto">
+            <p className="font-semibold text-gray-500 max-w-xl mx-auto">
               Cada peça importada com cuidado. Clique para ampliar — e se quiser
               uma dessas ou qualquer outra, é só chamar.
             </p>
@@ -534,28 +553,29 @@ const Index = () => {
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {GALERIA.map((img, i) => (
-              <div
+              <TiltCard
                 key={i}
                 onClick={() => setSelectedImage(img)}
-                className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer border-2 border-transparent hover:border-[#EA3E83] transition-all duration-300 shadow-sm hover:shadow-xl"
+                className="group relative aspect-ratio rounded-2xl overflow-hidden border-2 border-transparent hover:border-white shadow-sm hover:shadow-xl"
               >
                 <img
                   src={img}
                   alt={`Figure ${i + 1}`}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
+
                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-all duration-300 flex items-center justify-center">
                   <span className="text-white font-bold opacity-0 group-hover:opacity-100 transition-opacity text-sm">
                     Ver maior
                   </span>
                 </div>
-              </div>
+              </TiltCard>
             ))}
 
             {/* Card CTA dentro da galeria */}
             <div
               onClick={() => window.open(whatsappOrcamento, "_blank")}
-              className="group relative aspect-square rounded-2xl overflow-hidden cursor-pointer bg-gradient-to-br from-[#EA3E83] to-[#FF8FBC] border-2 border-[#EA3E83] flex flex-col items-center justify-center gap-3 hover:shadow-xl transition-all duration-300"
+              className="group relative aspect-ratio rounded-2xl overflow-hidden cursor-pointer bg-gradient-to-br from-[#EA3E83] to-[#FF8FBC] flex flex-col items-center justify-center gap-3 hover:shadow-xl transition-all duration-300"
             >
               <MessageCircle className="h-10 w-10 text-white" />
               <p className="text-white font-bold text-center text-sm px-4 leading-tight">
@@ -592,19 +612,19 @@ const Index = () => {
       {/* ══════════════════════════════════════════════════
           ESTOQUE — PREVIEW (3 cards) + LINK PARA /estoque
       ══════════════════════════════════════════════════ */}
-      <section id="estoque-preview" className="py-20 px-4 bg-pink-50">
+      <section id="estoque-preview" className="py-20 px-4 bg-gray-50">
         <div className="container mx-auto max-w-6xl">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12">
             <div>
-              <span className="inline-block bg-pink-200 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-3 tracking-widest uppercase">
+              <span className="inline-block bg-pink-500 text-white text-xs font-bold px-4 py-1 rounded-full mb-3 tracking-widest uppercase">
                 Pronta Entrega
               </span>
-              <h2 className="fredoka text-4xl font-bold text-gray-900">
+              <h2 className="fredoka text-4xl font-light text-gray-900">
                 Figures no estoque no Brasil
               </h2>
-              <p className="text-gray-500 mt-2">
-                Sem esperar importação — essas estão aqui e saem em até 4 dias
-                úteis.
+              <p className="font-semibold text-gray-500 mt-2">
+                Sem esperar importação! essas estão aqui e saem em até 4 dias
+                úteis direto para sua casa.
               </p>
             </div>
             <a
@@ -665,9 +685,23 @@ const Index = () => {
           ⚠️  Substitua os textos no array DEPOIMENTOS
               pelos feedbacks reais dos seus clientes.
       ══════════════════════════════════════════════════ */}
+
       <section id="depoimentos" className="py-20 px-4 bg-white">
+        <DepoimentosCarousel />
+        <div className="mt-10 text-center">
+          <button
+            id="feedbacks"
+            className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 px-8 py-4 text-base rounded-full"
+            onClick={() =>
+              window.open("https://forms.gle/NpLpF855u32zKAL37", "_blank")
+            }
+          >
+            Enviar Feedback!
+          </button>
+        </div>
+
         <div className="container mx-auto max-w-5xl">
-          <div className="text-center mb-12">
+          {/* <div className="text-center mb-12">
             <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
               Depoimentos
             </span>
@@ -707,8 +741,14 @@ const Index = () => {
                 </div>
               </div>
             ))}
-          </div>
+          </div> */}
         </div>
+        <button
+          onClick={() => scrollTo({ top: 0, behavior: "smooth" })}
+          className="mt-10 flex items-center gap-2 text-[#EA3E83] font-bold hover:underline mx-auto"
+        >
+          Voltar ao topo <ChevronRight className="h-4 w-4" />
+        </button>
       </section>
 
       {/* ══════════════════════════════════════════════════
