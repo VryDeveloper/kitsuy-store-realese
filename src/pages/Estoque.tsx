@@ -115,7 +115,7 @@ const Estoque = () => {
               alt="Kitsuy Icon"
               className="w-14 h-14 object-contain animate-float"
             />
-            <span className="fredoka text-2xl md:text-3xl font-bold text-[#EA3E83]">
+            <span className="fredoka text-2xl md:text-3xl font-light text-[#EA3E83]">
               KITSUY STORE
             </span>
           </a>
@@ -208,12 +208,12 @@ const Estoque = () => {
       </header>
 
       {/* HERO DA PÁGINA */}
-      <section className="py-14 px-4 bg-gradient-to-b from-pink-50 to-white text-center">
+      <section className="py-14 px-4 bg-gradient-to-b from-gray-50 to-white text-center">
         <div className="container mx-auto max-w-3xl">
           <span className="inline-block bg-pink-100 text-[#EA3E83] text-xs font-bold px-4 py-1 rounded-full mb-4 tracking-widest uppercase">
             Pronta Entrega · No Brasil
           </span>
-          <h1 className="fredoka text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+          <h1 className="fredoka text-4xl md:text-5xl font-light text-gray-900 mb-4">
             Figures em estoque
           </h1>
           <p className="text-gray-500 text-lg max-w-xl mx-auto mb-8">
@@ -248,7 +248,7 @@ const Estoque = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="flex items-center gap-3 mb-8">
             <div className="w-3 h-8 bg-[#EA3E83] rounded-full" />
-            <h2 className="fredoka text-2xl font-bold text-gray-900">
+            <h2 className="fredoka text-2xl font-light text-gray-900">
               Em estoque
             </h2>
             <span className="text-sm text-gray-400 ml-2">
@@ -287,18 +287,18 @@ const Estoque = () => {
 
       {/* SEÇÃO: SOB ENCOMENDA (masterpiece) */}
       {masterpieceFigures.length > 0 && (
-        <section className="py-12 px-4 bg-pink-50">
+        <section className="py-12 px-4 bg-gray-50">
           <div className="container mx-auto max-w-6xl">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-3 h-8 bg-gray-800 rounded-full" />
-              <h2 className="fredoka text-2xl font-bold text-gray-900">
+              <h2 className="fredoka text-2xl font-light text-gray-900">
                 Sob encomenda
               </h2>
               <span className="text-sm text-gray-400 ml-2">
                 {masterpieceFigures.length} itens
               </span>
             </div>
-            <p className="text-gray-500 text-sm mb-8 ml-6">
+            <p className="text-gray-500 font-semibold text-sm mb-8 ml-6">
               Estas figures precisam ser importadas sob pedido. Prazo: 30 a 65
               dias úteis.
             </p>
@@ -314,9 +314,9 @@ const Estoque = () => {
                       src={fig.image}
                       alt={fig.title}
                       draggable={false}
-                      className="w-full aspect-square object-cover rounded-xl mb-3"
+                      className="w-full aspect-ratio object-cover rounded-xl mb-3"
                     />
-                    <h3 className="font-bold text-gray-900 text-sm leading-tight mb-3 line-clamp-2">
+                    <h3 className="font-light text-gray-900 text-sm leading-tight mb-3 line-clamp-2">
                       {fig.title}
                     </h3>
                     <button
@@ -342,7 +342,7 @@ const Estoque = () => {
       {/* CTA FINAL */}
       <section className="py-16 px-4 bg-[#EA3E83] text-white text-center">
         <div className="container mx-auto max-w-2xl">
-          <h2 className="fredoka text-3xl md:text-4xl font-bold mb-4">
+          <h2 className="fredoka text-3xl md:text-4xl font-light mb-4">
             Não encontrou o que queria?
           </h2>
           <p className="opacity-90 mb-8">

@@ -44,10 +44,22 @@
 
     /* Modern Gradients */
     --gradient-hero: linear-gradient(135deg, hsl(336 80% 58%), hsl(0 84% 60%));
-    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(330 100% 97%));
-    --gradient-modern: linear-gradient(90deg, hsl(240 10% 10%), hsl(336 80% 58%));
-    --gradient-pastel: linear-gradient(45deg, hsl(330 100% 95%), hsl(336 80% 58% / 0.1));
-    
+    --gradient-subtle: linear-gradient(
+      180deg,
+      hsl(0 0% 100%),
+      hsl(330 100% 97%)
+    );
+    --gradient-modern: linear-gradient(
+      90deg,
+      hsl(240 10% 10%),
+      hsl(336 80% 58%)
+    );
+    --gradient-pastel: linear-gradient(
+      45deg,
+      hsl(330 100% 95%),
+      hsl(336 80% 58% / 0.1)
+    );
+
     /* Modern Shadows */
     --shadow-glow: 0 0 40px hsl(336 80% 58% / 0.2);
     --shadow-card: 0 4px 25px hsl(240 10% 10% / 0.08);
@@ -93,8 +105,20 @@
 
   body {
     @apply bg-background text-foreground;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
 
 /* Custom modern utilities */
@@ -102,19 +126,19 @@
   .bg-modern-gradient {
     background: linear-gradient(135deg, hsl(336 80% 58%), hsl(0 84% 60%));
   }
-  
+
   .bg-pastel-pink {
     background: hsl(330 100% 97%);
   }
-  
+
   .text-glow {
     text-shadow: 0 0 20px hsl(336 80% 58% / 0.5);
   }
-  
+
   .border-modern {
     @apply border border-border/50 backdrop-blur-sm;
   }
-  
+
   .shadow-neon {
     box-shadow: 0 0 20px hsl(336 80% 58% / 0.3);
   }
@@ -122,11 +146,15 @@
 
 /* Smooth transitions */
 * {
-  transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
 }
 
 @keyframes gradient-x {
-  0%, 100% {
+  0%,
+  100% {
     background-position: 0% 50%;
   }
   50% {
@@ -146,6 +174,75 @@
   100% {
     transform: translateX(-100%);
   }
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* bolhas — destaque individual */
+@keyframes stepFocus {
+  0%,
+  20% {
+    transform: scale(1);
+  }
+
+  25%,
+  45% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+
+  50%,
+  100% {
+    transform: scale(1);
+  }
+}
+
+.step-bubble {
+  animation: stepFocus 8s ease-in-out infinite;
+}
+
+/* linha acompanhando o fluxo */
+@keyframes lineFlow {
+  0% {
+    width: 0%;
+  }
+  100% {
+    width: 100%;
+  }
+}
+
+@keyframes clickBounce {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(0.9) translateY(2px);
+  }
+  60% {
+    transform: scale(1.08) translateY(-2px);
+  }
+  100% {
+    transform: scale(1) translateY(0);
+  }
+}
+
+.animate-click-bounce {
+  animation: clickBounce 0.2s ease;
+}
+
+.animate-line-flow {
+  animation: lineFlow 9s linear infinite;
+}
+
+.animate-shimmer {
+  animation: shimmer 2s infinite;
 }
 
 .animate-scroll {
@@ -216,7 +313,7 @@ html {
 
 /* Efeito de brilho neon */
 .group:hover {
-  box-shadow: 
+  box-shadow:
     0 0 20px rgba(34, 211, 238, 0.6),
     0 0 40px rgba(192, 38, 211, 0.4),
     0 0 60px rgba(236, 72, 153, 0.2);
@@ -239,11 +336,11 @@ html {
   src: url("./assets/fonts/ALBA____.TTF");
 }
 .alba {
-  font-family: 'alba';
+  font-family: "alba";
 }
 
 .fredoka {
-  font-family: 'fredoka';
+  font-family: "fredoka";
 }
 
 .oregano {
@@ -251,15 +348,16 @@ html {
 }
 
 .typo {
-  font-family: 'typo';
+  font-family: "typo";
 }
 
-.overlayFigure{
+.overlayFigure {
   display: hidden;
 }
 
 @keyframes worm {
-  0%, 100% {
+  0%,
+  100% {
     transform: translateY(0);
   }
   50% {
@@ -301,6 +399,10 @@ html {
 }
 
 @keyframes rainbow-border {
-  0% { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
+  0% {
+    background-position: 0% 50%;
+  }
+  100% {
+    background-position: 200% 50%;
+  }
 }
