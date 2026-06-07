@@ -224,7 +224,7 @@ const Index = () => {
               { label: "Estoque", href: "/estoque" },
               { label: "FAQs", href: "/faqs" },
               { label: "Contato", id: "contato" },
-              { label: "Sorteio", id: "sorteio" },
+              { label: "Sorteio", href: "/sorteio" },
             ].map((item) =>
               item.href ? (
                 <a
