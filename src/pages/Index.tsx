@@ -224,6 +224,7 @@ const Index = () => {
               { label: "Estoque", href: "/estoque" },
               { label: "FAQs", href: "/faqs" },
               { label: "Contato", id: "contato" },
+              { label: "Sorteio", id: "sorteio" },
             ].map((item) =>
               item.href ? (
                 <a
@@ -327,6 +328,43 @@ const Index = () => {
           </div>
         </nav>
       </header>
+
+      <section className="w-full px-4 md:px-6 mt-4">
+        <a
+          href="/sorteio"
+          className="group relative flex flex-col sm:flex-row items-center justify-between gap-4 w-full bg-gradient-to-r from-[#5CE1E6] to-[#AAECEF] rounded-2xl px-6 py-5 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-[1.01] overflow-hidden cursor-pointer"
+        >
+          {/* Padrão de fundo decorativo */}
+          <div
+            className="absolute inset-0 opacity-10 pointer-events-none"
+            style={{
+              backgroundImage:
+                "radial-gradient(circle at 20px 20px, white 2px, transparent 0)",
+              backgroundSize: "40px 40px",
+            }}
+          />
+
+          {/* Lado esquerdo: ícone + texto */}
+          <div className="flex items-center gap-4 relative z-10">
+            <div className="text-4xl select-none animate-bounce">🩵</div>
+            <div>
+              <p className="fredoka text-white text-xl md:text-2xl font-bold leading-tight">
+                Sorteio de 1.500 seguidores!
+              </p>
+              <p className="text-white/85 text-sm font-semibold">
+                Siga no Instagram e concorra a uma figure japonesa original -
+                Grátis!
+              </p>
+            </div>
+          </div>
+
+          {/* Lado direito: CTA */}
+          <div className="flex items-center gap-2 bg-white text-[#00C4AE] font-bold text-sm px-5 py-2.5 rounded-full shadow-md group-hover:bg-[#fffff] transition-colors whitespace-nowrap relative z-10">
+            Quero participar
+            <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+          </div>
+        </a>
+      </section>
 
       {/* ══════════════════════════════════════════════════
           BANNER CAROUSEL
