@@ -1,4 +1,4 @@
-import { createHmac } from "crypto";
+import { createHmac, timingSafeEqual } from "crypto";
 
 /**
  * Valida a assinatura HMAC do webhook do Mercado Pago.
@@ -40,7 +40,13 @@ export function validarAssinaturaWebhook(
       .update(manifest)
       .digest("hex");
 
-    const isValid = expected === v1;
+    // Comparação em tempo constante — evita timing attack. Os buffers
+    // precisam ter o mesmo tamanho antes de chamar timingSafeEqual.
+    const expectedBuf = Buffer.from(expected, "hex");
+    const receivedBuf = Buffer.from(v1, "hex");
+    const isValid =
+      expectedBuf.length === receivedBuf.length &&
+      timingSafeEqual(expectedBuf, receivedBuf);
 
     if (!isValid) {
       console.warn("[validar-assinatura] HMAC não confere");
