@@ -1,9 +1,12 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, MessageCircle } from "lucide-react";
 
 interface ProductCardProps {
+  id?: string;
+  source?: string;
   image: string;
   title: string;
   price: string;
@@ -11,24 +14,46 @@ interface ProductCardProps {
   discount: string;
 }
 
-export const ProductCard = ({ image, title, price, inStock, discount }: ProductCardProps) => {
+export const ProductCard = ({
+  id,
+  source,
+  image,
+  title,
+  price,
+  inStock,
+  discount,
+}: ProductCardProps) => {
+  const navigate = useNavigate();
   const [selectedImage, setSelectedImage] = useState<string | null>(null); // Estado para controlar o overlay
 
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title} ${price}`;
   const whatsappLink = `https://wa.me/5571997020168?text=${encodeURIComponent(whatsappMessage)}`;
 
-  const isOutOfStock = inStock.toLowerCase() === 'indisponível';
+  const isOutOfStock = inStock.toLowerCase() === "indisponível";
+
+  // Checkout real só existe para produtos da coleção `products`.
+  const podeComprarOnline = source === "products" && !!id;
+
+  const handleComprarClick = () => {
+    if (podeComprarOnline) {
+      navigate(`/checkout?produto=${id}&colecao=products`);
+    } else {
+      window.open(whatsappLink, "_blank");
+    }
+  };
 
   return (
     <>
       {/* Card de Produto */}
-      <Card className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col 
-h-auto sm:h-[450px] md:h-[485px]">
+      <Card
+        className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col 
+h-auto sm:h-[450px] md:h-[485px]"
+      >
         <div className="relative overflow-hidden bg-black h-max">
           <img
             src={image}
             alt={title}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer ${isOutOfStock ? 'grayscale' : ''}`}
+            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer ${isOutOfStock ? "grayscale" : ""}`}
             onClick={() => setSelectedImage(image)} // Abre o modal quando clica na imagem
             draggable={false} // Impede o drag da imagem
           />
@@ -49,7 +74,8 @@ h-auto sm:h-[450px] md:h-[485px]">
               variant="default"
               size="sm"
               className="flex-1"
-              onClick={() => window.open(whatsappLink, '_blank')}
+              disabled={isOutOfStock}
+              onClick={handleComprarClick}
             >
               <ShoppingCart className="mr-2 h-4 w-4" />
               Comprar
@@ -57,7 +83,7 @@ h-auto sm:h-[450px] md:h-[485px]">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => window.open(whatsappLink, '_blank')}
+              onClick={() => window.open(whatsappLink, "_blank")}
             >
               <MessageCircle className="h-4 w-4" />
             </Button>

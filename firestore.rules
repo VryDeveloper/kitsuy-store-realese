@@ -1,0 +1,42 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ── Produtos (estoque pronto) ──────────────────────────────────────
+    // Leitura pública (usado pelo site), escrita bloqueada para o client
+    // SDK. Atualizações de estoque só acontecem via Admin SDK (backend).
+    match /products/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Masterpiece (sob encomenda / orçamento via WhatsApp) ───────────
+    // Não afetado por este checkout — mantém leitura pública.
+    match /masterpiece/{productId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // ── Pedidos ─────────────────────────────────────────────────────────
+    // NUNCA acessível pelo client SDK. Toda leitura/escrita de pedidos
+    // acontece exclusivamente através das rotas serverless (Firebase
+    // Admin SDK), que ignoram estas regras.
+    match /pedidos/{pedidoId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // ── Auditoria de webhooks do Mercado Pago ──────────────────────────
+    // Mesma lógica: só o backend (Admin SDK) pode ler/escrever.
+    match /pagamentos_webhook/{webhookId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
+    // Bloqueia qualquer outra coleção não listada explicitamente acima.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
