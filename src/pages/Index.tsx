@@ -108,8 +108,6 @@ const GALERIA = [figure1, figure2, figure3, figure4, figure5, figure6, figure7];
 // ─── Componente ────────────────────────────────────────────────────────────────
 const Index = () => {
   const [figures, setFigures] = useState<Product[]>([]);
-  const [lancamentosFigures, setLancamentosFigures] = useState<Product[]>([]);
-  const [premiumFigures, setPremiumFigures] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchStock, setSearchStock] = useState("");
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
@@ -134,16 +132,11 @@ const Index = () => {
       try {
         const productsRef = collection(db, "products");
         const masterpieceRef = collection(db, "masterpiece");
-        const lancamentosRef = collection(db, "lancamentos");
-        const premiumRef = collection(db, "premium");
 
-        const [productsSnap, masterpieceSnap, lancamentosSnap, premiumSnap] =
-          await Promise.all([
-            getDocs(productsRef),
-            getDocs(masterpieceRef),
-            getDocs(lancamentosRef),
-            getDocs(premiumRef),
-          ]);
+        const [productsSnap, masterpieceSnap] = await Promise.all([
+          getDocs(productsRef),
+          getDocs(masterpieceRef),
+        ]);
 
         const productsData = productsSnap.docs.map((doc) => ({
           id: doc.id,
@@ -154,18 +147,6 @@ const Index = () => {
         const masterpieceData = masterpieceSnap.docs.map((doc) => ({
           id: doc.id,
           source: "masterpiece",
-          ...doc.data(),
-        })) as Product[];
-
-        const lancamentosData = lancamentosSnap.docs.map((doc) => ({
-          id: doc.id,
-          source: "lancamentos",
-          ...doc.data(),
-        })) as Product[];
-
-        const premiumData = premiumSnap.docs.map((doc) => ({
-          id: doc.id,
-          source: "premium",
           ...doc.data(),
         })) as Product[];
 
@@ -180,8 +161,6 @@ const Index = () => {
         });
 
         setFigures(sortedData);
-        setLancamentosFigures(lancamentosData);
-        setPremiumFigures(premiumData);
       } catch (error) {
         console.error("Erro ao carregar as coleções:", error);
       } finally {
