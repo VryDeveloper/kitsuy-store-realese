@@ -1,6 +1,11 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { randomUUID } from "crypto";
 import { db } from "./_lib/firebase-admin";
 import { handleCORS } from "../lib/cors";
+
+// Cotação de frete válida por 30 minutos — tempo suficiente para o cliente
+// terminar o checkout sem deixar a janela de uso aberta indefinidamente.
+const TTL_COTACAO_MS = 30 * 60 * 1000;
 
 /**
  * GET /api/calcular-frete?cep=XXXXXXXX&produtoId=ID
@@ -130,24 +135,53 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const cotacoes = (await response.json()) as CotacaoSuperFrete[];
 
-    const opcoes = cotacoes
-      .filter((c) => !c.error)
-      .map((c) => ({
-        id: String(c.id),
-        transportadora: c.name,
-        prazoEmDias: c.delivery_time,
-        valorEmCentavos: Math.round(c.price * 100),
-        valorFormatado: new Intl.NumberFormat("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        }).format(c.price),
-      }));
+    const cotacoesValidas = cotacoes.filter((c) => !c.error);
 
-    if (opcoes.length === 0) {
+    if (cotacoesValidas.length === 0) {
       return res.status(400).json({
         error: "Nenhuma opção de frete disponível para este CEP",
       });
     }
+
+    // ── PERSISTIR CADA COTAÇÃO NO FIRESTORE (fonte da verdade) ───────────
+    // O "id" devolvido ao frontend passa a ser o ID desse documento, não o
+    // id do serviço da SuperFrete. Isso permite que /api/criar-preferencia
+    // recupere o valor REAL cotado aqui, em vez de confiar em qualquer
+    // número que o cliente mande no corpo da requisição de pagamento.
+    const agora = Date.now();
+    const expiraEm = new Date(agora + TTL_COTACAO_MS);
+
+    const opcoes = await Promise.all(
+      cotacoesValidas.map(async (c) => {
+        const cotacaoId = randomUUID();
+        const valorEmCentavos = Math.round(c.price * 100);
+        const transportadora = c.name;
+        const prazoEmDias = c.delivery_time;
+
+        await db.collection("cotacoes_frete").doc(cotacaoId).set({
+          cotacaoId,
+          produtoId,
+          cep: String(cep),
+          transportadora,
+          prazoEmDias,
+          valorEmCentavos,
+          criadoEm: new Date(agora),
+          expiraEm,
+          usada: false,
+        });
+
+        return {
+          id: cotacaoId,
+          transportadora,
+          prazoEmDias,
+          valorEmCentavos,
+          valorFormatado: new Intl.NumberFormat("pt-BR", {
+            style: "currency",
+            currency: "BRL",
+          }).format(c.price),
+        };
+      }),
+    );
 
     console.log(
       `[calcular-frete] Concluído em ${Date.now() - inicioTotal}ms (total)`,

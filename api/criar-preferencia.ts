@@ -59,15 +59,55 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: "Dados incompletos" });
     }
 
-    if (
-      !freteEscolhido.valorEmCentavos ||
-      typeof freteEscolhido.valorEmCentavos !== "number" ||
-      freteEscolhido.valorEmCentavos < 0
-    ) {
+    if (!freteEscolhido.id || typeof freteEscolhido.id !== "string") {
       return res.status(400).json({ error: "Frete inválido" });
     }
 
     console.log("[criar-preferencia] Iniciando", { produtoId });
+
+    // ── VALIDAR COTAÇÃO DE FRETE NO FIRESTORE (nunca confiar no valor  ───
+    // enviado pelo frontend). O "id" recebido é o ID do documento gerado
+    // por /api/calcular-frete. Aqui recuperamos o valor REAL cotado —
+    // qualquer transportadora/prazo/valor que o body tenha mandado é
+    // ignorado a partir daqui.
+    const cotacaoRef = db.collection("cotacoes_frete").doc(freteEscolhido.id);
+    const cotacaoDoc = await cotacaoRef.get();
+
+    if (!cotacaoDoc.exists) {
+      return res.status(400).json({
+        error: "Cotação de frete não encontrada. Calcule o frete novamente.",
+      });
+    }
+
+    const cotacao = cotacaoDoc.data()!;
+
+    if (cotacao.usada) {
+      return res.status(400).json({
+        error: "Esta cotação de frete já foi utilizada. Calcule o frete novamente.",
+      });
+    }
+
+    const expiraEmMs = cotacao.expiraEm?.toMillis?.() ?? 0;
+    if (Date.now() > expiraEmMs) {
+      return res.status(400).json({
+        error: "Cotação de frete expirada. Calcule o frete novamente.",
+      });
+    }
+
+    if (cotacao.produtoId !== produtoId) {
+      console.warn("[criar-preferencia] Cotação de frete não bate com o produto", {
+        produtoId,
+        cotacaoProdutoId: cotacao.produtoId,
+      });
+      return res.status(400).json({ error: "Cotação de frete inválida para este produto" });
+    }
+
+    // Valores usados no cálculo final SEMPRE vêm do Firestore, nunca do body.
+    const freteReal = {
+      transportadora: cotacao.transportadora as string,
+      prazoEmDias: cotacao.prazoEmDias as number,
+      valorEmCentavos: cotacao.valorEmCentavos as number,
+    };
 
     // ── BUSCAR PREÇO REAL NO FIRESTORE (nunca aceitar do frontend) ──────
     const collectionName = "products"; // única coleção com checkout real
@@ -90,7 +130,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .replace(",", "."),
     );
     const precoEmCentavos = Math.round(precoEmReais * 100);
-    const freteEmCentavos = freteEscolhido.valorEmCentavos;
+    const freteEmCentavos = freteReal.valorEmCentavos;
     const totalEmCentavos = precoEmCentavos + freteEmCentavos;
     const totalEmReais = totalEmCentavos / 100;
 
@@ -127,10 +167,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         },
         endereco,
         frete: {
-          transportadora: freteEscolhido.transportadora,
-          prazoEmDias: freteEscolhido.prazoEmDias,
+          transportadora: freteReal.transportadora,
+          prazoEmDias: freteReal.prazoEmDias,
           valor: freteEmCentavos,
         },
+        cotacaoFreteId: freteEscolhido.id,
         pagamento: {
           mercadoPagoId: null,
           preferenceId: null,
@@ -141,6 +182,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       });
 
     console.log(`[criar-preferencia] Pedido criado no Firestore: ${pedidoId}`);
+
+    // Marca a cotação como usada — impede que o mesmo cotacaoId seja
+    // reaproveitado em outro pedido (ex: dois checkouts na mesma janela de
+    // 30 min tentando usar a mesma cotação de frete barata).
+    await cotacaoRef.update({ usada: true, usadaEmPedido: pedidoId });
 
     // ── CRIAR PREFERÊNCIA NO MERCADO PAGO ────────────────────────────────
     const preference = new Preference(mpClient);

@@ -34,6 +34,15 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Cotações de frete ───────────────────────────────────────────────
+    // Geradas por /api/calcular-frete e validadas por /api/criar-preferencia.
+    // Nunca acessível pelo client SDK — evita que alguém leia/edite o valor
+    // cotado direto no Firestore para burlar a validação do backend.
+    match /cotacoes_frete/{cotacaoId} {
+      allow read: if false;
+      allow write: if false;
+    }
+
     // Bloqueia qualquer outra coleção não listada explicitamente acima.
     match /{document=**} {
       allow read, write: if false;
