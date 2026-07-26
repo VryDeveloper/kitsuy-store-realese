@@ -104,7 +104,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             length: produto.comprimentoEmCm,
             weight: produto.pesoEmKg,
           },
-          services: ["1", "2", "3"], // PAC, SEDEX, Jadlog
+          // A API da SuperFrete espera "services" como string separada por
+          // vírgula (ex: "1,2,3"), não como array — enviar um array faz a
+          // API retornar 500 com "data.services.split is not a function".
+          services: "1,2,3", // PAC, SEDEX, Jadlog
           options: {
             insurance_value: precoParaSeguro,
             receipt: false,
@@ -158,17 +161,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const transportadora = c.name;
         const prazoEmDias = c.delivery_time;
 
-        await db.collection("cotacoes_frete").doc(cotacaoId).set({
-          cotacaoId,
-          produtoId,
-          cep: String(cep),
-          transportadora,
-          prazoEmDias,
-          valorEmCentavos,
-          criadoEm: new Date(agora),
-          expiraEm,
-          usada: false,
-        });
+        await db
+          .collection("cotacoes_frete")
+          .doc(cotacaoId)
+          .set({
+            cotacaoId,
+            produtoId,
+            cep: String(cep),
+            transportadora,
+            prazoEmDias,
+            valorEmCentavos,
+            criadoEm: new Date(agora),
+            expiraEm,
+            usada: false,
+          });
 
         return {
           id: cotacaoId,

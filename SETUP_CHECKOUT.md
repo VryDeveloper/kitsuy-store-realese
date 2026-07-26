@@ -131,20 +131,32 @@ necessário).
 
 ---
 
-## 8. Testando localmente (Vite + `vercel dev`)
+## 8. Testando localmente (Vite + servidor de API local)
 
-> **Importante:** rodar `vercel dev` sozinho na frente do dev server do Vite
-> quebra o HMR (o rewrite catch-all do `vercel.json`, necessário para o
-> roteamento do React Router funcionar em produção, intercepta requisições
-> internas do Vite como `/@vite/client` e `/src/main.tsx`, causando 404 e
-> tela em branco). Por isso, use **dois terminais**: um só para as funções
-> serverless (`vercel dev`) e outro para o frontend (`npm run dev`), que já
-> está configurado para repassar `/api/*` automaticamente para o primeiro.
+> **Atualização:** depois de muita tentativa, `vercel dev` se mostrou pouco
+> confiável neste projeto no Windows — mesmo com `"framework": null` no
+> `vercel.json` e o script `dev` renomeado para `dev:vite` (para evitar que
+> o `vercel dev` tentasse subir o Vite sozinho), a CLI continuava travando
+> na detecção de porta (`Failed to detect a server running on port ...` ou
+> `EACCES: permission denied $PORT`). Para não bloquear o desenvolvimento
+> local nessa dependência externa, criamos um servidor de API local simples
+> em `scripts/dev-api-server.ts` — ele importa os handlers de `api/*.ts`
+> diretamente (sem nenhuma dependência da Vercel) e os expõe em
+> `http://localhost:3000`, exatamente como o `vercel dev` faria. Não emula
+> 100% o ambiente de produção (sem edge runtime, sem roteamento automático
+> de pastas), mas para as rotas deste projeto (handlers simples
+> `@vercel/node`) o comportamento é equivalente.
+>
+> Se preferir tentar `vercel dev` de novo no futuro (ex: depois de uma
+> atualização da CLI), os comandos antigos ficam registrados no histórico
+> do git (`vercel dev --listen 3000`). As hipóteses de próximos passos para
+> fazer o `vercel dev` funcionar estão documentadas no relatório de handoff
+> da branch.
 
 > **Antes de começar:** confirme que nada mais está ocupando as portas 3000
 > e 8080. É comum o **Docker Desktop** (`com.docker.backend.exe`) reservar a
 > porta 8080 em segundo plano — feche o Docker Desktop se ele não for
-> necessário para o teste, ou o `npm run dev` vai falhar/mudar de porta
+> necessário para o teste, ou o `npm run dev:vite` vai falhar/mudar de porta
 > silenciosamente. Verifique com:
 >
 > ```powershell
@@ -154,28 +166,25 @@ necessário).
 > Se aparecer algo, identifique o processo com
 > `tasklist /FI "PID eq <PID>"` antes de encerrar.
 
-1. Instale a CLI da Vercel (se ainda não tiver):
-   ```bash
-   npm install -g vercel
-   ```
-2. **Terminal 1** — sobe somente as funções serverless (`api/`) na porta 3000:
+1. **Terminal 1** — sobe somente as funções serverless (`api/`) na porta 3000:
 
    ```bash
-   vercel dev --listen 3000
+   npm run dev:api
    ```
 
-   O `vercel.json` já está configurado com `"framework": null`, então esse
-   comando não tenta subir o Vite — ele só serve as rotas `/api/*`.
+   Isso roda `scripts/dev-api-server.ts` com `tsx watch` (recarrega sozinho
+   a cada alteração em `api/*.ts`). Ele lê `.env.local` automaticamente, não
+   precisa de nenhuma flag extra do Node.
 
-3. **Terminal 2** — sobe o frontend normalmente, com HMR funcionando:
+2. **Terminal 2** — sobe o frontend normalmente, com HMR funcionando:
    ```bash
-   npm run dev
+   npm run dev:vite
    ```
    O Vite sobe em `http://localhost:8080` e já está configurado
    (`vite.config.ts`) para repassar toda chamada `/api/*` para
-   `http://localhost:3000`, onde o `vercel dev` está rodando.
-4. Acesse `http://localhost:8080` no navegador (não a porta 3000).
-5. O Mercado Pago precisa alcançar seu `/api/webhook` publicamente para
+   `http://localhost:3000`, onde o servidor de API local está rodando.
+3. Acesse `http://localhost:8080` no navegador (não a porta 3000).
+4. O Mercado Pago precisa alcançar seu `/api/webhook` publicamente para
    enviar notificações. Em desenvolvimento local, use um túnel apontando
    para a porta do **frontend** (8080), já que ela repassa `/api` para o
    backend:
@@ -184,15 +193,15 @@ necessário).
    ```
    E configure a URL do ngrok como URL de notificação no painel do Mercado
    Pago (seção 3, passo 4) e em `VITE_SITE_URL` no `.env.local` (reinicie o
-   `npm run dev` depois de alterar o `.env.local`).
-6. Teste o fluxo completo:
+   `npm run dev:vite` depois de alterar o `.env.local`).
+5. Teste o fluxo completo:
    - Acesse `/estoque`, clique em **Comprar** num produto com `inStock:
 "disponível"` (precisa ter os campos de dimensão preenchidos).
    - Preencha o endereço → deve calcular o frete via SuperFrete.
    - Escolha um frete → deve abrir o Mercado Pago Brick.
    - Pague com um [cartão de teste do Mercado Pago](https://www.mercadopago.com.br/developers/pt/docs/checkout-api/additional-content/your-integrations/test/cards).
    - Confirme que o webhook foi chamado (veja os logs do Terminal 1, o
-     `vercel dev`).
+     `npm run dev:api`).
    - Confirme no Firestore que o pedido virou `status: "paid"` e que o
      produto ficou `inStock: "indisponível"`.
    - Confirme que os emails chegaram (loja + cliente).
