@@ -6,7 +6,8 @@
   "scripts": {
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist",
-    "dev": "vite",
+    "dev:vite": "vite",
+    "dev:api": "tsx watch scripts/dev-api-server.ts",
     "build": "vite build",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
