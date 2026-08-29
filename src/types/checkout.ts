@@ -26,6 +26,8 @@ export interface OpcaoFrete {
   prazoEmDias: number;
   valorEmCentavos: number;
   valorFormatado: string;
+  valorOriginalEmCentavos: number;
+  valorOriginalFormatado: string;
 }
 
 export interface ProdutoCheckout {
@@ -39,7 +41,7 @@ export type EtapaCheckout = "endereco" | "frete" | "pagamento";
 
 export interface EstadoCheckout {
   etapa: EtapaCheckout;
-  produto: ProdutoCheckout | null;
+  produtos: ProdutoCheckout[];
   cliente: DadosCliente | null;
   endereco: Endereco | null;
   freteEscolhido: OpcaoFrete | null;
@@ -48,8 +50,7 @@ export interface EstadoCheckout {
 export interface StatusPedido {
   pedidoId: string;
   status: "pendente" | "paid" | "cancelado" | string;
-  produto: string;
-  imagem: string;
+  produtos: { nome: string; imagem: string; preco: number }[];
   totalEmCentavos: number;
   transportadora: string;
   prazoEmDias: number;

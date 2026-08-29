@@ -35,13 +35,20 @@ interface CotacaoSuperFrete {
 }
 
 /**
- * A SuperFrete retorna `price` como o valor ANTES do desconto de conta/contrato
- * e `discount` como o valor a subtrair pra chegar no preço final (o mesmo que
- * aparece "com desconto" no site oficial). `discount` vem como string — nem
- * sempre presente dependendo da transportadora, por isso o fallback pra 0.
+ * A SuperFrete retorna `price` já com um desconto embutido e `discount` como
+ * o valor de conta/contrato a subtrair mais uma vez pra chegar no preço final
+ * — confirmado contra o site oficial: `price - discount` bate com o valor
+ * "com desconto" mostrado ao cliente logado, e `price + discount` bate com o
+ * valor "riscado" (tabela cheia, sem nenhum desconto). `discount` vem como
+ * string — nem sempre presente dependendo da transportadora, por isso o
+ * fallback pra 0 nas duas funções.
  */
 function valorFinalEmCentavos(cotacao: Pick<CotacaoSuperFrete, "price" | "discount">): number {
   return Math.round((cotacao.price - (Number(cotacao.discount) || 0)) * 100);
+}
+
+function valorOriginalEmCentavos(cotacao: Pick<CotacaoSuperFrete, "price" | "discount">): number {
+  return Math.round((cotacao.price + (Number(cotacao.discount) || 0)) * 100);
 }
 
 /**
@@ -214,6 +221,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         transportadora: c.name,
         prazoEmDias: c.delivery_time,
         valorEmCentavos: valorFinalEmCentavos(c),
+        valorOriginalEmCentavos: valorOriginalEmCentavos(c),
       })),
     );
 
@@ -251,6 +259,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               pesoCobradoKg: caixaResultado.pesoCobradoKg,
               valorSeguradoEmCentavos: caixaResultado.valorSeguradoEmCentavos,
               valorEmCentavosDestaCaixa: valorFinalEmCentavos(cotacaoDaCaixa),
+              valorOriginalEmCentavosDestaCaixa: valorOriginalEmCentavos(cotacaoDaCaixa),
               prazoEmDiasDestaCaixa: cotacaoDaCaixa.delivery_time,
             };
           })
@@ -266,21 +275,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             transportadora: opcaoConsolidada.transportadora,
             prazoEmDias: opcaoConsolidada.prazoEmDias,
             valorEmCentavos: opcaoConsolidada.valorEmCentavos,
+            valorOriginalEmCentavos: opcaoConsolidada.valorOriginalEmCentavos,
             caixas: caixasDaOpcao,
             criadoEm: new Date(agora),
             expiraEm,
             usada: false,
           });
 
+        const formatador = new Intl.NumberFormat("pt-BR", {
+          style: "currency",
+          currency: "BRL",
+        });
+
         return {
           id: cotacaoId,
           transportadora: opcaoConsolidada.transportadora,
           prazoEmDias: opcaoConsolidada.prazoEmDias,
           valorEmCentavos: opcaoConsolidada.valorEmCentavos,
-          valorFormatado: new Intl.NumberFormat("pt-BR", {
-            style: "currency",
-            currency: "BRL",
-          }).format(opcaoConsolidada.valorEmCentavos / 100),
+          valorFormatado: formatador.format(opcaoConsolidada.valorEmCentavos / 100),
+          valorOriginalEmCentavos: opcaoConsolidada.valorOriginalEmCentavos,
+          valorOriginalFormatado: formatador.format(
+            opcaoConsolidada.valorOriginalEmCentavos / 100,
+          ),
         };
       }),
     );

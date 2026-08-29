@@ -1,7 +1,13 @@
 /**
  * Templates de email em HTML inline, sem dependência de template engine.
  * Mantém a identidade visual da loja (cor primária #EA3E83, fonte Fredoka).
+ *
+ * Todo campo vindo de `cliente`/`endereco` (dados fornecidos pelo
+ * comprador) passa por `escapeHtml()` antes de entrar no HTML — ver
+ * comentário em `escape-html.ts` sobre por que isso é necessário mesmo
+ * já existindo validação de formato em `_lib/validar-checkout.ts`.
  */
+import { escapeHtml } from "./escape-html.js";
 
 const COR_PRIMARIA = "#EA3E83";
 
@@ -10,6 +16,26 @@ function formatarMoeda(centavos: number): string {
     style: "currency",
     currency: "BRL",
   }).format(centavos / 100);
+}
+
+/** Uma linha de tabela por produto — usado nos dois templates. */
+function linhasProdutos(produtos: ProdutoEmailPedido[]): string {
+  return produtos
+    .map(
+      (p) => `
+      <tr>
+        <td style="padding:8px 0;color:#777;">${escapeHtml(p.nome)}</td>
+        <td style="padding:8px 0;font-weight:bold;text-align:right;">${formatarMoeda(p.precoEmCentavos)}</td>
+      </tr>`,
+    )
+    .join("");
+}
+
+function tituloProduto(produtos: ProdutoEmailPedido[]): string {
+  if (produtos.length <= 1) {
+    return produtos[0]?.nome ?? "Produto";
+  }
+  return `${produtos.length} itens`;
 }
 
 function wrapper(conteudo: string): string {
@@ -29,10 +55,15 @@ function wrapper(conteudo: string): string {
   </div>`;
 }
 
+interface ProdutoEmailPedido {
+  nome: string;
+  imagem?: string;
+  precoEmCentavos: number;
+}
+
 interface DadosEmailPedido {
   pedidoId: string;
-  nomeProduto: string;
-  imagemProduto?: string;
+  produtos: ProdutoEmailPedido[];
   totalEmCentavos: number;
   transportadora: string;
   prazoEmDias: number;
@@ -40,6 +71,7 @@ interface DadosEmailPedido {
     nome: string;
     email: string;
     telefone: string;
+    cpf: string;
   };
   endereco: {
     logradouro: string;
@@ -58,9 +90,9 @@ export function templateEmailLoja(dados: DadosEmailPedido): {
   subject: string;
   html: string;
 } {
-  const enderecoFormatado = `${dados.endereco.logradouro}, ${dados.endereco.numero}${
-    dados.endereco.complemento ? ` - ${dados.endereco.complemento}` : ""
-  }, ${dados.endereco.bairro}, ${dados.endereco.cidade}/${dados.endereco.uf} - CEP ${dados.endereco.cep}`;
+  const enderecoFormatado = `${escapeHtml(dados.endereco.logradouro)}, ${escapeHtml(dados.endereco.numero)}${
+    dados.endereco.complemento ? ` - ${escapeHtml(dados.endereco.complemento)}` : ""
+  }, ${escapeHtml(dados.endereco.bairro)}, ${escapeHtml(dados.endereco.cidade)}/${escapeHtml(dados.endereco.uf)} - CEP ${escapeHtml(dados.endereco.cep)}`;
 
   const html = wrapper(`
     <h2 style="color:${COR_PRIMARIA};margin-top:0;">🎉 Novo pedido pago!</h2>
@@ -69,33 +101,34 @@ export function templateEmailLoja(dados: DadosEmailPedido): {
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
       <tr>
         <td style="padding:8px 0;color:#777;">Pedido</td>
-        <td style="padding:8px 0;font-weight:bold;text-align:right;">${dados.pedidoId}</td>
+        <td style="padding:8px 0;font-weight:bold;text-align:right;">${escapeHtml(dados.pedidoId)}</td>
       </tr>
       <tr>
-        <td style="padding:8px 0;color:#777;">Produto</td>
-        <td style="padding:8px 0;font-weight:bold;text-align:right;">${dados.nomeProduto}</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Produto(s)</td>
       </tr>
+      ${linhasProdutos(dados.produtos)}
       <tr>
         <td style="padding:8px 0;color:#777;">Total</td>
         <td style="padding:8px 0;font-weight:bold;text-align:right;color:${COR_PRIMARIA};">${formatarMoeda(dados.totalEmCentavos)}</td>
       </tr>
       <tr>
         <td style="padding:8px 0;color:#777;">Frete</td>
-        <td style="padding:8px 0;text-align:right;">${dados.transportadora} (${dados.prazoEmDias} dias úteis)</td>
+        <td style="padding:8px 0;text-align:right;">${escapeHtml(dados.transportadora)} (${dados.prazoEmDias} dias úteis)</td>
       </tr>
     </table>
 
     <h3 style="margin-bottom:6px;">Dados do cliente</h3>
-    <p style="margin:2px 0;">${dados.cliente.nome}</p>
-    <p style="margin:2px 0;">${dados.cliente.email}</p>
-    <p style="margin:2px 0;">${dados.cliente.telefone}</p>
+    <p style="margin:2px 0;">${escapeHtml(dados.cliente.nome)}</p>
+    <p style="margin:2px 0;">${escapeHtml(dados.cliente.email)}</p>
+    <p style="margin:2px 0;">${escapeHtml(dados.cliente.telefone)}</p>
+    <p style="margin:2px 0;">CPF: ${escapeHtml(dados.cliente.cpf)}</p>
 
     <h3 style="margin-bottom:6px;">Endereço de entrega</h3>
     <p style="margin:2px 0;">${enderecoFormatado}</p>
   `);
 
   return {
-    subject: `🎉 Novo pedido pago — ${dados.nomeProduto}`,
+    subject: `🎉 Novo pedido pago — ${tituloProduto(dados.produtos)}`,
     html,
   };
 }
@@ -109,20 +142,20 @@ export function templateEmailCliente(dados: DadosEmailPedido): {
 
   const html = wrapper(`
     <h2 style="color:${COR_PRIMARIA};margin-top:0;">Compra confirmada! 🎊</h2>
-    <p>Olá, ${dados.cliente.nome}! Recebemos seu pagamento e já estamos preparando seu pedido.</p>
+    <p>Olá, ${escapeHtml(dados.cliente.nome)}! Recebemos seu pagamento e já estamos preparando seu pedido.</p>
 
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
       <tr>
-        <td style="padding:8px 0;color:#777;">Produto</td>
-        <td style="padding:8px 0;font-weight:bold;text-align:right;">${dados.nomeProduto}</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Produto(s)</td>
       </tr>
+      ${linhasProdutos(dados.produtos)}
       <tr>
         <td style="padding:8px 0;color:#777;">Total pago</td>
         <td style="padding:8px 0;font-weight:bold;text-align:right;color:${COR_PRIMARIA};">${formatarMoeda(dados.totalEmCentavos)}</td>
       </tr>
       <tr>
         <td style="padding:8px 0;color:#777;">Envio</td>
-        <td style="padding:8px 0;text-align:right;">${dados.transportadora} — até ${dados.prazoEmDias} dias úteis</td>
+        <td style="padding:8px 0;text-align:right;">${escapeHtml(dados.transportadora)} — até ${dados.prazoEmDias} dias úteis</td>
       </tr>
     </table>
 

@@ -39,8 +39,10 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { ProductOfertaCard } from "@/components/ProductOfertaCard";
 import { CountdownTimer } from "@/components/CountdownTimer";
+import { CarrinhoSheet } from "@/components/CarrinhoSheet";
 import { db } from "@/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
+import { inStockAoVivo } from "@/lib/disponibilidade";
 
 // ─── Interfaces ────────────────────────────────────────────────────────────────
 interface Product {
@@ -138,11 +140,15 @@ const Index = () => {
           getDocs(masterpieceRef),
         ]);
 
-        const productsData = productsSnap.docs.map((doc) => ({
-          id: doc.id,
-          source: "products",
-          ...doc.data(),
-        })) as Product[];
+        const productsData = productsSnap.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            source: "products",
+            ...data,
+            inStock: inStockAoVivo(data),
+          };
+        }) as Product[];
 
         const masterpieceData = masterpieceSnap.docs.map((doc) => ({
           id: doc.id,
@@ -234,6 +240,7 @@ const Index = () => {
 
           {/* Ações */}
           <div className="flex gap-2 items-center">
+            <CarrinhoSheet />
             <Button
               variant="ghost"
               size="icon"

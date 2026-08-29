@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { db } from "./_lib/firebase-admin";
-import { handleCORS } from "../lib/cors";
+import { db } from "./_lib/firebase-admin.js";
+import { handleCORS } from "../lib/cors.js";
 
 /**
  * GET /api/verificar-pagamento?pedidoId=ID
@@ -33,11 +33,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const pedido = doc.data()!;
 
+    // Pedidos criados antes da migração pra carrinho multi-produto ainda
+    // têm o schema antigo (`produto`, objeto único) — shim defensivo, não é
+    // migração de dados.
+    const produtos: { nome?: string; imagem?: string; preco?: number }[] =
+      Array.isArray(pedido.produtos)
+        ? pedido.produtos
+        : pedido.produto
+          ? [pedido.produto]
+          : [];
+
     return res.status(200).json({
       pedidoId,
       status: pedido.status,
-      produto: pedido.produto?.nome || "Produto",
-      imagem: pedido.produto?.imagem || "",
+      produtos: produtos.map((p) => ({
+        nome: p.nome || "Produto",
+        imagem: p.imagem || "",
+        preco: p.preco || 0,
+      })),
       totalEmCentavos: pedido.pagamento?.totalEmCentavos || 0,
       transportadora: pedido.frete?.transportadora || "",
       prazoEmDias: pedido.frete?.prazoEmDias || 0,

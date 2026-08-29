@@ -16,16 +16,16 @@ async function parseErro(res: Response, fallback: string): Promise<never> {
   throw new Error(mensagem);
 }
 
-export async function calcularFrete(cep: string, produtoId: string) {
+export async function calcularFrete(cep: string, produtoIds: string[]) {
   const res = await fetch(
-    `${BASE}/api/calcular-frete?cep=${encodeURIComponent(cep)}&produtoId=${encodeURIComponent(produtoId)}`,
+    `${BASE}/api/calcular-frete?cep=${encodeURIComponent(cep)}&produtoIds=${encodeURIComponent(produtoIds.join(","))}`,
   );
   if (!res.ok) return parseErro(res, "Erro ao calcular frete");
   return res.json();
 }
 
 interface CriarPreferenciaPayload {
-  produtoId: string;
+  produtoIds: string[];
   freteEscolhido: {
     id: string;
     transportadora: string;
@@ -47,6 +47,7 @@ interface CriarPreferenciaPayload {
     cidade: string;
     uf: string;
   };
+  pedidoIdExistente?: string;
 }
 
 export async function criarPreferencia(dados: CriarPreferenciaPayload) {

@@ -15,18 +15,20 @@ import { Loader2, Truck, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 interface Props {
-  produto: ProdutoCheckout;
+  produtos: ProdutoCheckout[];
   cep: string;
   onVoltar: () => void;
   onEscolher: (frete: OpcaoFrete) => void;
 }
 
-export function OpcoesFrete({ produto, cep, onVoltar, onEscolher }: Props) {
+export function OpcoesFrete({ produtos, cep, onVoltar, onEscolher }: Props) {
   const { toast } = useToast();
   const [opcoes, setOpcoes] = useState<OpcaoFrete[]>([]);
   const [carregando, setCarregando] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
   const [selecionado, setSelecionado] = useState<string | null>(null);
+
+  const produtoIds = produtos.map((p) => p.id).join(",");
 
   useEffect(() => {
     const buscarFrete = async () => {
@@ -34,7 +36,7 @@ export function OpcoesFrete({ produto, cep, onVoltar, onEscolher }: Props) {
       setErro(null);
 
       try {
-        const resultado = await calcularFrete(cep, produto.id);
+        const resultado = await calcularFrete(cep, produtoIds.split(","));
         setOpcoes(resultado.opcoes);
 
         if (resultado.opcoes.length > 0) {
@@ -56,7 +58,7 @@ export function OpcoesFrete({ produto, cep, onVoltar, onEscolher }: Props) {
 
     buscarFrete();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [cep, produto.id]);
+  }, [cep, produtoIds]);
 
   const handleContinuar = () => {
     const freteEscolhido = opcoes.find((o) => o.id === selecionado);
@@ -114,7 +116,7 @@ export function OpcoesFrete({ produto, cep, onVoltar, onEscolher }: Props) {
               {opcoes.map((opcao) => (
                 <div
                   key={opcao.id}
-                  className="flex items-center space-x-3 border rounded-lg p-4 hover:bg-accent cursor-pointer"
+                  className="flex items-center space-x-3 border rounded-lg p-4 cursor-pointer transition-transform duration-150 hover:scale-[1.02]"
                   onClick={() => setSelecionado(opcao.id)}
                 >
                   <RadioGroupItem value={opcao.id} id={opcao.id} />
@@ -134,6 +136,11 @@ export function OpcoesFrete({ produto, cep, onVoltar, onEscolher }: Props) {
                       </div>
                     </div>
                     <div className="text-right">
+                      {opcao.valorOriginalEmCentavos > opcao.valorEmCentavos && (
+                        <p className="text-xs text-muted-foreground line-through">
+                          {opcao.valorOriginalFormatado}
+                        </p>
+                      )}
                       <p className="font-bold text-lg text-[#EA3E83]">
                         {opcao.valorFormatado}
                       </p>
