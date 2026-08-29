@@ -212,6 +212,13 @@ necessário).
 ## 9. Checklist antes de ir para produção
 
 - [ ] Trocar credenciais de teste do Mercado Pago pelas de produção
+- [ ] Trocar o `SUPERFRETE_TOKEN` de teste (sandbox) pelo token de produção
+      gerado em https://web.superfrete.com/#/integrations — sem isso, toda
+      cotação de frete usa preços de teste (sandbox), bem diferentes dos
+      preços reais mostrados na calculadora oficial do site. Dá pra confirmar
+      qual token está configurado rodando `npm run frete:testar` e olhando a
+      URL da logo da transportadora na resposta crua: se aparecer
+      `sandbox-api-superfrete` no domínio, ainda é o token de teste.
 - [ ] Configurar o webhook de produção apontando para o domínio real
 - [ ] Confirmar domínio verificado no Resend
 - [ ] Confirmar que todos os produtos da coleção `products` têm os campos

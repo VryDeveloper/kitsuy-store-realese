@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { verificarPagamento } from "@/lib/api";
 import { StatusPedido } from "@/types/checkout";
+import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, Clock, XCircle, Loader2, Package } from "lucide-react";
@@ -11,31 +12,49 @@ const PedidoConfirmado = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const pedidoId = searchParams.get("id");
+  const { limpar: limparCarrinho } = useCart();
 
   const [pedido, setPedido] = useState<StatusPedido | null>(null);
   const [carregando, setCarregando] = useState(true);
+  const [consultandoPagamento, setConsultandoPagamento] = useState(true);
   const [erro, setErro] = useState<string | null>(null);
 
+  // Esta página é pra onde o cliente vai logo depois de abrir o checkout do
+  // Mercado Pago numa aba nova (ver FormPagamento.tsx). O pagamento (Pix
+  // principalmente) é aprovado de forma assíncrona nessa outra aba, então
+  // aqui a gente fica consultando o status em segundo plano até o webhook
+  // confirmar — por até ~10 minutos, o mesmo prazo da reserva do produto —
+  // e a tela troca sozinha pra "Pagamento Confirmado" assim que acontecer.
   useEffect(() => {
     if (!pedidoId) {
       setErro("Pedido não informado.");
       setCarregando(false);
+      setConsultandoPagamento(false);
       return;
     }
 
     let tentativas = 0;
-    const maxTentativas = 10;
+    const maxTentativas = 150; // 150 × 4s ≈ 10 minutos
 
     const consultar = async () => {
       try {
         const resultado = await verificarPagamento(pedidoId);
         setPedido(resultado);
+        setCarregando(false);
 
-        // Enquanto o webhook não confirmar o pagamento, continua tentando
-        // por alguns segundos (o webhook pode demorar alguns instantes).
-        if (resultado.status === "paid" || tentativas >= maxTentativas) {
+        const resolvido =
+          resultado.status === "paid" || resultado.status === "cancelado";
+
+        // Só limpa o carrinho quando o pagamento é CONFIRMADO — nunca antes,
+        // pra não perder os itens se o pagamento ainda estiver em
+        // andamento ou vier a falhar depois.
+        if (resultado.status === "paid") {
+          limparCarrinho();
+        }
+
+        if (resolvido || tentativas >= maxTentativas) {
           clearInterval(intervalo);
-          setCarregando(false);
+          setConsultandoPagamento(false);
         }
       } catch (error) {
         clearInterval(intervalo);
@@ -43,15 +62,19 @@ const PedidoConfirmado = () => {
           error instanceof Error ? error.message : "Erro ao consultar pedido",
         );
         setCarregando(false);
+        setConsultandoPagamento(false);
       }
 
       tentativas += 1;
     };
 
     consultar();
-    const intervalo = setInterval(consultar, 3000);
+    const intervalo = setInterval(consultar, 4000);
 
     return () => clearInterval(intervalo);
+    // limparCarrinho não precisa estar nas deps: sempre chama o mesmo
+    // setItens([]) do contexto independente da closure ser "antiga".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoId]);
 
   const formatarMoeda = (centavos: number) =>
@@ -134,33 +157,50 @@ const PedidoConfirmado = () => {
                   <>
                     <Clock className="h-14 w-14 text-amber-500 mb-3" />
                     <h1 className="fredoka text-2xl text-gray-900">
-                      Pagamento em análise
+                      Aguardando pagamento
                     </h1>
                     <p className="text-gray-500 mt-1">
-                      Assim que for aprovado, você receberá um email de
-                      confirmação.
+                      Finalize o pagamento na aba do Mercado Pago que abrimos
+                      pra você. Assim que for aprovado, esta página atualiza
+                      sozinha e você recebe um email de confirmação.
                     </p>
+                    {consultandoPagamento ? (
+                      <p className="text-xs text-muted-foreground mt-3 flex items-center gap-2">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        Verificando automaticamente...
+                      </p>
+                    ) : (
+                      <p className="text-xs text-muted-foreground mt-3">
+                        Ainda não recebemos a confirmação. Se você já pagou,
+                        aguarde mais alguns instantes e recarregue a página.
+                      </p>
+                    )}
                   </>
                 )}
               </div>
 
               <div className="border-t pt-4 space-y-3">
-                <div className="flex gap-4 items-center">
-                  {pedido.imagem && (
-                    <img
-                      src={pedido.imagem}
-                      alt={pedido.produto}
-                      className="w-16 h-16 object-cover rounded-md"
-                    />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-medium text-gray-900">
-                      {pedido.produto}
-                    </p>
-                    <p className="text-sm text-gray-500">
-                      {pedido.transportadora} · {pedido.prazoEmDias} dias úteis
-                    </p>
-                  </div>
+                <div className="space-y-2">
+                  {pedido.produtos.map((produto, i) => (
+                    <div key={i} className="flex gap-4 items-center">
+                      {produto.imagem && (
+                        <img
+                          src={produto.imagem}
+                          alt={produto.nome}
+                          className="w-16 h-16 object-cover rounded-md"
+                        />
+                      )}
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{produto.nome}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-between items-center text-sm text-gray-500">
+                  <span>
+                    {pedido.transportadora} · {pedido.prazoEmDias} dias úteis
+                  </span>
                   <p className="font-bold text-lg text-[#EA3E83]">
                     {formatarMoeda(pedido.totalEmCentavos)}
                   </p>

@@ -162,13 +162,20 @@ export function agruparCarrinhoEmCaixas(
   return { caixas, itensSemCaixa };
 }
 
+// Códigos de serviço da SuperFrete: 1 PAC, 2 SEDEX, 3 Jadlog, 31 Loggi, 33 J&T.
+// Loja confirmou que consegue postar por todas essas transportadoras a partir
+// do CEP de origem cadastrado. Não inclui o 17 (Mini Envios): seu limite de
+// peso (0.3kg) é menor que o peso mínimo cobrado de qualquer caixa definida
+// em CAIXAS_DISPONIVEIS, então nunca cotaria nada mesmo se pedido.
+const SERVICOS_COTADOS = "1,2,3,31,33";
+
 /** Payload de cotação da SuperFrete pra uma caixa consolidada (mesmo formato usado em api/calcular-frete.ts). */
 export interface PayloadCotacaoSuperFrete {
   from: { postal_code: string };
   to: { postal_code: string };
   package: { height: number; width: number; length: number; weight: number };
   services: string;
-  options: { insurance_value: number; receipt: boolean; own_hand: boolean };
+  options: { insurance_value: number; use_insurance_value: boolean; receipt: boolean; own_hand: boolean };
 }
 
 export function montarPayloadCotacaoSuperFrete(
@@ -187,9 +194,14 @@ export function montarPayloadCotacaoSuperFrete(
       length: caixa.comprimentoCm,
       weight: pesoCobradoKg,
     },
-    services: "1,2,3",
+    services: SERVICOS_COTADOS,
     options: {
       insurance_value: valorSeguradoEmCentavos / 100,
+      // Sem isso, a SuperFrete ignora `insurance_value` por completo e cota
+      // com o seguro básico grátis da transportadora — divergindo do preço
+      // real cobrado quando a etiqueta é gerada com o valor declarado do
+      // produto. Documentado em https://superfrete.readme.io/reference/cotacao-de-frete.
+      use_insurance_value: true,
       receipt: false,
       own_hand: false,
     },
@@ -200,6 +212,8 @@ export interface CotacaoPorCaixa {
   transportadora: string;
   prazoEmDias: number;
   valorEmCentavos: number;
+  /** Valor sem o desconto de conta da SuperFrete — usado só pra mostrar riscado ao cliente. */
+  valorOriginalEmCentavos: number;
 }
 
 export interface OpcaoFreteConsolidada {
@@ -208,6 +222,8 @@ export interface OpcaoFreteConsolidada {
   prazoEmDias: number;
   /** Soma do valor de todas as caixas nessa transportadora. */
   valorEmCentavos: number;
+  /** Soma do valor sem desconto de todas as caixas — usado só pra mostrar riscado ao cliente. */
+  valorOriginalEmCentavos: number;
 }
 
 /**
@@ -226,7 +242,12 @@ export function consolidarCotacoesPorTransportadora(
   const totalCaixas = cotacoesPorCaixa.length;
   const acumulado = new Map<
     string,
-    { caixasVistas: number; prazoEmDias: number; valorEmCentavos: number }
+    {
+      caixasVistas: number;
+      prazoEmDias: number;
+      valorEmCentavos: number;
+      valorOriginalEmCentavos: number;
+    }
   >();
 
   for (const cotacoesDaCaixa of cotacoesPorCaixa) {
@@ -236,11 +257,13 @@ export function consolidarCotacoesPorTransportadora(
         atual.caixasVistas += 1;
         atual.prazoEmDias = Math.max(atual.prazoEmDias, cotacao.prazoEmDias);
         atual.valorEmCentavos += cotacao.valorEmCentavos;
+        atual.valorOriginalEmCentavos += cotacao.valorOriginalEmCentavos;
       } else {
         acumulado.set(cotacao.transportadora, {
           caixasVistas: 1,
           prazoEmDias: cotacao.prazoEmDias,
           valorEmCentavos: cotacao.valorEmCentavos,
+          valorOriginalEmCentavos: cotacao.valorOriginalEmCentavos,
         });
       }
     }
@@ -254,6 +277,7 @@ export function consolidarCotacoesPorTransportadora(
       transportadora,
       prazoEmDias: dados.prazoEmDias,
       valorEmCentavos: dados.valorEmCentavos,
+      valorOriginalEmCentavos: dados.valorOriginalEmCentavos,
     });
   }
 

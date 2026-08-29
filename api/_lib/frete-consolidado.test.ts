@@ -169,9 +169,10 @@ describe("montarPayloadCotacaoSuperFrete", () => {
         length: caixas[0].caixa.comprimentoCm,
         weight: caixas[0].pesoCobradoKg,
       },
-      services: "1,2,3",
+      services: "1,2,3,31,33",
       options: {
         insurance_value: 260,
+        use_insurance_value: true,
         receipt: false,
         own_hand: false,
       },
@@ -184,6 +185,7 @@ function cotacao(overrides: Partial<CotacaoPorCaixa> = {}): CotacaoPorCaixa {
     transportadora: "PAC",
     prazoEmDias: 5,
     valorEmCentavos: 2000,
+    valorOriginalEmCentavos: 2500,
     ...overrides,
   };
 }
@@ -198,8 +200,8 @@ describe("consolidarCotacoesPorTransportadora", () => {
     const opcoes = consolidarCotacoesPorTransportadora(cotacoesPorCaixa);
 
     expect(opcoes).toEqual([
-      { transportadora: "PAC", prazoEmDias: 5, valorEmCentavos: 2228 },
-      { transportadora: "SEDEX", prazoEmDias: 1, valorEmCentavos: 1432 },
+      { transportadora: "PAC", prazoEmDias: 5, valorEmCentavos: 2228, valorOriginalEmCentavos: 2500 },
+      { transportadora: "SEDEX", prazoEmDias: 1, valorEmCentavos: 1432, valorOriginalEmCentavos: 2500 },
     ]);
   });
 
@@ -212,7 +214,7 @@ describe("consolidarCotacoesPorTransportadora", () => {
     const opcoes = consolidarCotacoesPorTransportadora(cotacoesPorCaixa);
 
     expect(opcoes).toEqual([
-      { transportadora: "PAC", prazoEmDias: 7, valorEmCentavos: 3500 },
+      { transportadora: "PAC", prazoEmDias: 7, valorEmCentavos: 3500, valorOriginalEmCentavos: 5000 },
     ]);
   });
 
@@ -228,7 +230,7 @@ describe("consolidarCotacoesPorTransportadora", () => {
     const opcoes = consolidarCotacoesPorTransportadora(cotacoesPorCaixa);
 
     expect(opcoes).toEqual([
-      { transportadora: "PAC", prazoEmDias: 5, valorEmCentavos: 3500 },
+      { transportadora: "PAC", prazoEmDias: 5, valorEmCentavos: 3500, valorOriginalEmCentavos: 5000 },
     ]);
   });
 

@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, MessageCircle } from "lucide-react";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface ProductCardProps {
   id?: string;
@@ -23,7 +24,8 @@ export const ProductCard = ({
   inStock,
   discount,
 }: ProductCardProps) => {
-  const navigate = useNavigate();
+  const { itens, adicionar } = useCart();
+  const { toast } = useToast();
   const [selectedImage, setSelectedImage] = useState<string | null>(null); // Estado para controlar o overlay
 
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title} ${price}`;
@@ -33,13 +35,18 @@ export const ProductCard = ({
 
   // Checkout real só existe para produtos da coleção `products`.
   const podeComprarOnline = source === "products" && !!id;
+  const jaEstaNoCarrinho = podeComprarOnline && itens.some((item) => item.id === id);
 
   const handleComprarClick = () => {
-    if (podeComprarOnline) {
-      navigate(`/checkout?produto=${id}&colecao=products`);
-    } else {
+    if (!podeComprarOnline) {
       window.open(whatsappLink, "_blank");
+      return;
     }
+
+    if (jaEstaNoCarrinho) return;
+
+    adicionar({ id: id!, collectionName: source!, nome: title, preco: price, imagem: image });
+    toast({ title: "Adicionado ao carrinho", description: title });
   };
 
   return (
@@ -73,16 +80,23 @@ h-auto sm:h-[450px] md:h-[485px]"
             <Button
               variant="default"
               size="sm"
-              className="flex-1"
-              disabled={isOutOfStock}
+              className="flex-1 min-w-0"
+              disabled={isOutOfStock || jaEstaNoCarrinho}
               onClick={handleComprarClick}
             >
-              <ShoppingCart className="mr-2 h-4 w-4" />
-              Comprar
+              <ShoppingCart className="mr-2 h-4 w-4 shrink-0" />
+              <span className="truncate">
+                {jaEstaNoCarrinho
+                  ? "No carrinho"
+                  : podeComprarOnline
+                    ? "Adicionar ao carrinho"
+                    : "Comprar"}
+              </span>
             </Button>
             <Button
               variant="outline"
               size="sm"
+              className="shrink-0"
               onClick={() => window.open(whatsappLink, "_blank")}
             >
               <MessageCircle className="h-4 w-4" />

@@ -25,8 +25,12 @@ export function validarAssinaturaWebhook(
       return false;
     }
 
-    // Rejeita requisições com timestamp muito antigo (mais de 5 minutos)
-    const diff = Math.abs(Date.now() - Number(tsStr));
+    // Rejeita requisições com timestamp muito antigo (mais de 5 minutos).
+    // O Mercado Pago manda `ts` em SEGUNDOS (Unix timestamp), não em
+    // milissegundos — sem essa conversão, `diff` dá sempre um valor
+    // gigantesco (ordem de trilhões de ms) e toda notificação real é
+    // rejeitada como expirada, mesmo chegando na hora certa.
+    const diff = Math.abs(Date.now() - Number(tsStr) * 1000);
     if (Number.isNaN(diff) || diff > 300_000) {
       console.warn("[validar-assinatura] Timestamp expirado ou inválido", {
         diff,
