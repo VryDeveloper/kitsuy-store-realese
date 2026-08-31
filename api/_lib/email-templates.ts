@@ -12,6 +12,14 @@ import type { ResultadoVerificacaoFrete } from "./verificar-disponibilidade-fret
 
 const COR_PRIMARIA = "#EA3E83";
 
+// Mesmo número usado no botão de WhatsApp em todo o site (ver src/pages/FAQs.tsx e outros).
+const WHATSAPP_LOJA = "5571997020168";
+const WHATSAPP_LOJA_FORMATADO = "+55 71 99702-0168";
+
+function linkWhatsAppLoja(mensagem: string): string {
+  return `https://wa.me/${WHATSAPP_LOJA}?text=${encodeURIComponent(mensagem)}`;
+}
+
 function formatarMoeda(centavos: number): string {
   return new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -19,16 +27,21 @@ function formatarMoeda(centavos: number): string {
   }).format(centavos / 100);
 }
 
-/** Uma linha de tabela por produto — usado nos dois templates. */
+/** Uma linha de tabela por produto (com miniatura, quando o produto tem imagem) — usado nos dois templates. */
 function linhasProdutos(produtos: ProdutoEmailPedido[]): string {
   return produtos
-    .map(
-      (p) => `
+    .map((p) => {
+      const miniatura = p.imagem
+        ? `<img src="${escapeHtml(p.imagem)}" alt="${escapeHtml(p.nome)}" width="48" height="48" style="width:48px;height:48px;object-fit:cover;border-radius:8px;display:block;" />`
+        : "";
+
+      return `
       <tr>
+        <td style="padding:8px 8px 8px 0;width:48px;">${miniatura}</td>
         <td style="padding:8px 0;color:#777;">${escapeHtml(p.nome)}</td>
         <td style="padding:8px 0;font-weight:bold;text-align:right;">${formatarMoeda(p.precoEmCentavos)}</td>
-      </tr>`,
-    )
+      </tr>`;
+    })
     .join("");
 }
 
@@ -101,19 +114,19 @@ export function templateEmailLoja(dados: DadosEmailPedido): {
 
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
       <tr>
-        <td style="padding:8px 0;color:#777;">Pedido</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Pedido</td>
         <td style="padding:8px 0;font-weight:bold;text-align:right;">${escapeHtml(dados.pedidoId)}</td>
       </tr>
       <tr>
-        <td colspan="2" style="padding:8px 0;color:#777;">Produto(s)</td>
+        <td colspan="3" style="padding:8px 0;color:#777;">Produto(s)</td>
       </tr>
       ${linhasProdutos(dados.produtos)}
       <tr>
-        <td style="padding:8px 0;color:#777;">Total</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Total</td>
         <td style="padding:8px 0;font-weight:bold;text-align:right;color:${COR_PRIMARIA};">${formatarMoeda(dados.totalEmCentavos)}</td>
       </tr>
       <tr>
-        <td style="padding:8px 0;color:#777;">Frete</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Frete</td>
         <td style="padding:8px 0;text-align:right;">${escapeHtml(dados.transportadora)} (${dados.prazoEmDias} dias úteis)</td>
       </tr>
     </table>
@@ -147,15 +160,15 @@ export function templateEmailCliente(dados: DadosEmailPedido): {
 
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
       <tr>
-        <td colspan="2" style="padding:8px 0;color:#777;">Produto(s)</td>
+        <td colspan="3" style="padding:8px 0;color:#777;">Produto(s)</td>
       </tr>
       ${linhasProdutos(dados.produtos)}
       <tr>
-        <td style="padding:8px 0;color:#777;">Total pago</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Total pago</td>
         <td style="padding:8px 0;font-weight:bold;text-align:right;color:${COR_PRIMARIA};">${formatarMoeda(dados.totalEmCentavos)}</td>
       </tr>
       <tr>
-        <td style="padding:8px 0;color:#777;">Envio</td>
+        <td colspan="2" style="padding:8px 0;color:#777;">Envio</td>
         <td style="padding:8px 0;text-align:right;">${escapeHtml(dados.transportadora)} — até ${dados.prazoEmDias} dias úteis</td>
       </tr>
     </table>
@@ -169,6 +182,16 @@ export function templateEmailCliente(dados: DadosEmailPedido): {
     </div>
 
     <p style="font-size:13px;color:#999;">Se tiver qualquer dúvida, é só responder este email ou chamar no WhatsApp da loja.</p>
+
+    <div style="margin-top:20px;padding:14px 16px;background:#fdf1f6;border-radius:12px;">
+      <p style="margin:0;font-size:13px;color:#666;">
+        Não recebeu alguma atualização sobre este pedido ou algo parece errado?
+        Fala com a gente no WhatsApp:
+        <a href="${linkWhatsAppLoja(`Olá! Fiz o pedido ${dados.pedidoId} e preciso de ajuda.`)}" style="color:${COR_PRIMARIA};font-weight:bold;text-decoration:none;">
+          ${WHATSAPP_LOJA_FORMATADO}
+        </a>
+      </p>
+    </div>
   `);
 
   return {
