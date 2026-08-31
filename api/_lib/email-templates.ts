@@ -105,7 +105,9 @@ export function templateEmailLoja(dados: DadosEmailPedido): {
   html: string;
 } {
   const enderecoFormatado = `${escapeHtml(dados.endereco.logradouro)}, ${escapeHtml(dados.endereco.numero)}${
-    dados.endereco.complemento ? ` - ${escapeHtml(dados.endereco.complemento)}` : ""
+    dados.endereco.complemento
+      ? ` - ${escapeHtml(dados.endereco.complemento)}`
+      : ""
   }, ${escapeHtml(dados.endereco.bairro)}, ${escapeHtml(dados.endereco.cidade)}/${escapeHtml(dados.endereco.uf)} - CEP ${escapeHtml(dados.endereco.cep)}`;
 
   const html = wrapper(`
@@ -155,7 +157,7 @@ export function templateEmailCliente(dados: DadosEmailPedido): {
   const linkPedido = `${dados.siteUrl}/pedido-confirmado?id=${dados.pedidoId}`;
 
   const html = wrapper(`
-    <h2 style="color:${COR_PRIMARIA};margin-top:0;">Compra confirmada! 🎊</h2>
+    <h2 style="color:${COR_PRIMARIA};margin-top:0;">Compra confirmada! 🧡</h2>
     <p>Olá, ${escapeHtml(dados.cliente.nome)}! Recebemos seu pagamento e já estamos preparando seu pedido.</p>
 
     <table style="width:100%;border-collapse:collapse;margin:20px 0;">
@@ -195,7 +197,7 @@ export function templateEmailCliente(dados: DadosEmailPedido): {
   `);
 
   return {
-    subject: "🎊 Seu pedido na Kitsuy Store foi confirmado!",
+    subject: "🧡🦊 Seu pedido na Kitsuy Store foi confirmado!",
     html,
   };
 }
