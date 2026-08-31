@@ -35,16 +35,15 @@ interface CotacaoSuperFrete {
 }
 
 /**
- * A SuperFrete retorna `price` já com um desconto embutido e `discount` como
- * o valor de conta/contrato a subtrair mais uma vez pra chegar no preço final
- * — confirmado contra o site oficial: `price - discount` bate com o valor
- * "com desconto" mostrado ao cliente logado, e `price + discount` bate com o
- * valor "riscado" (tabela cheia, sem nenhum desconto). `discount` vem como
- * string — nem sempre presente dependendo da transportadora, por isso o
- * fallback pra 0 nas duas funções.
+ * Confirmado com o suporte da SuperFrete: `price` já é o valor final líquido
+ * (o que é debitado da carteira na emissão da etiqueta) — `discount` é só
+ * informativo, pra exibição tipo "de/por". `price + discount` reconstitui o
+ * valor de tabela cheia (sem desconto), usado em `valorOriginalEmCentavos`
+ * abaixo. `discount` vem como string — nem sempre presente dependendo da
+ * transportadora, por isso o fallback pra 0.
  */
 function valorFinalEmCentavos(cotacao: Pick<CotacaoSuperFrete, "price" | "discount">): number {
-  return Math.round((cotacao.price - (Number(cotacao.discount) || 0)) * 100);
+  return Math.round(cotacao.price * 100);
 }
 
 function valorOriginalEmCentavos(cotacao: Pick<CotacaoSuperFrete, "price" | "discount">): number {

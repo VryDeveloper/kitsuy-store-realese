@@ -4,10 +4,10 @@
  * Criado para investigar duas dúvidas que a documentação oficial
  * (https://superfrete.readme.io/reference/cotacao-de-frete) não esclarece:
  *
- * 1. Se `price - discount` (fórmula usada hoje em api/calcular-frete.ts)
- *    ainda é a forma certa de chegar no valor "com desconto" mostrado pro
- *    usuário logado na calculadora oficial do site, ou se `price` sozinho já
- *    é esse valor.
+ * 1. [RESOLVIDO em 31/08/2026, confirmado com o suporte da SuperFrete] `price`
+ *    sozinho já é o valor final (o que é debitado da carteira na emissão da
+ *    etiqueta) — não subtrair `discount`, que é só informativo pra exibição
+ *    "de/por". api/calcular-frete.ts já foi corrigido para usar `price` puro.
  * 2. O quanto `use_insurance_value: true` (adicionado em
  *    api/_lib/frete-consolidado.ts) muda o preço na prática, comparado com
  *    não enviar seguro nenhum (comportamento antigo).
@@ -206,12 +206,12 @@ async function main() {
   );
 
   console.log(
-    "\nAgora compare a tabela 'COM seguro' acima com o resultado da calculadora oficial " +
-      "(https://www.superfrete.com/calculadora) usando o MESMO CEP de origem, CEP de destino, " +
-      "dimensões e valor declarado. Se o valor mostrado no site bater com a coluna " +
-      "'price-discount', a fórmula atual do código (price - discount) continua certa. Se bater " +
-      "com 'price' puro (discount = 0 na prática) ou com 'price+discount', me avise qual coluna " +
-      "bateu que eu ajusto api/calcular-frete.ts.",
+    "\nFórmula confirmada com o suporte da SuperFrete: 'price' sozinho é o valor final " +
+      "(api/calcular-frete.ts já usa isso). A comparação com a calculadora oficial " +
+      "(https://www.superfrete.com/calculadora) pode divergir em centavos/poucos reais por conta " +
+      "de canais/orquestradores diferentes (site/app vs. API) e markup de integração — isso é " +
+      "esperado, não é bug. Site/app também priorizam modalidade econômica de forma diferente da " +
+      "API, que depende da região.",
   );
 }
 
