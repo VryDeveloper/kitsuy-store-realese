@@ -20,6 +20,8 @@ import {
 } from "@/components/ui/sheet";
 import { db } from "@/firebaseConfig";
 import { collection, getDocs } from "firebase/firestore";
+import { inStockAoVivo } from "@/lib/disponibilidade";
+import { CarrinhoSheet } from "@/components/CarrinhoSheet";
 
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
@@ -60,11 +62,15 @@ const Estoque = () => {
           getDocs(masterpieceRef),
         ]);
 
-        const productsData = productsSnap.docs.map((doc) => ({
-          id: doc.id,
-          source: "products",
-          ...doc.data(),
-        })) as Product[];
+        const productsData = productsSnap.docs.map((doc) => {
+          const data = doc.data();
+          return {
+            id: doc.id,
+            source: "products",
+            ...data,
+            inStock: inStockAoVivo(data),
+          };
+        }) as Product[];
 
         const masterpieceData = masterpieceSnap.docs.map((doc) => ({
           id: doc.id,
@@ -136,6 +142,7 @@ const Estoque = () => {
           </div>
 
           <div className="flex gap-2 items-center">
+            <CarrinhoSheet />
             <Button
               variant="ghost"
               size="icon"
@@ -257,7 +264,7 @@ const Estoque = () => {
           </div>
 
           {loading ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
                 <div
                   key={i}
@@ -266,7 +273,7 @@ const Estoque = () => {
               ))}
             </div>
           ) : stockFigures.length > 0 ? (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-6">
               {stockFigures.map((figure, index) => (
                 <div key={index}>
                   <ProductCard {...figure} />

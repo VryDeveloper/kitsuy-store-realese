@@ -1,5 +1,13 @@
 {
+  "framework": null,
   "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" },
     { "source": "/(.*)", "destination": "/" }
+  ],
+  "crons": [
+    {
+      "path": "/api/cron/limpar-pedidos-expirados",
+      "schedule": "0 6 * * *"
+    }
   ]
 }

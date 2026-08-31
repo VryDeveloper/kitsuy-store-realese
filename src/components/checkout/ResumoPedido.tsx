@@ -1,0 +1,92 @@
+import { ProdutoCheckout, OpcaoFrete } from "@/types/checkout";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
+
+interface Props {
+  produtos: ProdutoCheckout[];
+  frete: OpcaoFrete | null;
+}
+
+export function ResumoPedido({ produtos, frete }: Props) {
+  const precoTotalEmReais = produtos.reduce(
+    (soma, produto) =>
+      soma + parseFloat(produto.preco.replace(/[^\d,]/g, "").replace(",", ".")),
+    0,
+  );
+  const freteEmReais = frete ? frete.valorEmCentavos / 100 : 0;
+  const totalEmReais = precoTotalEmReais + freteEmReais;
+
+  const formatarMoeda = (valor: number) =>
+    new Intl.NumberFormat("pt-BR", {
+      style: "currency",
+      currency: "BRL",
+    }).format(valor);
+
+  return (
+    <Card className="sticky top-4">
+      <CardHeader>
+        <CardTitle className="fredoka text-[#EA3E83]">
+          Resumo do Pedido
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-3">
+          {produtos.map((produto) => (
+            <div key={produto.id} className="flex gap-4">
+              <img
+                src={produto.imagem}
+                alt={produto.nome}
+                className="w-20 h-20 object-cover rounded-md"
+              />
+              <div className="flex-1">
+                <h3 className="font-medium text-sm line-clamp-2">{produto.nome}</h3>
+                <p className="text-muted-foreground text-sm mt-1">Quantidade: 1</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <Separator />
+
+        <div className="space-y-2">
+          <div className="flex justify-between text-sm">
+            <span className="text-muted-foreground">
+              Produto{produtos.length > 1 ? "s" : ""}
+            </span>
+            <span className="font-medium">{formatarMoeda(precoTotalEmReais)}</span>
+          </div>
+
+          {frete ? (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">
+                Frete ({frete.transportadora})
+              </span>
+              <span className="font-medium">{frete.valorFormatado}</span>
+            </div>
+          ) : (
+            <div className="flex justify-between text-sm">
+              <span className="text-muted-foreground">Frete</span>
+              <span className="text-muted-foreground text-xs">A calcular</span>
+            </div>
+          )}
+        </div>
+
+        <Separator />
+
+        <div className="flex justify-between items-center">
+          <span className="text-lg font-semibold">Total</span>
+          <span className="text-2xl font-bold text-[#EA3E83]">
+            {formatarMoeda(totalEmReais)}
+          </span>
+        </div>
+
+        {frete && (
+          <p className="text-xs text-muted-foreground text-center pt-2">
+            Entrega em até {frete.prazoEmDias} dia
+            {frete.prazoEmDias > 1 ? "s" : ""} úteis
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
