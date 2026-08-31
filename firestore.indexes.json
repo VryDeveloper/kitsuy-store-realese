@@ -1,0 +1,13 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "products",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "estoqueStatus", "order": "ASCENDING" },
+        { "fieldPath": "reservadoAte", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}

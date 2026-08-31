@@ -21,5 +21,4 @@ function BotaoAnimado() {
     </button>
   );
 }
-
 export default BotaoAnimado;
