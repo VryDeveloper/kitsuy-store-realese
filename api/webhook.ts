@@ -246,6 +246,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         await notificarPedidoTelegram({
           pedidoId,
           nomeCliente: pedidoData.cliente?.nome ?? "",
+          telefoneCliente: pedidoData.cliente?.telefone ?? "",
           produtos: produtosPedido.map((p) => ({
             nome: p.nome,
             precoEmCentavos: p.preco,
@@ -253,6 +254,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           totalEmCentavos: pedidoData.pagamento?.totalEmCentavos ?? 0,
           transportadora: pedidoData.frete?.transportadora ?? "",
           prazoEmDias: pedidoData.frete?.prazoEmDias ?? 0,
+          endereco: {
+            logradouro: pedidoData.endereco?.logradouro ?? "",
+            numero: pedidoData.endereco?.numero ?? "",
+            complemento: pedidoData.endereco?.complemento,
+            bairro: pedidoData.endereco?.bairro ?? "",
+            cidade: pedidoData.endereco?.cidade ?? "",
+            uf: pedidoData.endereco?.uf ?? "",
+            cep: pedidoData.endereco?.cep ?? "",
+          },
         });
       } catch (err) {
         console.error("[webhook] Erro ao enviar notificação via Telegram:", err);
