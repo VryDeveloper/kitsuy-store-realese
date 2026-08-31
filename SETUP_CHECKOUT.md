@@ -226,6 +226,9 @@ necessário).
 - [ ] Publicar as `firestore.rules`
 - [ ] Configurar todas as variáveis de ambiente na Vercel (Production)
 - [ ] Testar uma compra real de baixo valor de ponta a ponta
+- [ ] Configurar `TELEGRAM_BOT_TOKEN` e `TELEGRAM_CHAT_ID` de produção (ver
+      seção 11) — sem isso a rede de segurança contra falha do Resend não
+      funciona e você pode não ficar sabendo de um pedido aprovado
 
 ---
 
@@ -237,3 +240,31 @@ console. Quando o número dedicado do WhatsApp Business estiver aprovado na
 Meta Cloud API, implemente a chamada real dentro dessa função (o restante
 do fluxo já está pronto para receber a integração sem mudanças em outros
 arquivos).
+
+---
+
+## 11. Notificação via Telegram (rede de segurança contra falha do Resend)
+
+Se o envio do email pra loja falhar (`api/_lib/resend.ts` mal configurado,
+domínio não verificado, instabilidade do provedor), hoje isso só aparece
+nos logs da Vercel — nada mais avisa que um pedido foi aprovado, e não
+existe nenhuma tela no site que liste pedidos. `api/_lib/notificar-telegram.ts`
+existe pra cobrir esse buraco: é chamado separadamente do envio de email,
+no seu próprio try/catch, então não depende do Resend nem é afetado se ele
+falhar.
+
+**Setup:**
+
+1. Fale com [@BotFather](https://t.me/BotFather) no Telegram, mande
+   `/newbot` e siga as instruções. Ele te dá um token no formato
+   `123456789:ABC-DEF...`.
+2. Mande qualquer mensagem pro bot recém-criado (ele não pode iniciar
+   conversa, só responder).
+3. Pra descobrir o `chat_id`, acesse
+   `https://api.telegram.org/bot<SEU_TOKEN>/getUpdates` no navegador — o
+   `chat.id` da mensagem que você mandou aparece na resposta.
+4. Configure `TELEGRAM_BOT_TOKEN` (o token do passo 1) e `TELEGRAM_CHAT_ID`
+   (o id do passo 3) nas variáveis de ambiente (local e Vercel).
+
+Sem essas duas variáveis configuradas, a função só loga um aviso e não
+envia nada — não quebra o fluxo do webhook, mas também não te protege.
