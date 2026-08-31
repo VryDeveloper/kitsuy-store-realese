@@ -21,10 +21,20 @@ function formatarMoeda(centavos: number): string {
 export interface NotificacaoPedidoTelegram {
   pedidoId: string;
   nomeCliente: string;
+  telefoneCliente: string;
   produtos: { nome: string; precoEmCentavos: number }[];
   totalEmCentavos: number;
   transportadora: string;
   prazoEmDias: number;
+  endereco: {
+    logradouro: string;
+    numero: string;
+    complemento?: string;
+    bairro: string;
+    cidade: string;
+    uf: string;
+    cep: string;
+  };
 }
 
 export async function notificarPedidoTelegram(
@@ -44,13 +54,20 @@ export async function notificarPedidoTelegram(
     .map((p) => `• ${p.nome} — ${formatarMoeda(p.precoEmCentavos)}`)
     .join("\n");
 
+  const enderecoFormatado =
+    `${dados.endereco.logradouro}, ${dados.endereco.numero}` +
+    (dados.endereco.complemento ? ` - ${dados.endereco.complemento}` : "") +
+    `, ${dados.endereco.bairro}, ${dados.endereco.cidade}/${dados.endereco.uf} - CEP ${dados.endereco.cep}`;
+
   const texto =
     `🎉 Novo pedido pago!\n\n` +
     `Pedido: ${dados.pedidoId}\n` +
-    `Cliente: ${dados.nomeCliente}\n\n` +
+    `Cliente: ${dados.nomeCliente}\n` +
+    `Telefone: ${dados.telefoneCliente}\n\n` +
     `${listaProdutos}\n\n` +
     `Total: ${formatarMoeda(dados.totalEmCentavos)}\n` +
-    `Frete: ${dados.transportadora} (${dados.prazoEmDias} dias úteis)`;
+    `Frete: ${dados.transportadora} (${dados.prazoEmDias} dias úteis)\n\n` +
+    `📦 Endereço de entrega:\n${enderecoFormatado}`;
 
   // Sem parse_mode — texto puro, sem risco de quebrar a mensagem com
   // caracteres especiais de Markdown/HTML vindos de nome de produto/cliente.
