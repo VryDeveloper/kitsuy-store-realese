@@ -10,6 +10,7 @@ import {
   templateEmailVerificacaoFrete,
 } from "./_lib/email-templates.js";
 import { notificarWhatsApp } from "./_lib/notificar-whatsapp.js";
+import { notificarPedidoTelegram } from "./_lib/notificar-telegram.js";
 import {
   marcarMultiplosProdutosVendidos,
   liberarReservaMultiplosProdutos,
@@ -238,6 +239,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // ── Notificações por email (loja + cliente) via Resend ────────────
       await enviarEmailsDeConfirmacao(pedidoData, pedidoId);
+
+      // ── Notificação via Telegram (rede de segurança independente do ───
+      // Resend — se o email da loja falhar, essa notificação ainda chega)
+      try {
+        await notificarPedidoTelegram({
+          pedidoId,
+          nomeCliente: pedidoData.cliente?.nome ?? "",
+          produtos: produtosPedido.map((p) => ({
+            nome: p.nome,
+            precoEmCentavos: p.preco,
+          })),
+          totalEmCentavos: pedidoData.pagamento?.totalEmCentavos ?? 0,
+          transportadora: pedidoData.frete?.transportadora ?? "",
+          prazoEmDias: pedidoData.frete?.prazoEmDias ?? 0,
+        });
+      } catch (err) {
+        console.error("[webhook] Erro ao enviar notificação via Telegram:", err);
+      }
 
       // ── Revalida se a transportadora escolhida ainda está disponível ──
       // A cotação original pode ter expirado (30min de TTL) até o pagamento
