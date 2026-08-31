@@ -8,6 +8,7 @@
  * já existindo validação de formato em `_lib/validar-checkout.ts`.
  */
 import { escapeHtml } from "./escape-html.js";
+import type { ResultadoVerificacaoFrete } from "./verificar-disponibilidade-frete.js";
 
 const COR_PRIMARIA = "#EA3E83";
 
@@ -174,4 +175,51 @@ export function templateEmailCliente(dados: DadosEmailPedido): {
     subject: "🎊 Seu pedido na Kitsuy Store foi confirmado!",
     html,
   };
+}
+
+/**
+ * Email enviado para a loja (owner) revalidando se a transportadora
+ * escolhida no checkout ainda está disponível pra emissão da etiqueta —
+ * ver `_lib/verificar-disponibilidade-frete.ts` sobre por que isso não é
+ * uma garantia, só o melhor sinal disponível antes da emissão manual.
+ */
+export function templateEmailVerificacaoFrete(dados: {
+  pedidoId: string;
+  resultado: ResultadoVerificacaoFrete;
+}): { subject: string; html: string } {
+  const { pedidoId, resultado } = dados;
+  const pedidoIdSeguro = escapeHtml(pedidoId);
+
+  if (resultado.status === "confirmado") {
+    const html = wrapper(`
+      <h2 style="color:${COR_PRIMARIA};margin-top:0;">✅ Frete confirmado</h2>
+      <p>Revalidamos a cotação do pedido <strong>${pedidoIdSeguro}</strong> — a transportadora escolhida pelo cliente (<strong>${escapeHtml(resultado.transportadoraEscolhida)}</strong>) continua disponível. Pode emitir a etiqueta normalmente.</p>
+    `);
+    return { subject: `✅ Frete OK — pedido ${pedidoId}`, html };
+  }
+
+  if (resultado.status === "alternativa") {
+    const listaOpcoes = resultado.opcoesDisponiveis
+      .map(
+        (o) =>
+          `<li>${escapeHtml(o.transportadora)} — ${formatarMoeda(o.valorEmCentavos)} (${o.prazoEmDias} dias)</li>`,
+      )
+      .join("");
+
+    const html = wrapper(`
+      <h2 style="color:${COR_PRIMARIA};margin-top:0;">⚠️ Confirme o frete antes de emitir</h2>
+      <p>No pedido <strong>${pedidoIdSeguro}</strong>, o cliente escolheu <strong>${escapeHtml(resultado.transportadoraEscolhida)}</strong>, mas ao revalidar agora essa opção não voltou na cotação.</p>
+      <p><strong>Alternativa recomendada:</strong> ${escapeHtml(resultado.recomendada.transportadora)} — ${formatarMoeda(resultado.recomendada.valorEmCentavos)} (${resultado.recomendada.prazoEmDias} dias).</p>
+      <p>Outras opções disponíveis agora:</p>
+      <ul style="padding-left:20px;">${listaOpcoes}</ul>
+      <p style="font-size:13px;color:#999;">Tente emitir pela transportadora escolhida primeiro — pode ter sido instabilidade momentânea. Se falhar, use a alternativa acima.</p>
+    `);
+    return { subject: `⚠️ Confirme o frete — pedido ${pedidoId}`, html };
+  }
+
+  const html = wrapper(`
+    <h2 style="color:${COR_PRIMARIA};margin-top:0;">🚨 Nenhuma transportadora disponível</h2>
+    <p>No pedido <strong>${pedidoIdSeguro}</strong>, revalidamos o frete e nenhuma transportadora retornou cotação válida agora (escolhida: ${escapeHtml(resultado.transportadoraEscolhida)}). Verifique manualmente no painel da SuperFrete antes de prometer prazo ao cliente.</p>
+  `);
+  return { subject: `🚨 Frete indisponível — pedido ${pedidoId}`, html };
 }

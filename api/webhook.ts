@@ -7,6 +7,7 @@ import { resend } from "./_lib/resend.js";
 import {
   templateEmailLoja,
   templateEmailCliente,
+  templateEmailVerificacaoFrete,
 } from "./_lib/email-templates.js";
 import { notificarWhatsApp } from "./_lib/notificar-whatsapp.js";
 import {
@@ -15,6 +16,7 @@ import {
   liberarMultiplosProdutosAposReembolso,
   type ProdutoRef,
 } from "./_lib/estoque.js";
+import { verificarDisponibilidadeFrete } from "./_lib/verificar-disponibilidade-frete.js";
 
 /**
  * WEBHOOK DO MERCADO PAGO
@@ -237,6 +239,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       // ── Notificações por email (loja + cliente) via Resend ────────────
       await enviarEmailsDeConfirmacao(pedidoData, pedidoId);
 
+      // ── Revalida se a transportadora escolhida ainda está disponível ──
+      // A cotação original pode ter expirado (30min de TTL) até o pagamento
+      // ser aprovado, e a SuperFrete não garante disponibilidade futura de
+      // uma cotação — só o momento da emissão manual confirma de verdade.
+      // Isso só avisa a loja com antecedência; nunca bloqueia o pagamento.
+      if (produtoRefsInfo.length > 0 && pedidoData.endereco?.cep && pedidoData.frete?.transportadora) {
+        try {
+          await verificarFreteEEnviarEmail(
+            produtoRefsInfo,
+            pedidoData.endereco.cep,
+            pedidoData.frete.transportadora,
+            pedidoId,
+          );
+        } catch (err) {
+          console.error("[webhook] Erro ao revalidar disponibilidade de frete:", err);
+        }
+      }
+
       // ── Ponto de extensão para notificação via WhatsApp (stub) ────────
       try {
         const [primeiro, ...resto] = produtosPedido;
@@ -426,5 +446,51 @@ async function enviarEmailsDeConfirmacao(
     }
   } catch (err) {
     console.error("[webhook] Erro ao enviar email para o cliente:", err);
+  }
+}
+
+// ─── Revalidação de disponibilidade de frete ───────────────────────────────
+
+async function verificarFreteEEnviarEmail(
+  produtosPedido: ProdutoRef[],
+  cep: string,
+  transportadoraEscolhida: string,
+  pedidoId: string,
+): Promise<void> {
+  const resultado = await verificarDisponibilidadeFrete(
+    produtosPedido,
+    cep,
+    transportadoraEscolhida,
+  );
+
+  console.log("[webhook] 🚚 Revalidação de frete", { pedidoId, ...resultado });
+
+  if (!resend) {
+    console.warn("[webhook] Resend não configurado — pulando email de verificação de frete");
+    return;
+  }
+
+  const remetente = process.env.EMAIL_REMETENTE;
+  const emailLoja = process.env.EMAIL_LOJA_NOTIFICACAO;
+
+  if (!remetente || !emailLoja) {
+    console.warn(
+      "[webhook] EMAIL_REMETENTE/EMAIL_LOJA_NOTIFICACAO não configurados — pulando email de verificação de frete",
+    );
+    return;
+  }
+
+  const { subject, html } = templateEmailVerificacaoFrete({ pedidoId, resultado });
+  const { error } = await resend.emails.send({
+    from: remetente,
+    to: emailLoja,
+    subject,
+    html,
+  });
+
+  if (error) {
+    console.error("[webhook] ❌ Resend recusou o email de verificação de frete:", error);
+  } else {
+    console.log("[webhook] 📧 Email de verificação de frete enviado para a loja");
   }
 }

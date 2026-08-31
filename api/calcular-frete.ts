@@ -5,50 +5,15 @@ import { handleCORS } from "../lib/cors.js";
 import { estaDisponivelAgora } from "./_lib/estoque.js";
 import {
   agruparCarrinhoEmCaixas,
-  montarPayloadCotacaoSuperFrete,
+  cotarCaixasNaSuperFrete,
   consolidarCotacoesPorTransportadora,
+  DIMENSOES_PADRAO,
   type ItemCarrinho,
 } from "./_lib/frete-consolidado.js";
 
 // Cotação de frete válida por 30 minutos — tempo suficiente para o cliente
 // terminar o checkout sem deixar a janela de uso aberta indefinidamente.
 const TTL_COTACAO_MS = 30 * 60 * 1000;
-
-// Dimensões padrão da caixa de envio, usadas quando o produto ainda não tem
-// essas informações cadastradas no Firestore. Valores provisórios (20x20x30cm,
-// até 1kg) — ajustar por produto assim que possível.
-const DIMENSOES_PADRAO = {
-  pesoEmKg: 1,
-  alturaEmCm: 20,
-  larguraEmCm: 20,
-  comprimentoEmCm: 30,
-};
-
-interface CotacaoSuperFrete {
-  id: string | number;
-  name: string;
-  delivery_time: number;
-  price: number;
-  discount?: string | number;
-  has_error?: boolean;
-  error?: string;
-}
-
-/**
- * Confirmado com o suporte da SuperFrete: `price` já é o valor final líquido
- * (o que é debitado da carteira na emissão da etiqueta) — `discount` é só
- * informativo, pra exibição tipo "de/por". `price + discount` reconstitui o
- * valor de tabela cheia (sem desconto), usado em `valorOriginalEmCentavos`
- * abaixo. `discount` vem como string — nem sempre presente dependendo da
- * transportadora, por isso o fallback pra 0.
- */
-function valorFinalEmCentavos(cotacao: Pick<CotacaoSuperFrete, "price" | "discount">): number {
-  return Math.round(cotacao.price * 100);
-}
-
-function valorOriginalEmCentavos(cotacao: Pick<CotacaoSuperFrete, "price" | "discount">): number {
-  return Math.round((cotacao.price + (Number(cotacao.discount) || 0)) * 100);
-}
 
 /**
  * GET /api/calcular-frete?cep=XXXXXXXX&produtoIds=id1,id2,id3
@@ -174,55 +139,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // ── COTAR CADA CAIXA NA SUPERFRETE (em paralelo) ───────────────────────
     const inicioSuperFrete = Date.now();
-    const resultadosPorCaixa = await Promise.all(
-      caixas.map(async (caixaResultado) => {
-        const payload = montarPayloadCotacaoSuperFrete(
-          caixaResultado,
-          process.env.LOJA_CEP_ORIGEM!,
-          String(cep),
-        );
-
-        const response = await fetch(
-          "https://api.superfrete.com/api/v0/calculator",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.SUPERFRETE_TOKEN}`,
-              "Content-Type": "application/json",
-              "User-Type": "shipper",
-            },
-            body: JSON.stringify(payload),
-          },
-        );
-
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error(
-            `[calcular-frete] Erro SuperFrete pra caixa ${caixaResultado.caixa.nome}:`,
-            errorText,
-          );
-          return { caixaResultado, cotacoes: [] as CotacaoSuperFrete[] };
-        }
-
-        const cotacoes = (await response.json()) as CotacaoSuperFrete[];
-        return {
-          caixaResultado,
-          cotacoes: cotacoes.filter((c) => !c.has_error && !c.error),
-        };
-      }),
+    const cotacoesPorCaixa = await cotarCaixasNaSuperFrete(
+      caixas,
+      process.env.LOJA_CEP_ORIGEM!,
+      String(cep),
     );
     console.log(
       `[calcular-frete] SuperFrete (${caixas.length} caixa(s)) respondeu em ${Date.now() - inicioSuperFrete}ms`,
     );
 
-    const cotacoesPorCaixa = resultadosPorCaixa.map(({ cotacoes }) =>
-      cotacoes.map((c) => ({
-        transportadora: c.name,
-        prazoEmDias: c.delivery_time,
-        valorEmCentavos: valorFinalEmCentavos(c),
-        valorOriginalEmCentavos: valorOriginalEmCentavos(c),
-      })),
-    );
+    const resultadosPorCaixa = caixas.map((caixaResultado, i) => ({
+      caixaResultado,
+      cotacoes: cotacoesPorCaixa[i],
+    }));
 
     const opcoesConsolidadas = consolidarCotacoesPorTransportadora(cotacoesPorCaixa);
 
@@ -248,7 +177,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const caixasDaOpcao = resultadosPorCaixa
           .map(({ caixaResultado, cotacoes }) => {
             const cotacaoDaCaixa = cotacoes.find(
-              (c) => c.name === opcaoConsolidada.transportadora,
+              (c) => c.transportadora === opcaoConsolidada.transportadora,
             );
             if (!cotacaoDaCaixa) return null;
 
@@ -257,9 +186,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
               produtoIds: caixaResultado.itens.map((item) => item.produtoId),
               pesoCobradoKg: caixaResultado.pesoCobradoKg,
               valorSeguradoEmCentavos: caixaResultado.valorSeguradoEmCentavos,
-              valorEmCentavosDestaCaixa: valorFinalEmCentavos(cotacaoDaCaixa),
-              valorOriginalEmCentavosDestaCaixa: valorOriginalEmCentavos(cotacaoDaCaixa),
-              prazoEmDiasDestaCaixa: cotacaoDaCaixa.delivery_time,
+              valorEmCentavosDestaCaixa: cotacaoDaCaixa.valorEmCentavos,
+              valorOriginalEmCentavosDestaCaixa: cotacaoDaCaixa.valorOriginalEmCentavos,
+              prazoEmDiasDestaCaixa: cotacaoDaCaixa.prazoEmDias,
             };
           })
           .filter((c): c is NonNullable<typeof c> => c !== null);
