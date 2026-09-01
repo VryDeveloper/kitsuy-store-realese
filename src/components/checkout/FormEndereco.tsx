@@ -22,7 +22,10 @@ const schema = z.object({
   email: z.string().email("Email inválido"),
   telefone: z.string().min(10, "Telefone inválido"),
   cpf: z.string().min(11, "CPF inválido"),
-  cep: z.string().length(8, "CEP deve ter 8 dígitos"),
+  cep: z
+    .string()
+    .transform((v) => v.replace(/\D/g, ""))
+    .refine((v) => v.length === 8, "CEP deve ter 8 dígitos"),
   logradouro: z.string().min(3, "Logradouro obrigatório"),
   numero: z.string().min(1, "Número obrigatório"),
   complemento: z.string().optional(),
@@ -52,6 +55,10 @@ export function FormEndereco({ onContinuar }: Props) {
 
   const handleCEPBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const cep = e.target.value.replace(/\D/g, "");
+
+    // Reflete o valor sem hífen no campo — cobre o autocomplete do
+    // navegador/Google, que às vezes preenche no formato "00000-000".
+    setValue("cep", cep);
 
     if (cep.length !== 8) return;
 
