@@ -13,6 +13,7 @@ import img11 from "@/assets/avaliacoes/11.jpg";
 import img12 from "@/assets/avaliacoes/12.jpg";
 import img13 from "@/assets/avaliacoes/13.jpg";
 import img14 from "@/assets/avaliacoes/14.jpg";
+import img15 from "@/assets/avaliacoes/15.jpg";
 const imagens = [
   img1,
   img2,
@@ -28,6 +29,7 @@ const imagens = [
   img12,
   img13,
   img14,
+  img15,
 ];
 
 export default function DepoimentosCarousel() {
