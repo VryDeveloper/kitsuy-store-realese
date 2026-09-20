@@ -257,12 +257,6 @@
   animation: scroll 20s linear infinite;
 }
 
-/* Pausa animação no hover */
-.flex:hover {
-  animation-play-state: paused;
-}
-
-/* No seu arquivo CSS global (index.css, globals.css, etc) */
 ::-webkit-scrollbar {
   width: 10px;
 }
