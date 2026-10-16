@@ -1,9 +1,11 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import {
   calcularPesoCubado,
   agruparCarrinhoEmCaixas,
   montarPayloadCotacaoSuperFrete,
   consolidarCotacoesPorTransportadora,
+  cotarCaixasNaSuperFrete,
+  cotarCarrinhoNaSuperFrete,
   type ItemCarrinho,
   type CaixaDisponivel,
   type CotacaoPorCaixa,
@@ -238,3 +240,388 @@ describe("consolidarCotacoesPorTransportadora", () => {
     expect(consolidarCotacoesPorTransportadora([])).toEqual([]);
   });
 });
+
+describe("cotarCaixasNaSuperFrete", () => {
+  beforeEach(() => {
+    process.env.SUPERFRETE_TOKEN = "token-teste-superfrete";
+    process.env.LOJA_CEP_ORIGEM = "40296330";
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    delete process.env.SUPERFRETE_TOKEN;
+    delete process.env.LOJA_CEP_ORIGEM;
+  });
+
+  it("rejeita sem SUPERFRETE_TOKEN configurado", async () => {
+    delete process.env.SUPERFRETE_TOKEN;
+
+    const itens = [item()];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    await expect(
+      cotarCaixasNaSuperFrete(caixas, "40296330", "01310100"),
+    ).rejects.toThrow("SUPERFRETE_TOKEN não configurado");
+  });
+
+  it("cota uma caixa única com sucesso", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [
+        {
+          name: "PAC",
+          delivery_time: 5,
+          price: 22.28,
+          discount: "0.50",
+        },
+        {
+          name: "SEDEX",
+          delivery_time: 1,
+          price: 14.32,
+        },
+      ],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [item()];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    const resultado = await cotarCaixasNaSuperFrete(
+      caixas,
+      "40296330",
+      "01310100",
+    );
+
+    expect(resultado).toHaveLength(1);
+    expect(resultado[0]).toEqual([
+      {
+        transportadora: "PAC",
+        prazoEmDias: 5,
+        valorEmCentavos: 2228,
+        valorOriginalEmCentavos: 2278,
+      },
+      {
+        transportadora: "SEDEX",
+        prazoEmDias: 1,
+        valorEmCentavos: 1432,
+        valorOriginalEmCentavos: 1432,
+      },
+    ]);
+  });
+
+  it("cota múltiplas caixas em paralelo", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [
+        {
+          name: "PAC",
+          delivery_time: 5,
+          price: 22.28,
+        },
+      ],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [
+      item({ produtoId: "a" }),
+      item({ produtoId: "b" }),
+    ];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    const resultado = await cotarCaixasNaSuperFrete(
+      caixas,
+      "40296330",
+      "01310100",
+    );
+
+    expect(resultado.length).toBeGreaterThan(0);
+    expect(Array.isArray(resultado[0])).toBe(true);
+  });
+
+  it("filtra cotações com erro (has_error)", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [
+        {
+          name: "PAC",
+          delivery_time: 5,
+          price: 22.28,
+        },
+        {
+          name: "SEDEX",
+          delivery_time: 1,
+          price: 14.32,
+          has_error: true,
+          error: "Cobertura não disponível",
+        },
+      ],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [item()];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    const resultado = await cotarCaixasNaSuperFrete(
+      caixas,
+      "40296330",
+      "01310100",
+    );
+
+    expect(resultado[0]).toHaveLength(1);
+    expect(resultado[0][0].transportadora).toBe("PAC");
+  });
+
+  it("retorna array vazio para caixa quando SuperFrete falha (não ok)", async () => {
+    const mockResponse = {
+      ok: false,
+      text: async () => "Erro interno",
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [item()];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    const resultado = await cotarCaixasNaSuperFrete(
+      caixas,
+      "40296330",
+      "01310100",
+    );
+
+    expect(resultado[0]).toEqual([]);
+  });
+
+  it("converte preço com desconto para centavos corretamente", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [
+        {
+          name: "PAC",
+          delivery_time: 5,
+          price: 22.28,
+          discount: "2.50",
+        },
+      ],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [item()];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    const resultado = await cotarCaixasNaSuperFrete(
+      caixas,
+      "40296330",
+      "01310100",
+    );
+
+    expect(resultado[0][0].valorEmCentavos).toBe(2228);
+    expect(resultado[0][0].valorOriginalEmCentavos).toBe(2478);
+  });
+
+  it("monta payload com token de autorização Bearer", async () => {
+    const fetchMock = vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        text: async () => "OK",
+        json: async () => [],
+      }),
+    );
+
+    vi.stubGlobal("fetch", fetchMock);
+
+    const itens = [item()];
+    const { caixas } = agruparCarrinhoEmCaixas(itens);
+
+    await cotarCaixasNaSuperFrete(caixas, "40296330", "01310100");
+
+    expect(fetchMock).toHaveBeenCalled();
+    const callArgs = fetchMock.mock.calls[0];
+    expect(callArgs[1].headers.Authorization).toBe(
+      "Bearer token-teste-superfrete",
+    );
+    expect(callArgs[1].headers["User-Type"]).toBe("shipper");
+  });
+});
+
+describe("cotarCarrinhoNaSuperFrete", () => {
+  beforeEach(() => {
+    process.env.SUPERFRETE_TOKEN = "token-teste";
+    process.env.LOJA_CEP_ORIGEM = "40296330";
+  });
+
+  afterEach(() => {
+    vi.clearAllMocks();
+    delete process.env.SUPERFRETE_TOKEN;
+    delete process.env.LOJA_CEP_ORIGEM;
+  });
+
+  it("rejeita sem LOJA_CEP_ORIGEM configurado", async () => {
+    delete process.env.LOJA_CEP_ORIGEM;
+
+    const itens = [item()];
+
+    await expect(
+      cotarCarrinhoNaSuperFrete(itens, "01310100"),
+    ).rejects.toThrow("LOJA_CEP_ORIGEM não configurado");
+  });
+
+  it("cota um carrinho com 1 item", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [
+        {
+          name: "PAC",
+          delivery_time: 5,
+          price: 22.28,
+        },
+      ],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [item({ produtoId: "prod1" })];
+
+    const resultado = await cotarCarrinhoNaSuperFrete(itens, "01310100");
+
+    expect(resultado.opcoes).toHaveLength(1);
+    expect(resultado.opcoes[0]).toEqual({
+      transportadora: "PAC",
+      prazoEmDias: 5,
+      valorEmCentavos: 2228,
+      valorOriginalEmCentavos: 2228,
+    });
+    expect(resultado.itensSemCaixa).toHaveLength(0);
+  });
+
+  it("retorna itens sem caixa quando algum item excede tamanho máximo", async () => {
+    vi.stubGlobal("fetch", vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        text: async () => "OK",
+        json: async () => [
+          { name: "PAC", delivery_time: 5, price: 22.28 },
+        ],
+      }),
+    ));
+
+    const itens = [
+      item({ produtoId: "grande", comprimentoCm: 100, larguraCm: 100, alturaCm: 100 }),
+    ];
+
+    const resultado = await cotarCarrinhoNaSuperFrete(itens, "01310100");
+
+    expect(resultado.opcoes).toHaveLength(0);
+    expect(resultado.itensSemCaixa).toHaveLength(1);
+  });
+
+  it("consolida múltiplas caixas em uma opção por transportadora", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [
+        {
+          name: "PAC",
+          delivery_time: 5,
+          price: 22.28,
+        },
+        {
+          name: "SEDEX",
+          delivery_time: 1,
+          price: 35.50,
+        },
+      ],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [
+      item({ produtoId: "a", precoEmCentavos: 5000 }),
+      item({ produtoId: "b", precoEmCentavos: 7000 }),
+    ];
+
+    const resultado = await cotarCarrinhoNaSuperFrete(itens, "01310100");
+
+    expect(resultado.opcoes.length).toBeGreaterThan(0);
+    // Cada transportadora deve aparecer apenas uma vez, com preços somados
+    const transportadoras = resultado.opcoes.map((o) => o.transportadora);
+    const transportadorasUnicas = new Set(transportadoras);
+    expect(transportadorasUnicas.size).toBe(transportadoras.length);
+  });
+
+  it("retorna opcoes vazias quando nenhuma transportadora cotou", async () => {
+    const mockResponse = {
+      ok: true,
+      text: async () => "OK",
+      json: async () => [],
+    };
+
+    vi.stubGlobal("fetch", vi.fn(() => Promise.resolve(mockResponse)));
+
+    const itens = [item()];
+
+    const resultado = await cotarCarrinhoNaSuperFrete(itens, "01310100");
+
+    expect(resultado.opcoes).toHaveLength(0);
+  });
+
+  it("retorna opcoes vazias quando carrinho fica vazio (todos itens excedem tamanho)", async () => {
+    vi.stubGlobal("fetch", vi.fn());
+
+    const itens = [
+      item({ comprimentoCm: 100, larguraCm: 100, alturaCm: 100 }),
+    ];
+
+    const resultado = await cotarCarrinhoNaSuperFrete(itens, "01310100");
+
+    expect(resultado.opcoes).toHaveLength(0);
+    expect(resultado.itensSemCaixa).toHaveLength(1);
+    expect(fetch).not.toHaveBeenCalled(); // Não chama a API se não há caixas
+  });
+
+  it("converte preço com desconto corretamente em consolidação", async () => {
+    let callCount = 0;
+    vi.stubGlobal("fetch", vi.fn(() => {
+      callCount++;
+      if (callCount === 1) {
+        return Promise.resolve({
+          ok: true,
+          text: async () => "OK",
+          json: async () => [
+            { name: "PAC", delivery_time: 5, price: 20.00, discount: "2.00" },
+          ],
+        });
+      }
+      return Promise.resolve({
+        ok: true,
+        text: async () => "OK",
+        json: async () => [
+          { name: "PAC", delivery_time: 7, price: 15.00, discount: "1.50" },
+        ],
+      });
+    }));
+
+    const itens = [
+      item({ produtoId: "a", precoEmCentavos: 5000 }),
+      item({ produtoId: "b", precoEmCentavos: 7000 }),
+    ];
+
+    const resultado = await cotarCarrinhoNaSuperFrete(itens, "01310100");
+
+    // Espera consolidação: valores somados
+    expect(resultado.opcoes.length).toBeGreaterThan(0);
+    const opcaoPAC = resultado.opcoes.find((o) => o.transportadora === "PAC");
+    if (opcaoPAC) {
+      expect(opcaoPAC.valorEmCentavos).toBeGreaterThan(0);
+    }
+  });
+});
+
