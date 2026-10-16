@@ -120,7 +120,7 @@ describe("reservarProduto", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -258,7 +258,7 @@ describe("renovarReservaProduto", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -373,7 +373,7 @@ describe("reservarMultiplosProdutos", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -412,7 +412,7 @@ describe("reservarMultiplosProdutos", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -439,7 +439,7 @@ describe("reservarMultiplosProdutos", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -464,7 +464,7 @@ describe("marcarProdutoVendido", () => {
     vi.clearAllMocks();
   });
 
-  const setupMock = (produto: any) => {
+  const setupMock = (produto: object) => {
     const mockTx = {
       get: vi.fn().mockResolvedValue({
         exists: true,
@@ -473,7 +473,7 @@ describe("marcarProdutoVendido", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -524,7 +524,7 @@ describe("liberarReservaProduto", () => {
     vi.clearAllMocks();
   });
 
-  const setupMock = (produto: any) => {
+  const setupMock = (produto: object) => {
     const mockTx = {
       get: vi.fn().mockResolvedValue({
         exists: true,
@@ -537,7 +537,7 @@ describe("liberarReservaProduto", () => {
       get: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -603,7 +603,7 @@ describe("liberarProdutoAposReembolso", () => {
     vi.clearAllMocks();
   });
 
-  const setupMock = (produto: any) => {
+  const setupMock = (produto: object) => {
     const mockTx = {
       get: vi.fn().mockResolvedValue({
         exists: true,
@@ -616,7 +616,7 @@ describe("liberarProdutoAposReembolso", () => {
       get: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -694,7 +694,7 @@ describe("marcarMultiplosProdutosVendidos", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -727,7 +727,7 @@ describe("liberarReservaMultiplosProdutos", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -758,7 +758,7 @@ describe("liberarMultiplosProdutosAposReembolso", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -797,7 +797,7 @@ describe("renovarReservaMultiplosProdutos", () => {
       update: vi.fn(),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 
@@ -836,7 +836,7 @@ describe("renovarReservaMultiplosProdutos", () => {
         }),
     };
 
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+    mockDb.runTransaction.mockImplementation(async (fn: (tx: object) => Promise<unknown>) => {
       return fn(mockTx);
     });
 

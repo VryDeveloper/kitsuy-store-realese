@@ -38,11 +38,13 @@ import { db } from "./_lib/firebase-admin.js";
 import { Preference } from "mercadopago";
 
 let preferenceCreateShouldFail = false;
+let lastPreferenceCreateData: object | null = null;
 
 vi.mock("mercadopago", () => ({
   Preference: class {
     constructor() {}
-    async create(data: any) {
+    async create(data: object) {
+      lastPreferenceCreateData = data;
       if (preferenceCreateShouldFail) {
         throw new Error("MP API Error");
       }
@@ -55,7 +57,7 @@ vi.mock("mercadopago", () => ({
   },
   Payment: class {
     constructor() {}
-    async get(data: any) {
+    async get(data: object) {
       return {
         id: 123456,
         status: "approved",
@@ -113,6 +115,7 @@ describe("POST /api/criar-preferencia", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.VITE_SITE_URL = "http://localhost:8081";
+    preferenceCreateShouldFail = false;
   });
 
   describe("validação de entrada", () => {
@@ -415,6 +418,30 @@ describe("POST /api/criar-preferencia", () => {
 
       // Verifica que a cotação foi marcada como usada (documento cotacoes_frete foi atualizado)
       expect(mockCotacaoDocRef.update).toHaveBeenCalled();
+
+      // Verifica que os preços usados foram do servidor, não do cliente
+      // Cliente enviou valorEmCentavos: 999999, mas o servidor deve usar 2000
+      // Cliente enviou transportadora: "SEDEX", mas o servidor deve usar "PAC"
+      const preferenceBody = (lastPreferenceCreateData as Record<string, unknown>)?.body as Record<
+        string,
+        unknown
+      >;
+      expect(preferenceBody).toBeDefined();
+
+      const items = preferenceBody?.items as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(2); // 1 produto + 1 frete
+
+      // Verifica preço do produto: 99,90 → 9990 centavos
+      const produtoItem = items[0];
+      expect(produtoItem.id).toBe("prod-1");
+      expect(produtoItem.title).toBe("Produto do Servidor");
+      expect(produtoItem.unit_price).toBe(99.9); // 9990 centavos = 99,90 reais
+
+      // Verifica frete: 2000 centavos = 20 reais, e transportadora "PAC" (não "SEDEX" do cliente)
+      const freteItem = items[1];
+      expect(freteItem.id).toBe("frete");
+      expect(freteItem.title).toContain("PAC"); // Do servidor, não "SEDEX"
+      expect(freteItem.unit_price).toBe(20); // 2000 centavos = 20 reais
     });
   });
 
@@ -671,8 +698,6 @@ describe("POST /api/criar-preferencia", () => {
 
       expect(res.statusCode).toBe(500);
       expect(mockLiberarReserva).toHaveBeenCalled();
-
-      preferenceCreateShouldFail = false;
     });
   });
 });
