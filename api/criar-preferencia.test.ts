@@ -538,7 +538,7 @@ describe("POST /api/criar-preferencia", () => {
   describe("indisponibilidade de estoque", () => {
     it("rejeita se estoque indisponível", async () => {
       const { EstoqueIndisponivelError, reservarMultiplosProdutos } = await import("./_lib/estoque.js");
-      const mockReservarProdutos = reservarMultiplosProdutos as any;
+      const mockReservarProdutos = reservarMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
 
       mockReservarProdutos.mockRejectedValue(
         new EstoqueIndisponivelError("Produto indisponível no momento", 409, "prod-1")
@@ -579,7 +579,7 @@ describe("POST /api/criar-preferencia", () => {
 
     it.skip("libera reserva se criação de preferência falhar", async () => {
       const { reservarMultiplosProdutos, liberarReservaMultiplosProdutos } = await import("./_lib/estoque.js");
-      const mockReservarProdutos = reservarMultiplosProdutos as any;
+      const mockReservarProdutos = reservarMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
       const mockLiberarReserva = liberarReservaMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
 
       mockReservarProdutos.mockResolvedValue({

@@ -80,7 +80,7 @@ const mockResend = resend as unknown as {
   emails: { send: ReturnType<typeof vi.fn> };
 };
 
-function createRequest(body: any, headers: any = {}): VercelRequest {
+function createRequest(body: unknown, headers: Record<string, unknown> = {}): VercelRequest {
   return {
     method: "POST",
     headers: {
@@ -90,7 +90,7 @@ function createRequest(body: any, headers: any = {}): VercelRequest {
     },
     body,
     query: { "data.id": headers["data.id"] },
-  } as any;
+  } as unknown as VercelRequest;
 }
 
 function createResponse(): VercelResponse {

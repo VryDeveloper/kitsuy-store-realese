@@ -29,7 +29,10 @@ vi.mock("./firebase-admin.js", () => {
 
 import { db } from "./firebase-admin.js";
 
-const mockDb = db as any;
+const mockDb = db as unknown as {
+  collection: ReturnType<typeof vi.fn>;
+  runTransaction: ReturnType<typeof vi.fn>;
+};
 
 describe("estaDisponivelAgora", () => {
   it("retorna true para produto com estoqueStatus 'disponivel'", () => {

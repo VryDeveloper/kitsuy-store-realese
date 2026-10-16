@@ -16,19 +16,21 @@ vi.mock("../lib/cors.js", () => ({
 
 import { db } from "./_lib/firebase-admin.js";
 
-const mockDb = db as any;
+const mockDb = db as unknown as {
+  collection: ReturnType<typeof vi.fn>;
+};
 
-function createRequest(query: any, method = "GET"): VercelRequest {
+function createRequest(query: unknown, method = "GET"): VercelRequest {
   return {
     method,
     headers: {},
     query,
     body: {},
-  } as any;
+  } as unknown as VercelRequest;
 }
 
 function createResponse(): VercelResponse {
-  const res: any = {
+  const res = {
     statusCode: 200,
     _getStatusCode() {
       return this.statusCode;
@@ -37,12 +39,12 @@ function createResponse(): VercelResponse {
       this.statusCode = code;
       return this;
     },
-    json(data: any) {
+    json(data: unknown) {
       this.body = data;
       return this;
     },
   };
-  return res;
+  return res as unknown as VercelResponse;
 }
 
 describe("GET /api/verificar-pagamento", () => {
