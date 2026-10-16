@@ -111,6 +111,23 @@ describe("reservarProduto", () => {
     vi.clearAllMocks();
   });
 
+  const setupMock = () => {
+    const mockTx = {
+      get: vi.fn(),
+      update: vi.fn(),
+    };
+
+    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+      return fn(mockTx);
+    });
+
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
+    return { mockTx };
+  };
+
   it("reserva um produto disponível com sucesso", async () => {
     const pedidoId = "pedido-123";
     const produto = {
@@ -120,16 +137,10 @@ describe("reservarProduto", () => {
       estoqueStatus: "disponivel",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     const resultado = await reservarProduto(
@@ -143,14 +154,9 @@ describe("reservarProduto", () => {
   });
 
   it("rejeita se produto não existe", async () => {
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: false,
-      }),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: false,
     });
 
     await expect(
@@ -164,15 +170,10 @@ describe("reservarProduto", () => {
       vendidoPedidoId: "outro-pedido",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     await expect(
@@ -187,15 +188,10 @@ describe("reservarProduto", () => {
       reservadoAte: Timestamp.fromMillis(Date.now() + 10000), // 10s no futuro
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     await expect(
@@ -212,16 +208,10 @@ describe("reservarProduto", () => {
       title: "Produto",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     const resultado = await reservarProduto(
@@ -237,16 +227,10 @@ describe("reservarProduto", () => {
     const agora = Date.now();
     const produto = { estoqueStatus: "disponivel", title: "Produto" };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     const resultado = await reservarProduto(
@@ -265,6 +249,23 @@ describe("renovarReservaProduto", () => {
     vi.clearAllMocks();
   });
 
+  const setupMock = () => {
+    const mockTx = {
+      get: vi.fn(),
+      update: vi.fn(),
+    };
+
+    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
+      return fn(mockTx);
+    });
+
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
+    return { mockTx };
+  };
+
   it("renova a reserva se o pedido é dono da reserva atual", async () => {
     const pedidoId = "pedido-123";
     const produto = {
@@ -273,16 +274,10 @@ describe("renovarReservaProduto", () => {
       title: "Produto",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     const resultado = await renovarReservaProduto(
@@ -296,14 +291,9 @@ describe("renovarReservaProduto", () => {
   });
 
   it("retorna null se produto não existe", async () => {
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: false,
-      }),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: false,
     });
 
     const resultado = await renovarReservaProduto(
@@ -320,15 +310,10 @@ describe("renovarReservaProduto", () => {
       reservadoPedidoId: "outro-pedido",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     const resultado = await renovarReservaProduto(
@@ -345,15 +330,10 @@ describe("renovarReservaProduto", () => {
       reservadoPedidoId: "pedido-123",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
+    const { mockTx } = setupMock();
+    mockTx.get.mockResolvedValue({
+      exists: true,
+      data: () => produto,
     });
 
     const resultado = await renovarReservaProduto(
