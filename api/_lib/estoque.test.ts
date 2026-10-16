@@ -394,6 +394,10 @@ describe("reservarMultiplosProdutos", () => {
       return fn(mockTx);
     });
 
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
     const resultado = await reservarMultiplosProdutos(
       [
         { collectionName: "products", produtoId: "prod-1" },
@@ -429,6 +433,10 @@ describe("reservarMultiplosProdutos", () => {
       return fn(mockTx);
     });
 
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
     await expect(
       reservarMultiplosProdutos(
         [
@@ -452,6 +460,10 @@ describe("reservarMultiplosProdutos", () => {
       return fn(mockTx);
     });
 
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
     await expect(
       reservarMultiplosProdutos(
         [
@@ -469,13 +481,7 @@ describe("marcarProdutoVendido", () => {
     vi.clearAllMocks();
   });
 
-  it("marca produto como vendido com sucesso", async () => {
-    const pedidoId = "pedido-123";
-    const produto = {
-      estoqueStatus: "reservado",
-      reservadoPedidoId: pedidoId,
-    };
-
+  const setupMock = (produto: any) => {
     const mockTx = {
       get: vi.fn().mockResolvedValue({
         exists: true,
@@ -487,6 +493,22 @@ describe("marcarProdutoVendido", () => {
     mockDb.runTransaction.mockImplementation(async (fn: Function) => {
       return fn(mockTx);
     });
+
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
+    return { mockTx };
+  };
+
+  it("marca produto como vendido com sucesso", async () => {
+    const pedidoId = "pedido-123";
+    const produto = {
+      estoqueStatus: "reservado",
+      reservadoPedidoId: pedidoId,
+    };
+
+    const { mockTx } = setupMock(produto);
 
     await marcarProdutoVendido(
       { collectionName: "products", produtoId: "prod-1" },
@@ -503,17 +525,7 @@ describe("marcarProdutoVendido", () => {
       vendidoPedidoId: pedidoId,
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
-    });
+    const { mockTx } = setupMock(produto);
 
     await marcarProdutoVendido(
       { collectionName: "products", produtoId: "prod-1" },
@@ -529,13 +541,7 @@ describe("liberarReservaProduto", () => {
     vi.clearAllMocks();
   });
 
-  it("libera a reserva se ela pertence ao pedido", async () => {
-    const pedidoId = "pedido-123";
-    const produto = {
-      estoqueStatus: "reservado",
-      reservadoPedidoId: pedidoId,
-    };
-
+  const setupMock = (produto: any) => {
     const mockTx = {
       get: vi.fn().mockResolvedValue({
         exists: true,
@@ -544,9 +550,29 @@ describe("liberarReservaProduto", () => {
       update: vi.fn(),
     };
 
+    const mockDocRef = {
+      get: vi.fn(),
+    };
+
     mockDb.runTransaction.mockImplementation(async (fn: Function) => {
       return fn(mockTx);
     });
+
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue(mockDocRef),
+    });
+
+    return { mockTx, mockDocRef };
+  };
+
+  it("libera a reserva se ela pertence ao pedido", async () => {
+    const pedidoId = "pedido-123";
+    const produto = {
+      estoqueStatus: "reservado",
+      reservadoPedidoId: pedidoId,
+    };
+
+    const { mockTx } = setupMock(produto);
 
     await liberarReservaProduto(
       { collectionName: "products", produtoId: "prod-1" },
@@ -562,17 +588,7 @@ describe("liberarReservaProduto", () => {
       reservadoPedidoId: null,
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
-    });
+    const { mockTx } = setupMock(produto);
 
     await liberarReservaProduto(
       { collectionName: "products", produtoId: "prod-1" },
@@ -588,17 +604,7 @@ describe("liberarReservaProduto", () => {
       reservadoPedidoId: "outro-pedido",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
-    });
+    const { mockTx } = setupMock(produto);
 
     await liberarReservaProduto(
       { collectionName: "products", produtoId: "prod-1" },
@@ -614,13 +620,7 @@ describe("liberarProdutoAposReembolso", () => {
     vi.clearAllMocks();
   });
 
-  it("libera produto vendido de volta ao estoque", async () => {
-    const pedidoId = "pedido-123";
-    const produto = {
-      estoqueStatus: "vendido",
-      vendidoPedidoId: pedidoId,
-    };
-
+  const setupMock = (produto: any) => {
     const mockTx = {
       get: vi.fn().mockResolvedValue({
         exists: true,
@@ -629,9 +629,29 @@ describe("liberarProdutoAposReembolso", () => {
       update: vi.fn(),
     };
 
+    const mockDocRef = {
+      get: vi.fn(),
+    };
+
     mockDb.runTransaction.mockImplementation(async (fn: Function) => {
       return fn(mockTx);
     });
+
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue(mockDocRef),
+    });
+
+    return { mockTx, mockDocRef };
+  };
+
+  it("libera produto vendido de volta ao estoque", async () => {
+    const pedidoId = "pedido-123";
+    const produto = {
+      estoqueStatus: "vendido",
+      vendidoPedidoId: pedidoId,
+    };
+
+    const { mockTx } = setupMock(produto);
 
     await liberarProdutoAposReembolso(
       { collectionName: "products", produtoId: "prod-1" },
@@ -647,17 +667,7 @@ describe("liberarProdutoAposReembolso", () => {
       vendidoPedidoId: null,
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
-    });
+    const { mockTx } = setupMock(produto);
 
     await liberarProdutoAposReembolso(
       { collectionName: "products", produtoId: "prod-1" },
@@ -673,17 +683,7 @@ describe("liberarProdutoAposReembolso", () => {
       vendidoPedidoId: "outro-pedido",
     };
 
-    const mockTx = {
-      get: vi.fn().mockResolvedValue({
-        exists: true,
-        data: () => produto,
-      }),
-      update: vi.fn(),
-    };
-
-    mockDb.runTransaction.mockImplementation(async (fn: Function) => {
-      return fn(mockTx);
-    });
+    const { mockTx } = setupMock(produto);
 
     await liberarProdutoAposReembolso(
       { collectionName: "products", produtoId: "prod-1" },
@@ -818,6 +818,10 @@ describe("renovarReservaMultiplosProdutos", () => {
       return fn(mockTx);
     });
 
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
+    });
+
     const resultado = await renovarReservaMultiplosProdutos(
       [
         { collectionName: "products", produtoId: "prod-1" },
@@ -851,6 +855,10 @@ describe("renovarReservaMultiplosProdutos", () => {
 
     mockDb.runTransaction.mockImplementation(async (fn: Function) => {
       return fn(mockTx);
+    });
+
+    mockDb.collection.mockReturnValue({
+      doc: vi.fn().mockReturnValue({}),
     });
 
     const resultado = await renovarReservaMultiplosProdutos(
