@@ -58,7 +58,7 @@ let mockPaymentStatus = "approved";
 vi.mock("mercadopago", () => ({
   Payment: class {
     constructor() {}
-    async get(data: any) {
+    async get(data: object) {
       return {
         id: 123456,
         status: mockPaymentStatus,

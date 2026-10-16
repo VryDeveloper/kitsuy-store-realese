@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import handler from "./criar-preferencia.js";
 
-// Mock dependencies
+// Mock dependencies — db is configured per test via mockDb
 vi.mock("./_lib/firebase-admin.js", () => ({
   db: {
     collection: vi.fn(),
@@ -37,10 +37,17 @@ vi.mock("./_lib/estoque.js", () => ({
 import { db } from "./_lib/firebase-admin.js";
 import { Preference } from "mercadopago";
 
+let preferenceCreateShouldFail = false;
+let lastPreferenceCreateData: object | null = null;
+
 vi.mock("mercadopago", () => ({
   Preference: class {
     constructor() {}
-    async create(data: any) {
+    async create(data: object) {
+      lastPreferenceCreateData = data;
+      if (preferenceCreateShouldFail) {
+        throw new Error("MP API Error");
+      }
       return {
         id: "pref-123456",
         init_point: "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=pref-123456",
@@ -50,7 +57,7 @@ vi.mock("mercadopago", () => ({
   },
   Payment: class {
     constructor() {}
-    async get(data: any) {
+    async get(data: object) {
       return {
         id: 123456,
         status: "approved",
@@ -63,6 +70,19 @@ vi.mock("mercadopago", () => ({
 const mockDb = db as unknown as {
   collection: ReturnType<typeof vi.fn>;
 };
+
+function createDefaultDbMock() {
+  const mockDocRef = {
+    get: vi.fn(),
+    set: vi.fn().mockResolvedValue(undefined),
+    update: vi.fn().mockResolvedValue(undefined),
+  };
+  const mockColRef = {
+    doc: vi.fn().mockReturnValue(mockDocRef),
+  };
+  mockDb.collection.mockReturnValue(mockColRef);
+  return { mockDocRef, mockColRef, mockDb };
+}
 
 function createRequest(body: unknown, method = "POST"): VercelRequest {
   return {
@@ -95,6 +115,7 @@ describe("POST /api/criar-preferencia", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.VITE_SITE_URL = "http://localhost:8081";
+    preferenceCreateShouldFail = false;
   });
 
   describe("validação de entrada", () => {
@@ -325,7 +346,7 @@ describe("POST /api/criar-preferencia", () => {
   });
 
   describe("preferência do Mercado Pago", () => {
-    it.skip("cria preferência com itens do servidor (não do cliente)", async () => {
+    it("cria preferência com itens do servidor (não do cliente)", async () => {
       // A segurança crítica: preços SEMPRE vêm do Firestore, nunca do body
       const { reservarMultiplosProdutos } = await import("./_lib/estoque.js");
       const mockReservarProdutos = reservarMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
@@ -345,26 +366,37 @@ describe("POST /api/criar-preferencia", () => {
         reservadoAte: new Date(Date.now() + 600000),
       });
 
-      const mockColRef = {
-        doc: vi.fn().mockReturnValue({
-          get: vi.fn().mockResolvedValue({
-            exists: true,
-            data: () => ({
-              usada: false,
-              expiraEm: {
-                toMillis: () => Date.now() + 100000,
-              },
-              produtoIds: ["prod-1"],
-              transportadora: "PAC",
-              prazoEmDias: 5,
-              valorEmCentavos: 2000,
-            }),
+      const mockCotacaoDocRef = {
+        get: vi.fn().mockResolvedValue({
+          exists: true,
+          data: () => ({
+            usada: false,
+            expiraEm: {
+              toMillis: () => Date.now() + 100000,
+            },
+            produtoIds: ["prod-1"],
+            transportadora: "PAC",
+            prazoEmDias: 5,
+            valorEmCentavos: 2000,
           }),
-          update: vi.fn(),
         }),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
-      mockDb.collection.mockReturnValue(mockColRef);
+      const mockPedidoDocRef = {
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+
+      mockDb.collection.mockImplementation((name: string) => {
+        if (name === "cotacoes_frete") {
+          return { doc: vi.fn().mockReturnValue(mockCotacaoDocRef) };
+        }
+        if (name === "pedidos") {
+          return { doc: vi.fn().mockReturnValue(mockPedidoDocRef) };
+        }
+        return { doc: vi.fn() };
+      });
 
       const req = createRequest({
         produtoIds: ["prod-1"],
@@ -384,14 +416,37 @@ describe("POST /api/criar-preferencia", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body?.preferenceId).toBe("pref-123456");
 
-      // Verifica se os valores do servidor foram usados, não do cliente
-      const updateCall = mockColRef.doc().update.mock.calls[0];
-      expect(updateCall?.[0]).toBeDefined();
+      // Verifica que a cotação foi marcada como usada (documento cotacoes_frete foi atualizado)
+      expect(mockCotacaoDocRef.update).toHaveBeenCalled();
+
+      // Verifica que os preços usados foram do servidor, não do cliente
+      // Cliente enviou valorEmCentavos: 999999, mas o servidor deve usar 2000
+      // Cliente enviou transportadora: "SEDEX", mas o servidor deve usar "PAC"
+      const preferenceBody = (lastPreferenceCreateData as Record<string, unknown>)?.body as Record<
+        string,
+        unknown
+      >;
+      expect(preferenceBody).toBeDefined();
+
+      const items = preferenceBody?.items as Array<Record<string, unknown>>;
+      expect(items).toHaveLength(2); // 1 produto + 1 frete
+
+      // Verifica preço do produto: 99,90 → 9990 centavos
+      const produtoItem = items[0];
+      expect(produtoItem.id).toBe("prod-1");
+      expect(produtoItem.title).toBe("Produto do Servidor");
+      expect(produtoItem.unit_price).toBe(99.9); // 9990 centavos = 99,90 reais
+
+      // Verifica frete: 2000 centavos = 20 reais, e transportadora "PAC" (não "SEDEX" do cliente)
+      const freteItem = items[1];
+      expect(freteItem.id).toBe("frete");
+      expect(freteItem.title).toContain("PAC"); // Do servidor, não "SEDEX"
+      expect(freteItem.unit_price).toBe(20); // 2000 centavos = 20 reais
     });
   });
 
   describe("idempotência - renovação de pedido", () => {
-    it.skip("renova pedido existente do mesmo cliente", async () => {
+    it("renova pedido existente do mesmo cliente", async () => {
       const { renovarReservaMultiplosProdutos } = await import("./_lib/estoque.js");
       const mockRenovarReserva = renovarReservaMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
 
@@ -423,7 +478,8 @@ describe("POST /api/criar-preferencia", () => {
               cliente: { email: emailCliente },
             }),
           }),
-        update: vi.fn(),
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       const mockCotacaoDocRef = {
@@ -438,7 +494,7 @@ describe("POST /api/criar-preferencia", () => {
             valorEmCentavos: 2000,
           }),
         }),
-        update: vi.fn(),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       mockDb.collection.mockImplementation((name: string) => {
@@ -462,18 +518,20 @@ describe("POST /api/criar-preferencia", () => {
       expect(res.body?.pedidoId).toBe(pedidoIdExistente);
     });
 
-    it.skip("rejeita renovação com email diferente (segurança)", async () => {
+    it("rejeita renovação com email diferente (segurança)", async () => {
       const pedidoIdExistente = "pedido-uuid-existente";
 
       const mockPedidoDocRef = {
         get: vi.fn().mockResolvedValue({
           exists: true,
           data: () => ({
-            pedidoId: pedidoExistente,
+            pedidoId: pedidoIdExistente,
             status: "pendente",
             cliente: { email: "original@test.com" },
           }),
         }),
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       const mockCotacaoDocRef = {
@@ -488,6 +546,7 @@ describe("POST /api/criar-preferencia", () => {
             valorEmCentavos: 2000,
           }),
         }),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       mockDb.collection.mockImplementation((name: string) => {
@@ -577,7 +636,9 @@ describe("POST /api/criar-preferencia", () => {
       expect(res.body?.produtoId).toBe("prod-1");
     });
 
-    it.skip("libera reserva se criação de preferência falhar", async () => {
+    it("libera reserva se criação de preferência falhar", async () => {
+      preferenceCreateShouldFail = true;
+
       const { reservarMultiplosProdutos, liberarReservaMultiplosProdutos } = await import("./_lib/estoque.js");
       const mockReservarProdutos = reservarMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
       const mockLiberarReserva = liberarReservaMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
@@ -597,6 +658,13 @@ describe("POST /api/criar-preferencia", () => {
         reservadoAte: new Date(Date.now() + 600000),
       });
 
+      mockLiberarReserva.mockResolvedValue(undefined);
+
+      const mockPedidoDocRef = {
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+
       const mockCotacaoDocRef = {
         get: vi.fn().mockResolvedValue({
           exists: true,
@@ -609,16 +677,13 @@ describe("POST /api/criar-preferencia", () => {
             valorEmCentavos: 2000,
           }),
         }),
-        update: vi.fn(),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
-      // Simular erro na criação de preferência
-      vi.mocked(Preference).mockImplementationOnce((() => ({
-        create: vi.fn().mockRejectedValueOnce(new Error("MP API Error")),
-      })) as unknown as typeof Preference);
-
-      mockDb.collection.mockReturnValue({
-        doc: vi.fn().mockReturnValue(mockCotacaoDocRef),
+      mockDb.collection.mockImplementation((name: string) => {
+        if (name === "pedidos") return { doc: vi.fn().mockReturnValue(mockPedidoDocRef) };
+        if (name === "cotacoes_frete") return { doc: vi.fn().mockReturnValue(mockCotacaoDocRef) };
+        return {};
       });
 
       const req = createRequest({
