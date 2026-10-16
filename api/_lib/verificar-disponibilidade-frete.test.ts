@@ -64,7 +64,7 @@ describe("verificarDisponibilidadeFrete", () => {
         doc: vi.fn(() => ({
           get: mockGet,
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -96,7 +96,7 @@ describe("verificarDisponibilidadeFrete", () => {
         doc: vi.fn(() => ({
           get: mockGet,
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -137,7 +137,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -181,7 +181,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -236,7 +236,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -289,7 +289,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -349,7 +349,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -402,7 +402,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [],
@@ -440,7 +440,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [],
@@ -483,7 +483,7 @@ describe("verificarDisponibilidadeFrete", () => {
             };
           }),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -525,7 +525,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -569,7 +569,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCarrinhoNaSuperFrete).mockResolvedValue({
         opcoes: [
@@ -612,7 +612,7 @@ describe("verificarDisponibilidadeFrete", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       // Primeira cotação (no checkout): PAC estava disponível
       // Segunda cotação (pós-pagamento): PAC não está mais, mas SEDEX está

@@ -33,7 +33,7 @@ vi.mock("./_lib/frete-consolidado.js", async () => {
   const actual = await vi.importActual("./_lib/frete-consolidado.js");
   return {
     ...actual,
-    agruparCarrinhoEmCaixas: vi.fn(function (itens: any) {
+    agruparCarrinhoEmCaixas: vi.fn(function (itens: Record<string, unknown>[]) {
       return {
         caixas: [
           {
@@ -42,7 +42,7 @@ vi.mock("./_lib/frete-consolidado.js", async () => {
             pesoRealSomadoKg: 0.5,
             pesoCubadoKg: 0.167,
             pesoCobradoKg: 0.5,
-            valorSeguradoEmCentavos: itens.reduce((sum: number, i: any) => sum + i.precoEmCentavos, 0),
+            valorSeguradoEmCentavos: (itens as { precoEmCentavos: number }[]).reduce((sum: number, i: { precoEmCentavos: number }) => sum + i.precoEmCentavos, 0),
           },
         ],
         itensSemCaixa: [],
@@ -60,7 +60,7 @@ import {
 } from "./_lib/frete-consolidado.js";
 import { handleCORS } from "../lib/cors.js";
 
-function createMockRequest(overrides: any = {}): VercelRequest {
+function createMockRequest(overrides: Record<string, unknown> = {}): VercelRequest {
   return {
     headers: {},
     query: {},
@@ -71,22 +71,22 @@ function createMockRequest(overrides: any = {}): VercelRequest {
 }
 
 function createMockResponse(): VercelResponse {
-  const mockRes: any = {
-    status: vi.fn(function (code: number) {
+  const mockRes: Record<string, unknown> = {
+    status: vi.fn(function (this: Record<string, unknown>, code: number) {
       this.statusCode = code;
       return this;
     }),
-    json: vi.fn(function (data: any) {
+    json: vi.fn(function (this: Record<string, unknown>, data: unknown) {
       this.body = data;
       return this;
     }),
     statusCode: 200,
     body: undefined,
   };
-  return mockRes;
+  return mockRes as VercelResponse;
 }
 
-function setupDbMock(productData: Record<string, any> = {}) {
+function setupDbMock(productData: Record<string, string | number | undefined> = {}) {
   vi.mocked(db.collection).mockImplementation((name: string) => ({
     doc: vi.fn((id: string) => ({
       get: vi.fn().mockResolvedValue({
@@ -102,7 +102,7 @@ function setupDbMock(productData: Record<string, any> = {}) {
       }),
       set: vi.fn().mockResolvedValue(undefined),
     })),
-  } as any));
+  } as Record<string, unknown>));
 }
 
 describe("POST /api/calcular-frete handler", () => {
@@ -121,7 +121,7 @@ describe("POST /api/calcular-frete handler", () => {
         }),
         set: vi.fn().mockResolvedValue(undefined),
       })),
-    } as any));
+    } as Record<string, unknown>));
   });
 
   afterEach(() => {
@@ -157,7 +157,7 @@ describe("POST /api/calcular-frete handler", () => {
           }),
           set: vi.fn().mockResolvedValue(undefined),
         })),
-      } as any));
+      } as Record<string, unknown>));
 
       vi.mocked(cotarCaixasNaSuperFrete).mockResolvedValue([
         [
@@ -255,7 +255,7 @@ describe("POST /api/calcular-frete handler", () => {
           }),
           set: vi.fn().mockResolvedValue(undefined),
         })),
-      } as any));
+      } as Record<string, unknown>));
 
       vi.mocked(cotarCaixasNaSuperFrete).mockResolvedValue([
         [
@@ -389,7 +389,7 @@ describe("POST /api/calcular-frete handler", () => {
         doc: vi.fn(() => ({
           get: mockGet,
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCaixasNaSuperFrete).mockResolvedValue([
         [
@@ -423,7 +423,7 @@ describe("POST /api/calcular-frete handler", () => {
             exists: false,
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       const req = createMockRequest({
         method: "GET",
@@ -459,7 +459,7 @@ describe("POST /api/calcular-frete handler", () => {
         doc: vi.fn(() => ({
           get: mockGet,
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCaixasNaSuperFrete).mockResolvedValue([
         [
@@ -501,7 +501,7 @@ describe("POST /api/calcular-frete handler", () => {
                 pesoEmKg: 0.5,
                 precoEmCentavos: 10050,
               },
-            ],
+            ] as Record<string, number | string>[],
             pesoRealSomadoKg: 0.5,
             pesoCubadoKg: 0.133,
             pesoCobradoKg: 0.5,
@@ -509,7 +509,7 @@ describe("POST /api/calcular-frete handler", () => {
           },
         ],
         itensSemCaixa: [],
-      });
+      } as Record<string, unknown>);
 
       vi.mocked(cotarCaixasNaSuperFrete).mockResolvedValue([
         [
@@ -601,7 +601,7 @@ describe("POST /api/calcular-frete handler", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(agruparCarrinhoEmCaixas).mockReturnValue({
         caixas: [],
@@ -793,7 +793,7 @@ describe("POST /api/calcular-frete handler", () => {
             }),
           })),
         })),
-      } as any);
+      } as Record<string, unknown>);
 
       vi.mocked(estaDisponivelAgora).mockReturnValue(false);
 
