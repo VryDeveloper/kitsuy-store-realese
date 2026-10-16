@@ -3,7 +3,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import handler from "./criar-preferencia.js";
 
-// Mock dependencies
+// Mock dependencies — db is configured per test via mockDb
 vi.mock("./_lib/firebase-admin.js", () => ({
   db: {
     collection: vi.fn(),
@@ -37,10 +37,15 @@ vi.mock("./_lib/estoque.js", () => ({
 import { db } from "./_lib/firebase-admin.js";
 import { Preference } from "mercadopago";
 
+let preferenceCreateShouldFail = false;
+
 vi.mock("mercadopago", () => ({
   Preference: class {
     constructor() {}
     async create(data: any) {
+      if (preferenceCreateShouldFail) {
+        throw new Error("MP API Error");
+      }
       return {
         id: "pref-123456",
         init_point: "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=pref-123456",
@@ -63,6 +68,19 @@ vi.mock("mercadopago", () => ({
 const mockDb = db as unknown as {
   collection: ReturnType<typeof vi.fn>;
 };
+
+function createDefaultDbMock() {
+  const mockDocRef = {
+    get: vi.fn(),
+    set: vi.fn().mockResolvedValue(undefined),
+    update: vi.fn().mockResolvedValue(undefined),
+  };
+  const mockColRef = {
+    doc: vi.fn().mockReturnValue(mockDocRef),
+  };
+  mockDb.collection.mockReturnValue(mockColRef);
+  return { mockDocRef, mockColRef, mockDb };
+}
 
 function createRequest(body: unknown, method = "POST"): VercelRequest {
   return {
@@ -325,7 +343,7 @@ describe("POST /api/criar-preferencia", () => {
   });
 
   describe("preferência do Mercado Pago", () => {
-    it.skip("cria preferência com itens do servidor (não do cliente)", async () => {
+    it("cria preferência com itens do servidor (não do cliente)", async () => {
       // A segurança crítica: preços SEMPRE vêm do Firestore, nunca do body
       const { reservarMultiplosProdutos } = await import("./_lib/estoque.js");
       const mockReservarProdutos = reservarMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
@@ -345,26 +363,37 @@ describe("POST /api/criar-preferencia", () => {
         reservadoAte: new Date(Date.now() + 600000),
       });
 
-      const mockColRef = {
-        doc: vi.fn().mockReturnValue({
-          get: vi.fn().mockResolvedValue({
-            exists: true,
-            data: () => ({
-              usada: false,
-              expiraEm: {
-                toMillis: () => Date.now() + 100000,
-              },
-              produtoIds: ["prod-1"],
-              transportadora: "PAC",
-              prazoEmDias: 5,
-              valorEmCentavos: 2000,
-            }),
+      const mockCotacaoDocRef = {
+        get: vi.fn().mockResolvedValue({
+          exists: true,
+          data: () => ({
+            usada: false,
+            expiraEm: {
+              toMillis: () => Date.now() + 100000,
+            },
+            produtoIds: ["prod-1"],
+            transportadora: "PAC",
+            prazoEmDias: 5,
+            valorEmCentavos: 2000,
           }),
-          update: vi.fn(),
         }),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
-      mockDb.collection.mockReturnValue(mockColRef);
+      const mockPedidoDocRef = {
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+
+      mockDb.collection.mockImplementation((name: string) => {
+        if (name === "cotacoes_frete") {
+          return { doc: vi.fn().mockReturnValue(mockCotacaoDocRef) };
+        }
+        if (name === "pedidos") {
+          return { doc: vi.fn().mockReturnValue(mockPedidoDocRef) };
+        }
+        return { doc: vi.fn() };
+      });
 
       const req = createRequest({
         produtoIds: ["prod-1"],
@@ -384,14 +413,13 @@ describe("POST /api/criar-preferencia", () => {
       expect(res.statusCode).toBe(200);
       expect(res.body?.preferenceId).toBe("pref-123456");
 
-      // Verifica se os valores do servidor foram usados, não do cliente
-      const updateCall = mockColRef.doc().update.mock.calls[0];
-      expect(updateCall?.[0]).toBeDefined();
+      // Verifica que a cotação foi marcada como usada (documento cotacoes_frete foi atualizado)
+      expect(mockCotacaoDocRef.update).toHaveBeenCalled();
     });
   });
 
   describe("idempotência - renovação de pedido", () => {
-    it.skip("renova pedido existente do mesmo cliente", async () => {
+    it("renova pedido existente do mesmo cliente", async () => {
       const { renovarReservaMultiplosProdutos } = await import("./_lib/estoque.js");
       const mockRenovarReserva = renovarReservaMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
 
@@ -423,7 +451,8 @@ describe("POST /api/criar-preferencia", () => {
               cliente: { email: emailCliente },
             }),
           }),
-        update: vi.fn(),
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       const mockCotacaoDocRef = {
@@ -438,7 +467,7 @@ describe("POST /api/criar-preferencia", () => {
             valorEmCentavos: 2000,
           }),
         }),
-        update: vi.fn(),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       mockDb.collection.mockImplementation((name: string) => {
@@ -462,18 +491,20 @@ describe("POST /api/criar-preferencia", () => {
       expect(res.body?.pedidoId).toBe(pedidoIdExistente);
     });
 
-    it.skip("rejeita renovação com email diferente (segurança)", async () => {
+    it("rejeita renovação com email diferente (segurança)", async () => {
       const pedidoIdExistente = "pedido-uuid-existente";
 
       const mockPedidoDocRef = {
         get: vi.fn().mockResolvedValue({
           exists: true,
           data: () => ({
-            pedidoId: pedidoExistente,
+            pedidoId: pedidoIdExistente,
             status: "pendente",
             cliente: { email: "original@test.com" },
           }),
         }),
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       const mockCotacaoDocRef = {
@@ -488,6 +519,7 @@ describe("POST /api/criar-preferencia", () => {
             valorEmCentavos: 2000,
           }),
         }),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
       mockDb.collection.mockImplementation((name: string) => {
@@ -577,7 +609,9 @@ describe("POST /api/criar-preferencia", () => {
       expect(res.body?.produtoId).toBe("prod-1");
     });
 
-    it.skip("libera reserva se criação de preferência falhar", async () => {
+    it("libera reserva se criação de preferência falhar", async () => {
+      preferenceCreateShouldFail = true;
+
       const { reservarMultiplosProdutos, liberarReservaMultiplosProdutos } = await import("./_lib/estoque.js");
       const mockReservarProdutos = reservarMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
       const mockLiberarReserva = liberarReservaMultiplosProdutos as unknown as ReturnType<typeof vi.fn>;
@@ -597,6 +631,13 @@ describe("POST /api/criar-preferencia", () => {
         reservadoAte: new Date(Date.now() + 600000),
       });
 
+      mockLiberarReserva.mockResolvedValue(undefined);
+
+      const mockPedidoDocRef = {
+        set: vi.fn().mockResolvedValue(undefined),
+        update: vi.fn().mockResolvedValue(undefined),
+      };
+
       const mockCotacaoDocRef = {
         get: vi.fn().mockResolvedValue({
           exists: true,
@@ -609,16 +650,13 @@ describe("POST /api/criar-preferencia", () => {
             valorEmCentavos: 2000,
           }),
         }),
-        update: vi.fn(),
+        update: vi.fn().mockResolvedValue(undefined),
       };
 
-      // Simular erro na criação de preferência
-      vi.mocked(Preference).mockImplementationOnce((() => ({
-        create: vi.fn().mockRejectedValueOnce(new Error("MP API Error")),
-      })) as unknown as typeof Preference);
-
-      mockDb.collection.mockReturnValue({
-        doc: vi.fn().mockReturnValue(mockCotacaoDocRef),
+      mockDb.collection.mockImplementation((name: string) => {
+        if (name === "pedidos") return { doc: vi.fn().mockReturnValue(mockPedidoDocRef) };
+        if (name === "cotacoes_frete") return { doc: vi.fn().mockReturnValue(mockCotacaoDocRef) };
+        return {};
       });
 
       const req = createRequest({
@@ -633,6 +671,8 @@ describe("POST /api/criar-preferencia", () => {
 
       expect(res.statusCode).toBe(500);
       expect(mockLiberarReserva).toHaveBeenCalled();
+
+      preferenceCreateShouldFail = false;
     });
   });
 });
