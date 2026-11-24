@@ -2,9 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Instagram, MessageCircle, CheckCircle2 } from "lucide-react";
 
 // ⚠️ Coloque a imagem da figure em src/assets/ e ajuste o import abaixo
-import mikuFigure from "@/assets/sorteiofigure.png";
+import mikuFigure from "@/assets/sorteiofigure.webp";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import FigureCarousel from "@/components/FigureCarousel";
+import { INSTAGRAM_URL, MENSAGENS_WHATSAPP, linkWhatsApp } from "@/config/loja";
 
 // ─── Hook: animação de contagem ───────────────────────────────────────────────
 function useCountUp(target: number, duration = 2600) {
@@ -106,9 +107,8 @@ const Sorteio = () => {
   const { count, filled, sectionRef } = useCountUp(1500);
   const [progWidth, setProgWidth] = useState("0%");
 
-  const instagramLink = "https://instagram.com/kitsuystore";
-  const whatsappLink =
-    "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de saber mais sobre o sorteio!";
+  const instagramLink = INSTAGRAM_URL;
+  const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.sorteio);
 
   useEffect(() => {
     setProgWidth(`${(count / 1500) * 100}%`);

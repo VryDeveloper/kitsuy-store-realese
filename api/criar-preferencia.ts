@@ -12,6 +12,7 @@ import {
   type ProdutoRef,
 } from "./_lib/estoque.js";
 import { clienteSchema, enderecoSchema } from "./_lib/validar-checkout.js";
+import { precoEmCentavos } from "./_lib/preco.js";
 
 /**
  * POST /api/criar-preferencia
@@ -260,15 +261,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ── CALCULAR TOTAL (produtos do Firestore + frete já validado) ──────
     const itensPedido = produtoIds.map((produtoId) => {
       const produto = produtos.get(`${collectionName}/${produtoId}`)!;
-      const precoEmReais = parseFloat(
-        String(produto.price)
-          .replace(/[^\d,]/g, "")
-          .replace(",", "."),
-      );
       return {
         produtoId,
         produto,
-        precoEmCentavos: Math.round(precoEmReais * 100),
+        precoEmCentavos: precoEmCentavos(produto.price),
       };
     });
 

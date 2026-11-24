@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from "react";
-import img1 from "@/assets/avaliacoes/1.jpg";
-import img2 from "@/assets/avaliacoes/2.jpg";
-import img3 from "@/assets/avaliacoes/3.jpg";
-import img4 from "@/assets/avaliacoes/4.jpg";
-import img5 from "@/assets/avaliacoes/5.jpg";
-import img6 from "@/assets/avaliacoes/6.jpg";
-import img7 from "@/assets/avaliacoes/7.jpg";
-import img8 from "@/assets/avaliacoes/8.jpg";
-import img9 from "@/assets/avaliacoes/9.jpg";
-import img10 from "@/assets/avaliacoes/10.jpg";
-import img11 from "@/assets/avaliacoes/11.jpg";
-import img12 from "@/assets/avaliacoes/12.jpg";
-import img13 from "@/assets/avaliacoes/13.jpg";
-import img14 from "@/assets/avaliacoes/14.jpg";
-import img15 from "@/assets/avaliacoes/15.jpg";
+import img1 from "@/assets/avaliacoes/1.webp";
+import img2 from "@/assets/avaliacoes/2.webp";
+import img3 from "@/assets/avaliacoes/3.webp";
+import img4 from "@/assets/avaliacoes/4.webp";
+import img5 from "@/assets/avaliacoes/5.webp";
+import img6 from "@/assets/avaliacoes/6.webp";
+import img7 from "@/assets/avaliacoes/7.webp";
+import img8 from "@/assets/avaliacoes/8.webp";
+import img9 from "@/assets/avaliacoes/9.webp";
+import img10 from "@/assets/avaliacoes/10.webp";
+import img11 from "@/assets/avaliacoes/11.webp";
+import img12 from "@/assets/avaliacoes/12.webp";
+import img13 from "@/assets/avaliacoes/13.webp";
+import img14 from "@/assets/avaliacoes/14.webp";
+import img15 from "@/assets/avaliacoes/15.webp";
 const imagens = [
   img1,
   img2,

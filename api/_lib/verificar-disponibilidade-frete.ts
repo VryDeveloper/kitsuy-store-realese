@@ -6,6 +6,7 @@ import {
   type ItemCarrinho,
   type OpcaoFreteConsolidada,
 } from "./frete-consolidado.js";
+import { precoEmCentavos } from "./preco.js";
 
 /**
  * Revalida a disponibilidade do frete de um pedido JÁ PAGO, recotando o
@@ -51,19 +52,13 @@ export async function verificarDisponibilidadeFrete(
     .filter((doc) => doc.exists)
     .map((doc) => {
       const produto = doc.data()!;
-      const precoEmReais = parseFloat(
-        String(produto.price)
-          .replace(/[^\d,]/g, "")
-          .replace(",", "."),
-      );
-
       return {
         produtoId: doc.id,
         pesoEmKg: produto.pesoEmKg || DIMENSOES_PADRAO.pesoEmKg,
         alturaCm: produto.alturaEmCm || DIMENSOES_PADRAO.alturaEmCm,
         larguraCm: produto.larguraEmCm || DIMENSOES_PADRAO.larguraEmCm,
         comprimentoCm: produto.comprimentoEmCm || DIMENSOES_PADRAO.comprimentoEmCm,
-        precoEmCentavos: Math.round(precoEmReais * 100),
+        precoEmCentavos: precoEmCentavos(produto.price),
       };
     });
 

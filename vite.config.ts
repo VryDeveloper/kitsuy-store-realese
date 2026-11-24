@@ -1,20 +1,15 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
-import path from "path";
-import { componentTagger } from "lovable-tagger";
+import { fileURLToPath } from "node:url";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig({
   server: {
     host: "::",
     port: 8080,
-    // Em desenvolvimento local, o Vite serve o frontend normalmente (com HMR
-    // funcionando) e apenas repassa as chamadas /api/* para o `vercel dev`,
-    // que roda separadamente numa porta própria (padrão: 3000) só para
-    // executar as funções serverless. Isso evita o problema conhecido de
-    // rodar `vercel dev` na frente do dev server do Vite, onde os rewrites
-    // do vercel.json interceptam requisições internas do Vite (/@vite/client,
-    // /@react-refresh, /src/*) e quebram o HMR.
+    // Em desenvolvimento local, o Vite serve o frontend (com HMR) e só
+    // repassa /api/* para o servidor local das funções (`npm run dev:api`,
+    // porta 3000), que substitui o `vercel dev` — ver scripts/dev-api-server.ts.
     proxy: {
       "/api": {
         target: "http://localhost:3000",
@@ -22,14 +17,11 @@ export default defineConfig(({ mode }) => ({
       },
     },
   },
-  base: "./", // ← ADICIONE ESTA LINHA
-  plugins: [react(), mode === "development" && componentTagger()].filter(
-    Boolean,
-  ),
-
+  base: "./",
+  plugins: [react()],
   resolve: {
     alias: {
-      "@": path.resolve(__dirname, "./src"),
+      "@": fileURLToPath(new URL("./src", import.meta.url)),
     },
   },
-}));
+});

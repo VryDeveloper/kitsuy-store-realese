@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import {
@@ -18,86 +18,20 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { db } from "@/firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
-import { inStockAoVivo } from "@/lib/disponibilidade";
+import { useProdutos } from "@/hooks/useProdutos";
 import { CarrinhoSheet } from "@/components/CarrinhoSheet";
 
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
-
-interface Product {
-  id: string;
-  title: string;
-  inStock: string;
-  discount: string;
-  price: string;
-  image: string;
-  displayOrder?: number;
-  description?: string;
-  stock?: number;
-  featured?: boolean;
-  source?: string;
-}
+import { INSTAGRAM_URL, MENSAGENS_WHATSAPP, linkWhatsApp } from "@/config/loja";
 
 const Estoque = () => {
-  const [figures, setFigures] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
+  const { produtos: figures, carregando: loading } = useProdutos();
   const [searchQuery, setSearchQuery] = useState("");
 
-  const whatsappLink =
-    "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
-  const whatsappEstoque =
-    "https://wa.me/5571997020168?text=Olá! Vim do site e quero saber sobre as figures disponíveis no estoque!";
-  const instagramLink = "https://instagram.com/kitsuystore";
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const productsRef = collection(db, "products");
-        const masterpieceRef = collection(db, "masterpiece");
-
-        const [productsSnap, masterpieceSnap] = await Promise.all([
-          getDocs(productsRef),
-          getDocs(masterpieceRef),
-        ]);
-
-        const productsData = productsSnap.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            source: "products",
-            ...data,
-            inStock: inStockAoVivo(data),
-          };
-        }) as Product[];
-
-        const masterpieceData = masterpieceSnap.docs.map((doc) => ({
-          id: doc.id,
-          source: "masterpiece",
-          ...doc.data(),
-        })) as Product[];
-
-        const allFigures = [...productsData, ...masterpieceData].sort(
-          (a, b) => {
-            const aOut = a.inStock?.toLowerCase() === "indisponível";
-            const bOut = b.inStock?.toLowerCase() === "indisponível";
-            if (aOut !== bOut) return aOut ? 1 : -1;
-            const orderA = Number(a.displayOrder) || 999999;
-            const orderB = Number(b.displayOrder) || 999999;
-            return orderA - orderB;
-          },
-        );
-
-        setFigures(allFigures);
-      } catch (error) {
-        console.error("Erro ao carregar produtos:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchProducts();
-  }, []);
+  const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.conhecer);
+  const whatsappEstoque = linkWhatsApp(MENSAGENS_WHATSAPP.estoque);
+  const instagramLink = INSTAGRAM_URL;
 
   const filteredFigures = figures.filter((fig) =>
     fig.title?.toLowerCase().includes(searchQuery.toLowerCase()),
@@ -330,10 +264,7 @@ const Estoque = () => {
                       className="w-full py-2 rounded-xl bg-[#EA3E83] text-white text-sm font-semibold hover:bg-[#c72e6c] mt-auto transition-colors"
                       onClick={() => {
                         const msg = `Olá! Vi a figure "${fig.title}" no site e quero um orçamento!`;
-                        window.open(
-                          `https://wa.me/5571997020168?text=${encodeURIComponent(msg)}`,
-                          "_blank",
-                        );
+                        window.open(linkWhatsApp(msg), "_blank");
                       }}
                     >
                       Pedir orçamento

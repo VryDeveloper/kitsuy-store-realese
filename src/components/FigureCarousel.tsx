@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 
 //─── Substitua estes imports pelas suas imagens reais ───────────────────────
-import img1 from "@/assets/figure/frente.jpg";
-import img2 from "@/assets/figure/lateral.jpg";
-import img3 from "@/assets/figure/base.jpg";
+import img1 from "@/assets/figure/frente.webp";
+import img2 from "@/assets/figure/lateral.webp";
+import img3 from "@/assets/figure/base.webp";
 
 const IMAGES = [
   { src: img1, label: "Frente" },
