@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { useProdutos } from "@/hooks/useProdutos";
 import { CarrinhoSheet } from "@/components/CarrinhoSheet";
+import { BotaoConta } from "@/components/BotaoConta";
 
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
@@ -77,6 +78,7 @@ const Estoque = () => {
 
           <div className="flex gap-2 items-center">
             <CarrinhoSheet />
+            <BotaoConta />
             <Button
               variant="ghost"
               size="icon"

@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 import { CarrinhoSheet } from "@/components/CarrinhoSheet";
+import { BotaoConta } from "@/components/BotaoConta";
 import { useProdutos } from "@/hooks/useProdutos";
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
@@ -134,6 +135,7 @@ const Index = () => {
           {/* Ações */}
           <div className="flex gap-2 items-center">
             <CarrinhoSheet />
+            <BotaoConta />
             <Button
               variant="ghost"
               size="icon"

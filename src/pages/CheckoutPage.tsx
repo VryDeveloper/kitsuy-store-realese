@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import { doc, getDoc } from "firebase/firestore";
+import { Link, useNavigate } from "react-router-dom";
+import { doc, getDoc, setDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import {
   ProdutoCheckout,
@@ -16,6 +16,7 @@ import { getPedidoReservado, chaveCarrinho } from "@/lib/reservaSessao";
 import { inStockAoVivo } from "@/lib/disponibilidade";
 import { ResumoPedido } from "@/components/checkout/ResumoPedido";
 import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
@@ -25,6 +26,23 @@ const CheckoutPage = () => {
   const navigate = useNavigate();
   const { itens: itensCarrinho, remover: removerDoCarrinho } = useCart();
   const { toast } = useToast();
+  const { usuario } = useAuth();
+  // Dados salvos na conta (usuarios/{uid}) para já preencher o formulário.
+  const [perfil, setPerfil] = useState<Partial<DadosCliente & Endereco> | null>(null);
+
+  useEffect(() => {
+    if (!usuario) return;
+    getDoc(doc(db, "usuarios", usuario.uid))
+      .then((snap) =>
+        setPerfil({
+          nome: usuario.displayName ?? undefined,
+          email: usuario.email ?? undefined,
+          ...snap.data()?.cliente,
+          ...snap.data()?.endereco,
+        }),
+      )
+      .catch((err) => console.error("Erro ao ler perfil salvo:", err));
+  }, [usuario]);
 
   const [produtos, setProdutos] = useState<ProdutoCheckout[]>([]);
   const [carregandoProdutos, setCarregandoProdutos] = useState(true);
@@ -137,6 +155,14 @@ const CheckoutPage = () => {
     setCliente(dadosCliente);
     setEndereco(dadosEndereco);
     setEtapa("frete");
+    if (usuario) {
+      // Salvar o perfil é conveniência: se falhar, o checkout segue.
+      setDoc(
+        doc(db, "usuarios", usuario.uid),
+        { cliente: dadosCliente, endereco: dadosEndereco, atualizadoEm: new Date() },
+        { merge: true },
+      ).catch((err) => console.error("Erro ao salvar perfil:", err));
+    }
   };
 
   const handleFreteEscolhido = (frete: OpcaoFrete) => {
@@ -218,7 +244,22 @@ const CheckoutPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
             {etapa === "endereco" && (
-              <FormEndereco onContinuar={handleEnderecoContinuar} />
+              <>
+                {!usuario && (
+                  <p className="mb-3 text-sm text-gray-500">
+                    Tem conta?{" "}
+                    <Link to="/entrar?voltar=/checkout" className="font-semibold text-[#EA3E83] hover:underline">
+                      Entre
+                    </Link>{" "}
+                    para preencher seus dados e acompanhar o pedido.
+                  </p>
+                )}
+                <FormEndereco
+                  key={perfil ? "perfil" : "vazio"}
+                  valoresIniciais={{ ...perfil, ...cliente, ...endereco }}
+                  onContinuar={handleEnderecoContinuar}
+                />
+              </>
             )}
 
             {etapa === "frete" && endereco && (

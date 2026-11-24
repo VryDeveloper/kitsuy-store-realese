@@ -13,6 +13,7 @@ import {
 } from "./_lib/estoque.js";
 import { clienteSchema, enderecoSchema } from "./_lib/validar-checkout.js";
 import { precoEmCentavos } from "./_lib/preco.js";
+import { usuarioDoToken } from "./_lib/auth.js";
 
 /**
  * POST /api/criar-preferencia
@@ -143,6 +144,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const clienteSeguro = clienteValidado.data;
+
+    // Conta é opcional: token ausente ou inválido vira compra sem conta.
+    const usuario = await usuarioDoToken(req);
     const enderecoSeguro = enderecoValidado.data;
 
     console.log("[criar-preferencia] Iniciando", { produtoIds });
@@ -289,6 +293,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .doc(pedidoId)
       .set({
         pedidoId,
+        uid: usuario?.uid ?? null,
         status: "pendente",
         criadoEm: now,
         atualizadoEm: now,

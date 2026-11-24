@@ -38,9 +38,10 @@ type FormData = z.infer<typeof schema>;
 
 interface Props {
   onContinuar: (cliente: DadosCliente, endereco: Endereco) => void;
+  valoresIniciais?: Partial<FormData>;
 }
 
-export function FormEndereco({ onContinuar }: Props) {
+export function FormEndereco({ onContinuar, valoresIniciais }: Props) {
   const { toast } = useToast();
   const [buscandoCEP, setBuscandoCEP] = useState(false);
 
@@ -51,6 +52,7 @@ export function FormEndereco({ onContinuar }: Props) {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: valoresIniciais,
   });
 
   const handleCEPBlur = async (e: React.FocusEvent<HTMLInputElement>) => {

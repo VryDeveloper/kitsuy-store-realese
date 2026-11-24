@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
 import { getStorage } from "firebase/storage"; // opcional, se quiser usar imagens
 
 // Configuração do Firebase
@@ -18,6 +19,9 @@ const app = initializeApp(firebaseConfig);
 
 // Inicializa o Firestore (banco de dados)
 export const db = getFirestore(app);
+
+// Login de clientes (Google e e-mail/senha)
+export const auth = getAuth(app);
 
 // Opcional: inicializa o Storage (para imagens)
 export const storage = getStorage(app);

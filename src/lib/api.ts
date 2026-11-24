@@ -3,6 +3,8 @@
  * Todo fetch relacionado ao checkout passa por aqui.
  */
 
+import { auth } from "@/firebaseConfig";
+
 const BASE = ""; // rotas relativas — funciona em qualquer ambiente (dev/prod)
 
 async function parseErro(res: Response, fallback: string): Promise<never> {
@@ -50,10 +52,16 @@ interface CriarPreferenciaPayload {
   pedidoIdExistente?: string;
 }
 
+// Header de login, se houver alguém logado. Sem conta, a compra segue igual.
+async function headerAuth(): Promise<Record<string, string>> {
+  const token = await auth.currentUser?.getIdToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export async function criarPreferencia(dados: CriarPreferenciaPayload) {
   const res = await fetch(`${BASE}/api/criar-preferencia`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...(await headerAuth()) },
     body: JSON.stringify(dados),
   });
   if (!res.ok) return parseErro(res, "Erro ao criar preferência de pagamento");
@@ -66,6 +74,21 @@ export async function verificarPagamento(pedidoId: string) {
   );
   if (!res.ok) return parseErro(res, "Pedido não encontrado");
   return res.json();
+}
+
+export interface PedidoDaConta {
+  pedidoId: string;
+  status: string;
+  criadoEm: string | null;
+  totalEmCentavos: number;
+  transportadora: string;
+  produtos: { nome: string; imagem: string; preco: number }[];
+}
+
+export async function meusPedidos(): Promise<PedidoDaConta[]> {
+  const res = await fetch(`${BASE}/api/meus-pedidos`, { headers: await headerAuth() });
+  if (!res.ok) return parseErro(res, "Erro ao buscar pedidos");
+  return (await res.json()).pedidos;
 }
 
 /**

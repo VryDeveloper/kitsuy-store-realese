@@ -43,6 +43,12 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Perfil do cliente (dados do checkout salvos) ───────────────────
+    // Só o próprio dono, logado, lê e escreve o seu documento.
+    match /usuarios/{uid} {
+      allow read, write: if request.auth != null && request.auth.uid == uid;
+    }
+
     // Bloqueia qualquer outra coleção não listada explicitamente acima.
     match /{document=**} {
       allow read, write: if false;
