@@ -16,7 +16,9 @@ export async function usuarioDoToken(
   if (!token) return null;
 
   try {
-    return await getAuth().verifyIdToken(token);
+    // checkRevoked: token de sessão encerrada (troca de senha, "sair de
+    // todos os aparelhos", conta desativada) é recusado na hora.
+    return await getAuth().verifyIdToken(token, true);
   } catch {
     return null;
   }

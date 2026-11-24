@@ -157,9 +157,12 @@ const CheckoutPage = () => {
     setEtapa("frete");
     if (usuario) {
       // Salvar o perfil é conveniência: se falhar, o checkout segue.
+      // O CPF NÃO é salvo: o navegador não tem como criptografá-lo de verdade,
+      // então o cliente digita de novo a cada compra (minimização de dados).
+      const { nome, email, telefone } = dadosCliente;
       setDoc(
         doc(db, "usuarios", usuario.uid),
-        { cliente: dadosCliente, endereco: dadosEndereco, atualizadoEm: new Date() },
+        { cliente: { nome, email, telefone }, endereco: dadosEndereco, atualizadoEm: new Date() },
         { merge: true },
       ).catch((err) => console.error("Erro ao salvar perfil:", err));
     }

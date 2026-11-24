@@ -14,6 +14,7 @@ import {
 import { clienteSchema, enderecoSchema } from "./_lib/validar-checkout.js";
 import { precoEmCentavos } from "./_lib/preco.js";
 import { usuarioDoToken } from "./_lib/auth.js";
+import { cifrar } from "./_lib/cripto.js";
 
 /**
  * POST /api/criar-preferencia
@@ -147,6 +148,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Conta é opcional: token ausente ou inválido vira compra sem conta.
     const usuario = await usuarioDoToken(req);
+
+    // CPF e telefone vão criptografados para o Firestore. Cifra antes de
+    // reservar estoque: sem chave configurada, falha aqui sem travar peças.
+    const cpfCifrado = cifrar(clienteSeguro.cpf);
+    const telefoneCifrado = cifrar(clienteSeguro.telefone);
     const enderecoSeguro = enderecoValidado.data;
 
     console.log("[criar-preferencia] Iniciando", { produtoIds });
@@ -308,8 +314,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         cliente: {
           nome: clienteSeguro.nome,
           email: clienteSeguro.email,
-          telefone: clienteSeguro.telefone,
-          cpf: clienteSeguro.cpf,
+          telefone: telefoneCifrado,
+          cpf: cpfCifrado,
         },
         endereco: enderecoSeguro,
         frete: {
