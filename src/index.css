@@ -123,6 +123,30 @@
 
 /* Custom modern utilities */
 @layer utilities {
+  /* Link do menu: sublinhado rosa que cresce do centro. */
+  .nav-link {
+    position: relative;
+    padding-block: 6px;
+  }
+  .nav-link::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    right: 50%;
+    bottom: 0;
+    height: 3px;
+    border-radius: 3px;
+    background: #ea3e83;
+    transition:
+      left 250ms cubic-bezier(0.22, 1, 0.36, 1),
+      right 250ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .nav-link:hover::after,
+  .nav-link:focus-visible::after {
+    left: 0;
+    right: 0;
+  }
+
   .bg-modern-gradient {
     background: linear-gradient(135deg, hsl(336 80% 58%), hsl(0 84% 60%));
   }

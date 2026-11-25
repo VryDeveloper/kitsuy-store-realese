@@ -25,6 +25,7 @@ import { BotaoConta } from "@/components/BotaoConta";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
 import { INSTAGRAM_URL, MENSAGENS_WHATSAPP, linkWhatsApp } from "@/config/loja";
+import MagneticBounce from "@/components/MagneticBounce";
 
 const Estoque = () => {
   const { produtos: figures, carregando: loading } = useProdutos();
@@ -262,15 +263,17 @@ const Estoque = () => {
                     <h3 className="font-light text-gray-900 text-sm leading-tight mb-3 line-clamp-2">
                       {fig.title}
                     </h3>
-                    <button
-                      className="w-full py-2 rounded-xl bg-[#EA3E83] text-white text-sm font-semibold hover:bg-[#c72e6c] mt-auto transition-colors"
-                      onClick={() => {
-                        const msg = `Olá! Vi a figure "${fig.title}" no site e quero um orçamento!`;
-                        window.open(linkWhatsApp(msg), "_blank");
-                      }}
-                    >
-                      Pedir orçamento
-                    </button>
+                    <MagneticBounce forca={3} className="w-full mt-auto">
+                      <button
+                        className="w-full py-2 rounded-xl bg-[#EA3E83] text-white text-sm font-semibold hover:bg-[#c72e6c] transition-colors"
+                        onClick={() => {
+                          const msg = `Olá! Vi a figure "${fig.title}" no site e quero um orçamento!`;
+                          window.open(linkWhatsApp(msg), "_blank");
+                        }}
+                      >
+                        Pedir orçamento
+                      </button>
+                    </MagneticBounce>
                   </div>
                 ))}
               </div>
@@ -289,14 +292,16 @@ const Estoque = () => {
             Se existe no Japão, a gente encontra. Manda o nome ou a foto e a
             gente pesquisa pra você — orçamento grátis e sem compromisso.
           </p>
-          <Button
-            size="lg"
-            onClick={() => window.open(whatsappEstoque, "_blank")}
-            className="bg-white text-[#EA3E83] hover:bg-white/90 gap-2 font-bold px-8 py-6 text-base rounded-full"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Chamar no WhatsApp
-          </Button>
+          <MagneticBounce>
+            <Button
+              size="lg"
+              onClick={() => window.open(whatsappEstoque, "_blank")}
+              className="bg-white text-[#EA3E83] hover:bg-white/90 gap-2 font-bold px-8 py-6 text-base rounded-full"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Chamar no WhatsApp
+            </Button>
+          </MagneticBounce>
         </div>
       </section>
 

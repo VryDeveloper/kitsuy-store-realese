@@ -3,6 +3,8 @@ import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import DepoimentosCarousel from "@/components/DepoimentosCarousel";
 import TiltCard from "@/components/TiltCard";
+import FormEncontreFigure from "@/components/FormEncontreFigure";
+import MagneticBounce from "@/components/MagneticBounce";
 import {
   Instagram,
   MessageCircle,
@@ -40,8 +42,8 @@ import { useProdutos } from "@/hooks/useProdutos";
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
 import banner1 from "@/assets/banner-1.webp";
-import banner2 from "@/assets/banner-2.webp";
-import banner3 from "@/assets/banner-3.webp";
+import bannerSorteio from "@/assets/banner-sorteio.webp";
+import bannerInstagram from "@/assets/banner-instagram.webp";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
 import figure1 from "@/assets/figure-1.webp";
@@ -63,8 +65,8 @@ const Index = () => {
 
   const banners = [
     { image: banner1, alt: "Friren-Banner" },
-    { image: banner2, alt: "Promocao-Banner" },
-    { image: banner3, alt: "Jujutsu Figure-Banner" },
+    { image: bannerSorteio, alt: "Sorteio especial Kitsuy Store: concorra à figure Hatsune Miku Clione pelo Instagram", href: INSTAGRAM_URL },
+    { image: bannerInstagram, alt: "Siga a Kitsuy Store no Instagram: @kitsuystore", href: INSTAGRAM_URL },
   ];
 
   const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.conhecer);
@@ -109,7 +111,7 @@ const Index = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className="text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
+                  className="nav-link text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
                 >
                   {item.label}
                 </a>
@@ -124,7 +126,7 @@ const Index = () => {
                       window.scrollTo({ top: y, behavior: "smooth" });
                     }
                   }}
-                  className="text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
+                  className="nav-link text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
                 >
                   {item.label}
                 </button>
@@ -265,13 +267,18 @@ const Index = () => {
           <CarouselContent>
             {banners.map((banner, index) => (
               <CarouselItem key={index}>
-                <div className="relative aspect-[16/9] md:aspect-[21/7] overflow-hidden rounded-2xl">
+                <a
+                  href={banner.href}
+                  target={banner.href ? "_blank" : undefined}
+                  rel={banner.href ? "noopener noreferrer" : undefined}
+                  className="relative block aspect-[16/9] md:aspect-[21/7] overflow-hidden rounded-2xl"
+                >
                   <img
                     src={banner.image}
                     alt={banner.alt}
                     className="w-full h-full object-contain"
                   />
-                </div>
+                </a>
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -339,14 +346,16 @@ const Index = () => {
             ))}
           </div>
 
-          <Button
-            size="lg"
-            onClick={() => window.open(whatsappOrcamento, "_blank")}
-            className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 text-base px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Pedir um orçamento grátis
-          </Button>
+          <MagneticBounce>
+            <Button
+              size="lg"
+              onClick={() => window.open(whatsappOrcamento, "_blank")}
+              className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 text-base px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Pedir um orçamento grátis
+            </Button>
+          </MagneticBounce>
         </div>
       </section>
 
@@ -673,21 +682,13 @@ const Index = () => {
       {/* ══════════════════════════════════════════════════
           ENCOMENDA — CTA
       ══════════════════════════════════════════════════ */}
-      <section className="py-20 px-4 bg-gradient-to-br from-[#EA3E83] to-[#c72e6c] text-white relative overflow-hidden">
-        {/* Padrão de fundo decorativo */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 30px 30px, white 3px, transparent 0)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
+      <section className="py-20 px-4 bg-[#d4237a] text-white">
+        <div className="container mx-auto max-w-6xl grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="text-center lg:text-left">
           <h2 className="fredoka text-4xl md:text-6xl font-bold mb-4">
             Não encontrou o que procura?
           </h2>
-          <p className="text-xl opacity-90 mb-4 max-w-2xl mx-auto">
+          <p className="text-xl opacity-90 mb-4 max-w-2xl mx-auto lg:mx-0">
             Se existe no Japão, a gente encontra. Manda o nome ou a foto da
             figure e a gente já começa a pesquisar pra você —{" "}
             <strong>sem compromisso.</strong>
@@ -697,15 +698,7 @@ const Index = () => {
             robô.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              onClick={() => window.open(whatsappOrcamento, "_blank")}
-              className="bg-white text-[#EA3E83] hover:bg-white gap-2 text-base px-8 py-6 rounded-full font-bold shadow-lg"
-            >
-              <MessageCircle className="h-5 w-5" />
-              Pedir orçamento pelo WhatsApp
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
             <Button
               size="lg"
               variant="outline"
@@ -718,7 +711,7 @@ const Index = () => {
           </div>
 
           {/* Checklist de garantias */}
-          <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm">
+          <div className="mt-12 flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-3 text-sm">
             {[
               "Figures 100% originais",
               "Orçamento sem compromisso",
@@ -732,6 +725,8 @@ const Index = () => {
               </div>
             ))}
           </div>
+          </div>
+          <FormEncontreFigure />
         </div>
       </section>
 
