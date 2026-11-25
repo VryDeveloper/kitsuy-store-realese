@@ -18,6 +18,7 @@ import {
   type ProdutoRef,
 } from "./_lib/estoque.js";
 import { verificarDisponibilidadeFrete } from "./_lib/verificar-disponibilidade-frete.js";
+import { decifrar } from "./_lib/cripto.js";
 
 /**
  * WEBHOOK DO MERCADO PAGO
@@ -207,6 +208,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const pedidoData = pedidoDoc.data()!;
+    // CPF e telefone ficam criptografados no Firestore (ver _lib/cripto.ts).
+    if (pedidoData.cliente) {
+      pedidoData.cliente = {
+        ...pedidoData.cliente,
+        cpf: decifrar(String(pedidoData.cliente.cpf ?? "")),
+        telefone: decifrar(String(pedidoData.cliente.telefone ?? "")),
+      };
+    }
     const statusAnterior = pedidoData.status as string | undefined;
     const jaEstavaPago = statusAnterior === "paid";
     const { orderStatus, paymentStatus } = mapMPStatus(

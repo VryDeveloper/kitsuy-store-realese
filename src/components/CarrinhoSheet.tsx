@@ -9,23 +9,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, X, Package } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
+import { formatarMoeda, precoEmReais } from "@/lib/preco";
 
-function precoParaNumero(preco: string): number {
-  return parseFloat(preco.replace(/[^\d,]/g, "").replace(",", ".")) || 0;
-}
-
-function formatarMoeda(valor: number): string {
-  return new Intl.NumberFormat("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  }).format(valor);
-}
 
 export function CarrinhoSheet() {
   const { itens, remover, contador } = useCart();
   const navigate = useNavigate();
 
-  const total = itens.reduce((soma, item) => soma + precoParaNumero(item.preco), 0);
+  const total = itens.reduce((soma, item) => soma + precoEmReais(item.preco), 0);
 
   return (
     <Sheet>

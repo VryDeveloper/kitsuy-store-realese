@@ -10,6 +10,7 @@ import {
   DIMENSOES_PADRAO,
   type ItemCarrinho,
 } from "./_lib/frete-consolidado.js";
+import { precoEmCentavos } from "./_lib/preco.js";
 
 // Cotação de frete válida por 30 minutos — tempo suficiente para o cliente
 // terminar o checkout sem deixar a janela de uso aberta indefinidamente.
@@ -97,19 +98,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         );
       }
 
-      const precoEmReais = parseFloat(
-        String(produto.price)
-          .replace(/[^\d,]/g, "")
-          .replace(",", "."),
-      );
-
       return {
         produtoId,
         pesoEmKg: produto.pesoEmKg || DIMENSOES_PADRAO.pesoEmKg,
         alturaCm: produto.alturaEmCm || DIMENSOES_PADRAO.alturaEmCm,
         larguraCm: produto.larguraEmCm || DIMENSOES_PADRAO.larguraEmCm,
         comprimentoCm: produto.comprimentoEmCm || DIMENSOES_PADRAO.comprimentoEmCm,
-        precoEmCentavos: Math.round(precoEmReais * 100),
+        precoEmCentavos: precoEmCentavos(produto.price),
       };
     });
 

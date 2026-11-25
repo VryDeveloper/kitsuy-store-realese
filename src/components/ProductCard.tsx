@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ShoppingCart, MessageCircle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { linkWhatsApp } from "@/config/loja";
 
 interface ProductCardProps {
   id?: string;
@@ -29,7 +30,7 @@ export const ProductCard = ({
   const [selectedImage, setSelectedImage] = useState<string | null>(null); // Estado para controlar o overlay
 
   const whatsappMessage = `Olá! Gostaria de saber mais sobre: ${title} ${price}`;
-  const whatsappLink = `https://wa.me/5571997020168?text=${encodeURIComponent(whatsappMessage)}`;
+  const whatsappLink = linkWhatsApp(whatsappMessage);
 
   const isOutOfStock = inStock.toLowerCase() === "indisponível";
 

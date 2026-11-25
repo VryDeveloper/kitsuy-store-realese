@@ -12,6 +12,9 @@ import {
   type ProdutoRef,
 } from "./_lib/estoque.js";
 import { clienteSchema, enderecoSchema } from "./_lib/validar-checkout.js";
+import { precoEmCentavos } from "./_lib/preco.js";
+import { usuarioDoToken } from "./_lib/auth.js";
+import { cifrar } from "./_lib/cripto.js";
 
 /**
  * POST /api/criar-preferencia
@@ -142,6 +145,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const clienteSeguro = clienteValidado.data;
+
+    // Conta é opcional: token ausente ou inválido vira compra sem conta.
+    const usuario = await usuarioDoToken(req);
+
+    // CPF e telefone vão criptografados para o Firestore. Cifra antes de
+    // reservar estoque: sem chave configurada, falha aqui sem travar peças.
+    const cpfCifrado = cifrar(clienteSeguro.cpf);
+    const telefoneCifrado = cifrar(clienteSeguro.telefone);
     const enderecoSeguro = enderecoValidado.data;
 
     console.log("[criar-preferencia] Iniciando", { produtoIds });
@@ -260,15 +271,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // ── CALCULAR TOTAL (produtos do Firestore + frete já validado) ──────
     const itensPedido = produtoIds.map((produtoId) => {
       const produto = produtos.get(`${collectionName}/${produtoId}`)!;
-      const precoEmReais = parseFloat(
-        String(produto.price)
-          .replace(/[^\d,]/g, "")
-          .replace(",", "."),
-      );
       return {
         produtoId,
         produto,
-        precoEmCentavos: Math.round(precoEmReais * 100),
+        precoEmCentavos: precoEmCentavos(produto.price),
       };
     });
 
@@ -293,6 +299,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .doc(pedidoId)
       .set({
         pedidoId,
+        uid: usuario?.uid ?? null,
         status: "pendente",
         criadoEm: now,
         atualizadoEm: now,
@@ -307,8 +314,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         cliente: {
           nome: clienteSeguro.nome,
           email: clienteSeguro.email,
-          telefone: clienteSeguro.telefone,
-          cpf: clienteSeguro.cpf,
+          telefone: telefoneCifrado,
+          cpf: cpfCifrado,
         },
         endereco: enderecoSeguro,
         frete: {

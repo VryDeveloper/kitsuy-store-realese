@@ -4,10 +4,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/co
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
+import { EMAIL_LOJA, INSTAGRAM_URL, MENSAGENS_WHATSAPP, linkWhatsApp } from "@/config/loja";
 
 const FAQs = () => {
-  const whatsappLink = "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
-  const instagramLink = "https://instagram.com/kitsuystore";
+  const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.conhecer);
+  const instagramLink = INSTAGRAM_URL;
 
   const faqData = [
     {
@@ -279,7 +280,7 @@ const FAQs = () => {
             </Button>
           </div>
           <p className="text-xs opacity-60">
-            Site em Contrução! Envie seu Feedback para kitsuystore@gmail.com
+            Site em Contrução! Envie seu Feedback para {EMAIL_LOJA}
           </p>
           <p className="text-xs opacity-60">
             © 2025 Kitsuy Store. Todos os direitos reservados.

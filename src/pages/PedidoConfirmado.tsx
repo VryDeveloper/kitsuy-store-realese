@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { verificarPagamento } from "@/lib/api";
+import { formatarMoeda } from "@/lib/preco";
 import { StatusPedido } from "@/types/checkout";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
@@ -76,12 +77,6 @@ const PedidoConfirmado = () => {
     // setItens([]) do contexto independente da closure ser "antiga".
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pedidoId]);
-
-  const formatarMoeda = (centavos: number) =>
-    new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(centavos / 100);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -202,7 +197,7 @@ const PedidoConfirmado = () => {
                     {pedido.transportadora} · {pedido.prazoEmDias} dias úteis
                   </span>
                   <p className="font-bold text-lg text-[#EA3E83]">
-                    {formatarMoeda(pedido.totalEmCentavos)}
+                    {formatarMoeda(pedido.totalEmCentavos / 100)}
                   </p>
                 </div>
 

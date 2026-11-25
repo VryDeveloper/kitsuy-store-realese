@@ -1,6 +1,7 @@
 import { ProdutoCheckout, OpcaoFrete } from "@/types/checkout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { formatarMoeda, precoEmReais } from "@/lib/preco";
 
 interface Props {
   produtos: ProdutoCheckout[];
@@ -9,18 +10,11 @@ interface Props {
 
 export function ResumoPedido({ produtos, frete }: Props) {
   const precoTotalEmReais = produtos.reduce(
-    (soma, produto) =>
-      soma + parseFloat(produto.preco.replace(/[^\d,]/g, "").replace(",", ".")),
+    (soma, produto) => soma + precoEmReais(produto.preco),
     0,
   );
   const freteEmReais = frete ? frete.valorEmCentavos / 100 : 0;
   const totalEmReais = precoTotalEmReais + freteEmReais;
-
-  const formatarMoeda = (valor: number) =>
-    new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
-    }).format(valor);
 
   return (
     <Card className="sticky top-4">

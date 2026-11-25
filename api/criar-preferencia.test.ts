@@ -115,6 +115,7 @@ describe("POST /api/criar-preferencia", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.VITE_SITE_URL = "http://localhost:8081";
+    process.env.DADOS_CHAVE_CRIPTO = Buffer.alloc(32, 7).toString("base64");
     preferenceCreateShouldFail = false;
   });
 
@@ -516,6 +517,12 @@ describe("POST /api/criar-preferencia", () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body?.pedidoId).toBe(pedidoIdExistente);
+
+      // CPF e telefone nunca vão em texto puro para o Firestore.
+      const gravado = mockPedidoDocRef.set.mock.calls[0][0];
+      expect(gravado.cliente.cpf).toMatch(/^enc:v1:/);
+      expect(gravado.cliente.telefone).toMatch(/^enc:v1:/);
+      expect(JSON.stringify(gravado)).not.toContain("12345678901");
     });
 
     it("rejeita renovação com email diferente (segurança)", async () => {

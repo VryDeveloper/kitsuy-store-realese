@@ -153,7 +153,7 @@ describe("CarrinhoSheet", () => {
       expect(screen.getByText("Produto Teste")).toBeInTheDocument();
       expect(screen.getByText("1")).toBeInTheDocument();
 
-      const itemElement = screen.getByText("Produto Teste").closest("div[class*='border'][class*='rounded-lg']");
+      const itemElement = screen.getByText("Produto Teste").closest<HTMLElement>("div[class*='border'][class*='rounded-lg']");
       expect(itemElement).toBeInTheDocument();
 
       const removeButton = within(itemElement!).getByRole("button");

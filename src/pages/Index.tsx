@@ -1,9 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ProductCard } from "@/components/ProductCard";
 import DepoimentosCarousel from "@/components/DepoimentosCarousel";
 import TiltCard from "@/components/TiltCard";
-import BotaoAnimado from "@/components/BotaoAnimado";
+import FormEncontreFigure from "@/components/FormEncontreFigure";
+import MagneticBounce from "@/components/MagneticBounce";
 import {
   Instagram,
   MessageCircle,
@@ -13,7 +14,6 @@ import {
   Menu,
   MessageCircleQuestion,
   MapPin,
-  Star,
   ChevronRight,
   Truck,
   ShieldCheck,
@@ -21,7 +21,6 @@ import {
   ArrowRight,
   CheckCircle2,
 } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import {
   Sheet,
   SheetContent,
@@ -37,149 +36,46 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
-import { ProductOfertaCard } from "@/components/ProductOfertaCard";
-import { CountdownTimer } from "@/components/CountdownTimer";
 import { CarrinhoSheet } from "@/components/CarrinhoSheet";
-import { db } from "@/firebaseConfig";
-import { collection, getDocs } from "firebase/firestore";
-import { inStockAoVivo } from "@/lib/disponibilidade";
-
-// ─── Interfaces ────────────────────────────────────────────────────────────────
-interface Product {
-  id: string;
-  title: string;
-  inStock: string;
-  discount: string;
-  price: string;
-  image: string;
-  displayOrder?: number;
-  description?: string;
-  stock?: number;
-  featured?: boolean;
-  source?: string;
-}
+import { BotaoConta } from "@/components/BotaoConta";
+import { useProdutos } from "@/hooks/useProdutos";
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
-import banner1 from "@/assets/banner-1.png";
-import banner2 from "@/assets/banner-2.png";
-import banner3 from "@/assets/banner-3.png";
+import banner1 from "@/assets/banner-1.webp";
+import bannerSorteio from "@/assets/banner-sorteio.webp";
+import bannerInstagram from "@/assets/banner-instagram.webp";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
-import figure1 from "@/assets/figure-1.png";
-import figure2 from "@/assets/figure-2.png";
-import figure3 from "@/assets/figure-3.png";
-import figure4 from "@/assets/figure-4.png";
-import figure5 from "@/assets/figure-5.png";
-import figure6 from "@/assets/figure-6.png";
-import figure7 from "@/assets/figure-7.png";
+import figure1 from "@/assets/figure-1.webp";
+import figure2 from "@/assets/figure-2.webp";
+import figure3 from "@/assets/figure-3.webp";
+import figure4 from "@/assets/figure-4.webp";
+import figure5 from "@/assets/figure-5.webp";
+import figure6 from "@/assets/figure-6.webp";
+import figure7 from "@/assets/figure-7.webp";
+import { EMAIL_LOJA, INSTAGRAM_URL, MENSAGENS_WHATSAPP, WHATSAPP_EXIBICAO, linkWhatsApp } from "@/config/loja";
 
 // ─── Dados estáticos ───────────────────────────────────────────────────────────
-const DEPOIMENTOS = [
-  {
-    nome: "Ana Lima",
-    texto:
-      "Recebi minha figure da Frieren em perfeito estado! O atendimento foi super atencioso, me mandaram fotos antes de enviar. Recomendo muito!",
-    estrelas: 5,
-    figura: "Frieren — SPM Figure",
-  },
-  {
-    nome: "Carlos Mendes",
-    texto:
-      "Pedi uma figure rara que não tinha em nenhum lugar no Brasil. A Kitsuy encontrou em menos de 2 dias e o preço ficou ótimo. Chegou lacrada do Japão.",
-    estrelas: 5,
-    figura: "Jujutsu Kaisen — Gojo Satoru",
-  },
-  {
-    nome: "Beatriz Santos",
-    texto:
-      "Atendimento pelo WhatsApp é 10/10. Tirei todas as dúvidas antes de fechar e eles são super honestos sobre prazos. Já fiz 3 pedidos.",
-    estrelas: 5,
-    figura: "Demon Slayer — Nezuko",
-  },
-  {
-    nome: "Rafael Costa",
-    texto:
-      "Não sabia que existia esse tipo de serviço. Você faz um pedido, eles buscam no Japão e entregam no seu endereço. Simples assim. Figura perfeita.",
-    estrelas: 5,
-    figura: "One Piece — Zoro",
-  },
-];
-
 const GALERIA = [figure1, figure2, figure3, figure4, figure5, figure6, figure7];
 
 // ─── Componente ────────────────────────────────────────────────────────────────
 const Index = () => {
-  const [figures, setFigures] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchStock, setSearchStock] = useState("");
+  const { produtos: figures, carregando: loading } = useProdutos();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const banners = [
     { image: banner1, alt: "Friren-Banner" },
-    { image: banner2, alt: "Promocao-Banner" },
-    { image: banner3, alt: "Jujutsu Figure-Banner" },
+    { image: bannerSorteio, alt: "Sorteio especial Kitsuy Store: concorra à figure Hatsune Miku Clione pelo Instagram", href: INSTAGRAM_URL },
+    { image: bannerInstagram, alt: "Siga a Kitsuy Store no Instagram: @kitsuystore", href: INSTAGRAM_URL },
   ];
 
-  const whatsappLink =
-    "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de conhecer os produtos!";
-  const whatsappOrcamento =
-    "https://wa.me/5571997020168?text=Olá! Vim do site e gostaria de fazer um orçamento de encomenda!";
-  const whatsappEstoque =
-    "https://wa.me/5571997020168?text=Olá! Vim do site e quero saber sobre as figures disponíveis no estoque!";
-  const instagramLink = "https://instagram.com/kitsuystore";
-
-  // ─── Firestore ───────────────────────────────────────────────────────────────
-  useEffect(() => {
-    const fetchAllProducts = async () => {
-      try {
-        const productsRef = collection(db, "products");
-        const masterpieceRef = collection(db, "masterpiece");
-
-        const [productsSnap, masterpieceSnap] = await Promise.all([
-          getDocs(productsRef),
-          getDocs(masterpieceRef),
-        ]);
-
-        const productsData = productsSnap.docs.map((doc) => {
-          const data = doc.data();
-          return {
-            id: doc.id,
-            source: "products",
-            ...data,
-            inStock: inStockAoVivo(data),
-          };
-        }) as Product[];
-
-        const masterpieceData = masterpieceSnap.docs.map((doc) => ({
-          id: doc.id,
-          source: "masterpiece",
-          ...doc.data(),
-        })) as Product[];
-
-        const allFigures = [...productsData, ...masterpieceData];
-        const sortedData = allFigures.sort((a, b) => {
-          const aOut = a.inStock?.toLowerCase() === "indisponível";
-          const bOut = b.inStock?.toLowerCase() === "indisponível";
-          if (aOut !== bOut) return aOut ? 1 : -1;
-          const orderA = Number(a.displayOrder) || 999999;
-          const orderB = Number(b.displayOrder) || 999999;
-          return orderA - orderB;
-        });
-
-        setFigures(sortedData);
-      } catch (error) {
-        console.error("Erro ao carregar as coleções:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAllProducts();
-  }, []);
+  const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.conhecer);
+  const whatsappOrcamento = linkWhatsApp(MENSAGENS_WHATSAPP.orcamento);
+  const whatsappEstoque = linkWhatsApp(MENSAGENS_WHATSAPP.estoque);
+  const instagramLink = INSTAGRAM_URL;
 
   const stockFigures = figures.filter((fig) => fig.source === "products");
-  const filteredStock = stockFigures.filter((fig) =>
-    fig.title.toLowerCase().includes(searchStock.toLowerCase()),
-  );
+  const filteredStock = stockFigures;
 
   // ─── JSX ─────────────────────────────────────────────────────────────────────
   return (
@@ -215,7 +111,7 @@ const Index = () => {
                 <a
                   key={item.label}
                   href={item.href}
-                  className="text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
+                  className="nav-link text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
                 >
                   {item.label}
                 </a>
@@ -230,7 +126,7 @@ const Index = () => {
                       window.scrollTo({ top: y, behavior: "smooth" });
                     }
                   }}
-                  className="text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
+                  className="nav-link text-sm font-semibold text-gray-600 hover:text-[#EA3E83] transition-colors"
                 >
                   {item.label}
                 </button>
@@ -241,6 +137,7 @@ const Index = () => {
           {/* Ações */}
           <div className="flex gap-2 items-center">
             <CarrinhoSheet />
+            <BotaoConta />
             <Button
               variant="ghost"
               size="icon"
@@ -370,13 +267,18 @@ const Index = () => {
           <CarouselContent>
             {banners.map((banner, index) => (
               <CarouselItem key={index}>
-                <div className="relative aspect-[16/9] md:aspect-[21/7] overflow-hidden rounded-2xl">
+                <a
+                  href={banner.href}
+                  target={banner.href ? "_blank" : undefined}
+                  rel={banner.href ? "noopener noreferrer" : undefined}
+                  className="relative block aspect-[16/9] md:aspect-[21/7] overflow-hidden rounded-2xl"
+                >
                   <img
                     src={banner.image}
                     alt={banner.alt}
                     className="w-full h-full object-contain"
                   />
-                </div>
+                </a>
               </CarouselItem>
             ))}
           </CarouselContent>
@@ -444,14 +346,16 @@ const Index = () => {
             ))}
           </div>
 
-          <Button
-            size="lg"
-            onClick={() => window.open(whatsappOrcamento, "_blank")}
-            className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 text-base px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
-          >
-            <MessageCircle className="h-5 w-5" />
-            Pedir um orçamento grátis
-          </Button>
+          <MagneticBounce>
+            <Button
+              size="lg"
+              onClick={() => window.open(whatsappOrcamento, "_blank")}
+              className="bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 text-base px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              <MessageCircle className="h-5 w-5" />
+              Pedir um orçamento grátis
+            </Button>
+          </MagneticBounce>
         </div>
       </section>
 
@@ -778,21 +682,13 @@ const Index = () => {
       {/* ══════════════════════════════════════════════════
           ENCOMENDA — CTA
       ══════════════════════════════════════════════════ */}
-      <section className="py-20 px-4 bg-gradient-to-br from-[#EA3E83] to-[#c72e6c] text-white relative overflow-hidden">
-        {/* Padrão de fundo decorativo */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 30px 30px, white 3px, transparent 0)",
-            backgroundSize: "60px 60px",
-          }}
-        />
-        <div className="container mx-auto max-w-4xl text-center relative z-10">
+      <section className="py-20 px-4 bg-[#d4237a] text-white">
+        <div className="container mx-auto max-w-6xl grid gap-12 lg:grid-cols-2 lg:items-center">
+          <div className="text-center lg:text-left">
           <h2 className="fredoka text-4xl md:text-6xl font-bold mb-4">
             Não encontrou o que procura?
           </h2>
-          <p className="text-xl opacity-90 mb-4 max-w-2xl mx-auto">
+          <p className="text-xl opacity-90 mb-4 max-w-2xl mx-auto lg:mx-0">
             Se existe no Japão, a gente encontra. Manda o nome ou a foto da
             figure e a gente já começa a pesquisar pra você —{" "}
             <strong>sem compromisso.</strong>
@@ -802,15 +698,7 @@ const Index = () => {
             robô.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button
-              size="lg"
-              onClick={() => window.open(whatsappOrcamento, "_blank")}
-              className="bg-white text-[#EA3E83] hover:bg-white gap-2 text-base px-8 py-6 rounded-full font-bold shadow-lg"
-            >
-              <MessageCircle className="h-5 w-5" />
-              Pedir orçamento pelo WhatsApp
-            </Button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
             <Button
               size="lg"
               variant="outline"
@@ -823,7 +711,7 @@ const Index = () => {
           </div>
 
           {/* Checklist de garantias */}
-          <div className="mt-12 flex flex-wrap justify-center gap-6 text-sm">
+          <div className="mt-12 flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-3 text-sm">
             {[
               "Figures 100% originais",
               "Orçamento sem compromisso",
@@ -837,6 +725,8 @@ const Index = () => {
               </div>
             ))}
           </div>
+          </div>
+          <FormEncontreFigure />
         </div>
       </section>
 
@@ -895,7 +785,7 @@ const Index = () => {
                   className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors text-left"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  WhatsApp: (71) 99702-0168
+                  WhatsApp: {WHATSAPP_EXIBICAO}
                 </button>
                 <button
                   onClick={() => window.open(instagramLink, "_blank")}
@@ -906,12 +796,12 @@ const Index = () => {
                 </button>
                 <button
                   onClick={() =>
-                    (window.location.href = "mailto:kitsuystore@gmail.com")
+                    (window.location.href = `mailto:${EMAIL_LOJA}`)
                   }
                   className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors text-left"
                 >
                   <Clock className="h-4 w-4" />
-                  kitsuystore@gmail.com
+                  {EMAIL_LOJA}
                 </button>
               </div>
             </div>
