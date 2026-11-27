@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { motion, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { ChevronRight, CreditCard, Percent, ShieldCheck, ShoppingCart, Tag, Truck } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
@@ -88,35 +88,36 @@ export function DestaquePromocao({ figures, titulo }: Props) {
         <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:items-center">
           {/* Destacada grande à esquerda, as outras menores à direita */}
           <ul className="grid grid-cols-3 grid-rows-2 gap-3 sm:gap-4 aspect-[6/5]">
+            {/* As molduras ficam paradas; só a imagem troca, com fade e um leve deslize (sem esticar). */}
             {ordem.map((f, k) => (
-              <motion.li
-                key={f.id}
-                layout
-                transition={{ duration: semMovimento ? 0 : 0.7, ease: [0.4, 0, 0.2, 1] }}
-                className={`relative overflow-hidden border-2 bg-black ${
-                  k === 0
-                    ? "col-span-2 row-span-2"
-                    : // com 2 figures a pequena fica centralizada com a mesma proporção da grande (4:5); proporções
-                      // diferentes fazem a imagem esticar na troca
-                      figures.length === 2 ? "row-span-2 self-center aspect-[4/5]" : ""
+              <li
+                key={k}
+                className={`relative overflow-hidden rounded-2xl border-2 bg-black ${
+                  k === 0 ? "col-span-2 row-span-2" : figures.length === 2 ? "row-span-2 self-center aspect-[4/5]" : ""
                 }`}
-                // borderRadius no style para o framer corrigir a curva durante a animação
-                style={{ borderColor: k === 0 ? ROSA : `${ROSA}66`, borderRadius: 16 }}
+                style={{ borderColor: k === 0 ? ROSA : `${ROSA}66` }}
               >
-                <button
-                  type="button"
-                  onClick={() => setAtual(figures.indexOf(f))}
-                  aria-label={k === 0 ? f.title : `Destacar ${f.title}`}
-                  className="block h-full w-full"
-                >
-                  <motion.img layout src={f.image} alt="" loading="lazy" className="h-full w-full object-cover" />
-                </button>
-                {f.descontoPct > 0 && (
-                  <span className="pointer-events-none absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-black" style={{ background: ROSA }}>
-                    -{f.descontoPct}%
-                  </span>
-                )}
-              </motion.li>
+                <AnimatePresence initial={false}>
+                  <motion.button
+                    key={f.id}
+                    type="button"
+                    onClick={() => setAtual(figures.indexOf(f))}
+                    aria-label={k === 0 ? f.title : `Destacar ${f.title}`}
+                    initial={{ opacity: 0, x: 24 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -24 }}
+                    transition={{ duration: semMovimento ? 0 : 0.6, ease: "easeInOut" }}
+                    className="absolute inset-0 block"
+                  >
+                    <img src={f.image} alt="" loading="lazy" className="h-full w-full object-cover" />
+                    {f.descontoPct > 0 && (
+                      <span className="absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-black" style={{ background: ROSA }}>
+                        -{f.descontoPct}%
+                      </span>
+                    )}
+                  </motion.button>
+                </AnimatePresence>
+              </li>
             ))}
           </ul>
 
