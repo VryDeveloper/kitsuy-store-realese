@@ -1,16 +1,15 @@
 import { useEffect, useRef } from "react";
 
 /*
- * Líquido rosa feito de bolinhas (metaballs). Cada gota soma um "campo" numa grade de baixa resolução e onde o
- * campo passa do LIMIAR vira líquido: por isso gotas próximas se fundem e se separam como líquido de verdade.
+ * Líquido rosa feito de bolinhas (metaballs). Cada gota soma um "campo" numa grade e onde o campo passa do LIMIAR
+ * vira líquido: por isso gotas próximas se fundem e se separam como líquido de verdade. A grade é pequena (rápida),
+ * mas o limiar é aplicado na GPU depois de esticar o campo, então a borda sai lisa na resolução da tela.
  * Parado, forma a onda do rodapé e balança. O mouse rápido arremessa o líquido pela seção (as gotas se juntam
  * no ar e depois nadam de volta e refazem a onda), o mouse devagar empurra e o clique (ou toque) explode.
  */
 
 const LIMIAR = 0.35; // campo a partir do qual é líquido
 const F_MAX = 1.2; // campo a partir do qual já é miolo (cor cheia)
-const NIVEIS = 128; // tons da tabela de cores por nível de campo...
-const NG = 16; // ...e por inclinação (brilho na parte de cima das gotas)
 const INFLUENCIA = 1.85; // o campo de uma gota vai até 1,85× o raio; sozinha ela aparece com o próprio raio
 const PASSO = 1 / 60; // a física anda em passos fixos de 1/60 s
 const GRAVIDADE = 0.32; // px por passo²
@@ -37,22 +36,43 @@ const suave = (a: number, b: number, x: number) => {
   return k * k * (3 - 2 * k);
 };
 
-/** Tabela (nível de campo × inclinação) → pixel RGBA empacotado para Uint32Array. `cor` em "#rrggbb". */
-function tabelaDeCores(cor: string) {
-  const hex = parseInt(cor.slice(1), 16);
-  const rgb = [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255];
-  const tabela = new Uint32Array(NIVEIS * NG);
-  for (let i = 0; i < NIVEIS; i++) {
-    const f = ((i + 0.5) / NIVEIS) * F_MAX;
-    const alfa = Math.round(suave(LIMIAR - 0.05, LIMIAR + 0.05, f) * 255);
-    const borda = 1 - suave(LIMIAR, LIMIAR * 1.6, f);
-    for (let k = 0; k < NG; k++) {
-      const brilho = borda * (k / (NG - 1)) * 0.5; // clareia só a borda de cima, como luz batendo no líquido
-      const [r, g, b] = rgb.map((c) => Math.round(c + (255 - c) * brilho));
-      tabela[i * NG + k] = ((alfa << 24) | (b << 16) | (g << 8) | r) >>> 0;
-    }
+/** Reserva sem WebGL: nível do campo (0–255) → pixel RGBA empacotado para Uint32Array. */
+function tabelaDeCores([r, g, b]: number[]) {
+  const tabela = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    const alfa = Math.round(suave(LIMIAR - 0.05, LIMIAR + 0.05, (i / 255) * F_MAX) * 255);
+    tabela[i] = ((alfa << 24) | (b << 16) | (g << 8) | r) >>> 0;
   }
   return tabela;
+}
+
+// Estica o campo (filtro linear) e só então aplica o limiar: borda lisa em qualquer resolução.
+const VERTICE = `attribute vec2 p; varying vec2 uv; uniform vec2 ajuste;
+void main() { uv = vec2(p.x * 0.5 + 0.5, 0.5 - p.y * 0.5) * ajuste; gl_Position = vec4(p, 0.0, 1.0); }`;
+const FRAGMENTO = `precision mediump float;
+varying vec2 uv; uniform sampler2D campo; uniform vec2 texel; uniform vec3 cor; uniform float aa; uniform float inc;
+float f(vec2 q) { return texture2D(campo, q).r * ${F_MAX.toFixed(2)}; }
+void main() {
+  float c = f(uv);
+  float a = smoothstep(${LIMIAR} - aa, ${LIMIAR} + aa, c);
+  // brilho fino na borda de cima das gotas, como luz batendo no líquido
+  float subida = clamp((f(uv + vec2(0.0, texel.y)) - f(uv - vec2(0.0, texel.y))) * inc, 0.0, 1.0);
+  float borda = 1.0 - smoothstep(${LIMIAR}, ${LIMIAR * 1.6}, c);
+  gl_FragColor = vec4(mix(cor, vec3(1.0), borda * subida * 0.5) * a, a);
+}`;
+
+function programa(gl: WebGLRenderingContext) {
+  const prog = gl.createProgram();
+  if (!prog) return null;
+  for (const [tipo, fonte] of [[gl.VERTEX_SHADER, VERTICE], [gl.FRAGMENT_SHADER, FRAGMENTO]] as const) {
+    const sh = gl.createShader(tipo);
+    if (!sh) return null;
+    gl.shaderSource(sh, fonte);
+    gl.compileShader(sh);
+    gl.attachShader(prog, sh);
+  }
+  gl.linkProgram(prog);
+  return gl.getProgramParameter(prog, gl.LINK_STATUS) ? prog : null;
 }
 
 /** Líquido interativo que cobre a seção-mãe (fica atrás do conteúdo). Sem animação com "reduzir movimento". */
@@ -61,12 +81,33 @@ export function OndaLiquida({ cor, className = "" }: { cor: string; className?: 
 
   useEffect(() => {
     const canvas = ref.current;
-    const ctx = canvas?.getContext("2d");
     const area = canvas?.parentElement;
-    if (!canvas || !ctx || !area) return;
+    if (!canvas || !area) return;
+    const gl = canvas.getContext("webgl", { premultipliedAlpha: true, antialias: false });
+    const prog = gl && programa(gl);
+    const ctx = prog ? null : canvas.getContext("2d"); // sem WebGL: desenha a grade direto (mais serrilhado)
+    if (!prog && !ctx) return;
 
     const reduz = matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const tabela = tabelaDeCores(cor);
+    const hex = parseInt(cor.slice(1), 16); // cor em "#rrggbb"
+    const rgb = [(hex >> 16) & 255, (hex >> 8) & 255, hex & 255];
+    const tabela = tabelaDeCores(rgb);
+    if (gl && prog) {
+      gl.useProgram(prog);
+      gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+      gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+      const p = gl.getAttribLocation(prog, "p");
+      gl.enableVertexAttribArray(p);
+      gl.vertexAttribPointer(p, 2, gl.FLOAT, false, 0, 0);
+      gl.bindTexture(gl.TEXTURE_2D, gl.createTexture());
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.pixelStorei(gl.UNPACK_ALIGNMENT, 1);
+      gl.uniform3f(gl.getUniformLocation(prog, "cor"), rgb[0] / 255, rgb[1] / 255, rgb[2] / 255);
+    }
+    const uni = (nome: string) => (gl && prog ? gl.getUniformLocation(prog, nome) : null);
     // x/y no canvas; cx/cy na tela: a velocidade vem da tela, então rolar a página não "arremessa" nada
     const mouse = { x: 0, y: 0, cx: 0, cy: 0, pcx: 0, pcy: 0, vx: 0, vy: 0, dentro: false };
     const voando: Gota[] = [];
@@ -78,12 +119,9 @@ export function OndaLiquida({ cor, className = "" }: { cor: string; className?: 
     let gw = 1;
     let gh = 1;
     let campo = new Float32Array(1);
-    let colBase = new Float32Array(1);
-    let img = ctx.createImageData(1, 1);
-    let px = new Uint32Array(img.data.buffer);
-    let topoBase = 0;
-    let raioBase = 0;
-    let escalaInc = 0;
+    let bytes = new Uint8Array(1); // campo em 0–255, o que vai para a textura
+    let img: ImageData | null = null;
+    let px = new Uint32Array(1);
     let linhaAnt = 0; // primeira linha da grade pintada no quadro anterior
     let t = 0;
     let acumulado = 0;
@@ -101,29 +139,39 @@ export function OndaLiquida({ cor, className = "" }: { cor: string; className?: 
       const ret = canvas.getBoundingClientRect();
       w = ret.width;
       h = ret.height;
-      // ~160 mil células no máximo; o navegador estica o canvas e suaviza as bordas
-      S = Math.max(2, Math.round(Math.sqrt((w * h) / 160_000)));
+      // ~200 mil células no máximo na grade do campo
+      S = Math.max(2, Math.round(Math.sqrt((w * h) / 200_000)));
       gw = Math.max(1, Math.ceil(w / S));
       gh = Math.max(1, Math.ceil(h / S));
-      canvas.width = gw;
-      canvas.height = gh;
       campo = new Float32Array(gw * gh);
-      colBase = new Float32Array(gw);
-      img = ctx.createImageData(gw, gh);
-      px = new Uint32Array(img.data.buffer);
+      bytes = new Uint8Array(gw * gh);
       linhaAnt = 0;
 
       const celular = w < 640;
       const R = celular ? 12 : Math.min(20, Math.max(14, w / 72));
       const altura = celular ? 95 : 130; // altura da onda parada
-      topoBase = h - altura * 0.3;
-      raioBase = R * INFLUENCIA;
-      escalaInc = (3 * raioBase) / S;
+      if (gl) {
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.max(1, Math.round(w * dpr));
+        canvas.height = Math.max(1, Math.round(h * dpr));
+        gl.viewport(0, 0, canvas.width, canvas.height);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.LUMINANCE, gw, gh, 0, gl.LUMINANCE, gl.UNSIGNED_BYTE, bytes);
+        gl.uniform2f(uni("ajuste"), w / (gw * S), h / (gh * S)); // a grade passa um pouco da seção
+        gl.uniform2f(uni("texel"), 1 / gw, 1 / gh);
+        gl.uniform1f(uni("aa"), 1.2 / (R * INFLUENCIA * dpr)); // ~1 px de borda suave
+        gl.uniform1f(uni("inc"), (3 * R * INFLUENCIA) / S / 15);
+      } else if (ctx) {
+        canvas.width = gw;
+        canvas.height = gh;
+        img = ctx.createImageData(gw, gh);
+        px = new Uint32Array(img.data.buffer);
+      }
       gotas = [];
       topo = [];
-      for (let linha = 0; linha < 4; linha++) {
+      // Tudo que é rosa é bolinha, até o fundo da seção (sem faixa fixa)
+      for (let linha = 0; h - altura + linha * R * 0.95 <= h - R * 0.2; linha++) {
         const hy = h - altura + linha * R * 0.95;
-        const balanco = 1 - linha * 0.25;
+        const balanco = Math.max(0.1, 1 - linha * 0.18);
         for (let hx = linha % 2 ? R / 2 : 0; hx <= w + R / 2; hx += R) {
           const x = hx + ondaX(hx) * balanco;
           const y = hy + ondaY(hx) * balanco;
@@ -332,28 +380,12 @@ export function OndaLiquida({ cor, className = "" }: { cor: string; className?: 
 
     const desenhar = () => {
       // Só recalcula da gota mais alta para baixo (com a onda parada, é só o rodapé)
-      let linhaIni = Math.floor((topoBase - raioBase - 14) / S);
+      let linhaIni = gh - 1;
       for (const g of gotas) linhaIni = Math.min(linhaIni, Math.floor((g.y - g.r * 3.2) / S));
       linhaIni = Math.max(0, linhaIni - 1);
       const linha0 = Math.min(linhaIni, linhaAnt);
       linhaAnt = linhaIni;
       campo.fill(0, linha0 * gw);
-
-      // Faixa do fundo: nunca seca, só baixa quando o líquido sai
-      for (let c = 0; c < gw; c++) colBase[c] = topoBase + ondaY((c + 0.5) * S) * 0.35;
-      const rb2 = raioBase * raioBase;
-      for (let l = Math.max(0, Math.floor((topoBase - 5 - raioBase) / S)); l < gh; l++) {
-        const y = (l + 0.5) * S;
-        const linha = l * gw;
-        for (let c = 0; c < gw; c++) {
-          const acima = colBase[c] - y;
-          if (acima <= 0) campo[linha + c] += 1;
-          else if (acima < raioBase) {
-            const u = 1 - (acima * acima) / rb2;
-            campo[linha + c] += u * u * u;
-          }
-        }
-      }
 
       for (const g of gotas) {
         somar(g.x, g.y, g.r * INFLUENCIA, 1);
@@ -365,24 +397,16 @@ export function OndaLiquida({ cor, className = "" }: { cor: string; className?: 
         }
       }
 
-      // Campo → pixels: abaixo do limiar é transparente; na borda, o brilho depende da inclinação
-      const escala = NIVEIS / F_MAX;
-      for (let l = linha0; l < gh; l++) {
-        const linha = l * gw;
-        const acima = l > 0 ? linha - gw : -1;
-        const abaixo = l < gh - 1 ? linha + gw : linha;
-        for (let c = 0; c < gw; c++) {
-          const f = campo[linha + c];
-          if (f < LIMIAR - 0.05) {
-            px[linha + c] = 0;
-            continue;
-          }
-          const nivel = f >= F_MAX ? NIVEIS - 1 : (f * escala) | 0;
-          const inc = (campo[abaixo + c] - (acima < 0 ? 0 : campo[acima + c])) * escalaInc;
-          px[linha + c] = tabela[nivel * NG + (inc <= 0 ? 0 : inc >= NG - 1 ? NG - 1 : inc | 0)];
-        }
+      const escala = 255 / F_MAX;
+      for (let i = linha0 * gw; i < campo.length; i++) bytes[i] = campo[i] >= F_MAX ? 255 : campo[i] * escala;
+      if (gl) {
+        const linhas = bytes.subarray(linha0 * gw);
+        gl.texSubImage2D(gl.TEXTURE_2D, 0, 0, linha0, gw, gh - linha0, gl.LUMINANCE, gl.UNSIGNED_BYTE, linhas);
+        gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+      } else if (ctx && img) {
+        for (let i = linha0 * gw; i < bytes.length; i++) px[i] = tabela[bytes[i]];
+        ctx.putImageData(img, 0, 0, 0, linha0, gw, gh - linha0);
       }
-      ctx.putImageData(img, 0, 0, 0, linha0, gw, gh - linha0);
     };
 
     const quadro = (agora: number) => {
