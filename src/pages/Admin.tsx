@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { useConfigSite } from "@/hooks/useConfigSite";
+import { useAcessoAdmin } from "@/hooks/useAcessoAdmin";
 import { chamarAdmin } from "@/lib/api";
 import type { Banner, ChaveFeature, ChaveTexto } from "@/config/site";
 import { AVALIACOES_PADRAO, BANNERS_PADRAO, GALERIA_PADRAO } from "@/config/imagensPadrao";
@@ -348,12 +349,7 @@ export default function Admin() {
   const { usuario, carregando } = useAuth();
   const { toast } = useToast();
   const qc = useQueryClient();
-  const acesso = useQuery({
-    queryKey: ["admin-eu", usuario?.uid],
-    queryFn: () => chamarAdmin("eu"),
-    enabled: !!usuario,
-    retry: false,
-  });
+  const acesso = useAcessoAdmin();
   const atual = useConfigSite();
   const configCarregada = qc.getQueryState(["config-site"])?.status === "success";
   const [config, setConfig] = useState<Config | null>(null);

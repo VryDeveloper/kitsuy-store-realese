@@ -40,6 +40,7 @@ import { CarrinhoSheet } from "@/components/CarrinhoSheet";
 import { BotaoConta } from "@/components/BotaoConta";
 import { useProdutos } from "@/hooks/useProdutos";
 import { comDestaque, useConfigSite } from "@/hooks/useConfigSite";
+import { BotaoPainel } from "@/components/BotaoPainel";
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
@@ -139,6 +140,7 @@ const Index = () => {
               <MessageCircle className="h-4 w-4" />
               WhatsApp
             </Button>
+            <BotaoPainel />
 
             {/* Menu mobile */}
             <Sheet>

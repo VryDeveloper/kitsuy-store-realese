@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/sheet";
 import { useProdutos } from "@/hooks/useProdutos";
 import { CarrinhoSheet } from "@/components/CarrinhoSheet";
+import { BotaoPainel } from "@/components/BotaoPainel";
 import { BotaoConta } from "@/components/BotaoConta";
 
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
@@ -96,6 +97,7 @@ const Estoque = () => {
               <MessageCircle className="h-4 w-4" />
               WhatsApp
             </Button>
+            <BotaoPainel />
             <Sheet>
               <SheetTrigger asChild>
                 <Button
