@@ -437,3 +437,9 @@ html {
   bottom: -40px;
   animation: circulo-subir linear infinite both;
 }
+
+/* Nada pode empurrar a página para o lado no celular (clip não quebra o header fixo, ao contrário de hidden) */
+html,
+body {
+  overflow-x: clip;
+}
