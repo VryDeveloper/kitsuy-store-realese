@@ -134,7 +134,14 @@ export function DestaquePromocao({ figures, titulo }: Props) {
               {comDestaque(titulo, (t) => <span style={{ color: ROSA }}>{t}</span>)}
             </h2>
             {maiorDesconto > 0 && (
-            <div className="mx-auto lg:mx-0 mb-7 flex max-w-sm items-center gap-4 rounded-3xl border-2 px-5 py-3" style={{ borderColor: ROSA }}>
+            // Borda que gira: um quadrado com gradiente cônico rodando atrás, e o miolo preto por cima deixa só 2px aparecendo
+            <div className="relative mx-auto lg:mx-0 mb-7 max-w-sm overflow-hidden rounded-3xl p-[2px]">
+            <span
+              aria-hidden
+              className="absolute left-1/2 top-1/2 -ml-[300px] -mt-[300px] h-[600px] w-[600px] animate-[spin_4s_linear_infinite] motion-reduce:animate-none"
+              style={{ background: `conic-gradient(${ROSA}40, ${ROSA} 20%, #ffffff 25%, ${ROSA} 30%, ${ROSA}40 55%, ${ROSA} 75%, #ffffff 80%, ${ROSA} 85%, ${ROSA}40)` }}
+            />
+            <div className="relative flex items-center gap-4 rounded-[22px] bg-[#0b0a0f] px-5 py-3">
               <span className="grid h-12 w-12 shrink-0 -rotate-12 place-items-center rounded-2xl" style={{ background: ROSA }}>
                 <Percent className="h-6 w-6" strokeWidth={3} />
               </span>
@@ -144,6 +151,7 @@ export function DestaquePromocao({ figures, titulo }: Props) {
                 <span className="text-4xl md:text-5xl font-black">{maiorDesconto}%</span>{" "}
                 <span className="text-3xl md:text-4xl font-black" style={{ color: ROSA }}>OFF</span>
               </p>
+            </div>
             </div>
             )}
 
