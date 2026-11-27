@@ -94,7 +94,11 @@ export function DestaquePromocao({ figures, titulo }: Props) {
                 layout
                 transition={{ duration: semMovimento ? 0 : 0.7, ease: [0.4, 0, 0.2, 1] }}
                 className={`relative overflow-hidden border-2 bg-black ${
-                  k === 0 ? "col-span-2 row-span-2" : figures.length === 2 ? "row-span-2" : ""
+                  k === 0
+                    ? "col-span-2 row-span-2"
+                    : // com 2 figures a pequena fica centralizada com a mesma proporção da grande (4:5); proporções
+                      // diferentes fazem a imagem esticar na troca
+                      figures.length === 2 ? "row-span-2 self-center aspect-[4/5]" : ""
                 }`}
                 // borderRadius no style para o framer corrigir a curva durante a animação
                 style={{ borderColor: k === 0 ? ROSA : `${ROSA}66`, borderRadius: 16 }}
