@@ -19,6 +19,15 @@ import { handleCORS } from "../lib/cors.js";
  */
 const TIPOS_IMAGEM = ["image/webp", "image/jpeg", "image/png", "image/avif"];
 
+/** Slug único entre as figures: se outra já usa, acrescenta -2, -3... */
+async function slugLivre(base: string, id: string | null): Promise<string> {
+  for (let n = 1; ; n++) {
+    const slug = n === 1 ? base : `${base}-${n}`;
+    const snap = await db.collection("products").where("slug", "==", slug).limit(2).get();
+    if (snap.docs.every((d) => d.id === id)) return slug;
+  }
+}
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (handleCORS(req, res)) return;
   if (req.method !== "POST") return res.status(405).json({ error: "Método não permitido" });
@@ -37,6 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         const dados = validarProduto((body.dados ?? {}) as Record<string, unknown>);
         const produtos = db.collection("products");
         const id = typeof body.id === "string" && body.id ? body.id : null;
+        if (dados.slug) dados.slug = await slugLivre(dados.slug, id);
         if (!id) {
           const ref = await produtos.add({ ...dados, estoqueStatus: "disponivel", lastUpdated: new Date() });
           return res.status(201).json({ id: ref.id });

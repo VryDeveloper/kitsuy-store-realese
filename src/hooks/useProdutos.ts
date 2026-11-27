@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import { collection, getDocs } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import { inStockAoVivo } from "@/lib/disponibilidade";
+import type { ProdutoSeo } from "@/lib/seoProduto";
 
-export interface Product {
+export interface Product extends Omit<ProdutoSeo, "description"> {
   id: string;
   title: string;
   inStock: string;

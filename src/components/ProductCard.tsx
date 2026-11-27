@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, MessageCircle } from "lucide-react";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { linkWhatsApp } from "@/config/loja";
+import { caminhoProduto, fotosDoProduto, type FotoProduto } from "@/lib/seoProduto";
 
 interface ProductCardProps {
   id?: string;
@@ -14,6 +16,30 @@ interface ProductCardProps {
   price: string;
   inStock: string;
   discount: string;
+  slug?: string | null;
+  images?: FotoProduto[] | null;
+  imageAlt?: string | null;
+}
+
+/** Com o mouse em cima, alterna as fotos a cada 1,5 s; ao sair volta para a capa. */
+function useFotoNoHover(total: number) {
+  const [hover, setHover] = useState(false);
+  const [carregar, setCarregar] = useState(false); // extras só entram no DOM no 1º hover
+  const [ativa, setAtiva] = useState(0);
+  useEffect(() => {
+    if (!hover || total < 2) return setAtiva(0);
+    const t = setInterval(() => setAtiva((i) => (i + 1) % total), 1500);
+    return () => clearInterval(t);
+  }, [hover, total]);
+  return {
+    ativa,
+    carregar,
+    eventos: {
+      // Só mouse: no toque o "hover" emulado faria a foto trocar no meio do clique.
+      onPointerEnter: (e: React.PointerEvent) => e.pointerType === "mouse" && (setHover(true), setCarregar(true)),
+      onPointerLeave: () => setHover(false),
+    },
+  };
 }
 
 export const ProductCard = ({
@@ -24,6 +50,9 @@ export const ProductCard = ({
   price,
   inStock,
   discount,
+  slug,
+  images,
+  imageAlt,
 }: ProductCardProps) => {
   const { itens, adicionar } = useCart();
   const { toast } = useToast();
@@ -37,6 +66,10 @@ export const ProductCard = ({
   // Checkout real só existe para produtos da coleção `products`.
   const podeComprarOnline = source === "products" && !!id;
   const jaEstaNoCarrinho = podeComprarOnline && itens.some((item) => item.id === id);
+  // Figure de pronta entrega disponível → o card leva para a vitrine (/produto/:slug).
+  const vitrine = podeComprarOnline && !isOutOfStock ? caminhoProduto({ id: id!, slug }) : null;
+  const fotos = fotosDoProduto({ id: id ?? "", title, price, image, images, imageAlt });
+  const { ativa, carregar, eventos } = useFotoNoHover(vitrine ? fotos.length : 1);
 
   const handleComprarClick = () => {
     if (!podeComprarOnline) {
@@ -54,17 +87,29 @@ export const ProductCard = ({
     <>
       {/* Card de Produto */}
       <Card
-        className="group overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col 
+        {...eventos}
+        className="group relative overflow-hidden transition-all duration-300 border-none hover:shadow-2xl hover:scale-105 animate-fade-in flex flex-col 
 h-auto sm:h-[450px] md:h-[485px]"
       >
         <div className="relative overflow-hidden bg-black h-max">
           <img
             src={image}
-            alt={title}
-            className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 cursor-pointer ${isOutOfStock ? "grayscale" : ""}`}
-            onClick={() => setSelectedImage(image)} // Abre o modal quando clica na imagem
+            alt={fotos[0].alt}
+            className={`w-full h-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-110 cursor-pointer ${isOutOfStock ? "grayscale" : ""} ${ativa ? "opacity-0" : ""}`}
+            onClick={vitrine ? undefined : () => setSelectedImage(image)} // Sem vitrine: abre o modal da imagem
             draggable={false} // Impede o drag da imagem
           />
+          {carregar &&
+            fotos.slice(1).map((f, i) => (
+              <img
+                key={f.url + i}
+                src={f.url}
+                alt=""
+                aria-hidden
+                className={`absolute inset-0 w-full h-full object-cover transition-[transform,opacity] duration-500 group-hover:scale-110 ${ativa === i + 1 ? "opacity-100" : "opacity-0"}`}
+                draggable={false}
+              />
+            ))}
           <div className="absolute top-3 right-3">
             <span className="bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-semibold">
               {inStock}
@@ -73,11 +118,22 @@ h-auto sm:h-[450px] md:h-[485px]"
         </div>
         <div className="flex flex-col justify-between flex-1">
           <CardContent className="p-4">
-            <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
+            <h3 className="font-semibold text-lg mb-2 line-clamp-2">
+              {/* after:inset-0 estica o link pelo card inteiro (o botão do WhatsApp fica por cima, z-10) */}
+              {vitrine ? <Link to={vitrine} className="after:absolute after:inset-0">{title}</Link> : title}
+            </h3>
             <h4 className="text-lg line-through text-primary">{discount}</h4>
             <p className="text-2xl font-bold text-primary">{price}</p>
           </CardContent>
           <CardFooter className="p-4 pt-0 flex gap-2">
+            {vitrine ? (
+              <Button asChild variant="default" size="sm" className="flex-1 min-w-0 relative z-10">
+                <Link to={vitrine}>
+                  <ShoppingCart className="mr-2 h-4 w-4 shrink-0" />
+                  <span className="truncate">{jaEstaNoCarrinho ? "No carrinho" : "Ver figure"}</span>
+                </Link>
+              </Button>
+            ) : (
             <Button
               variant="default"
               size="sm"
@@ -94,10 +150,12 @@ h-auto sm:h-[450px] md:h-[485px]"
                     : "Comprar"}
               </span>
             </Button>
+            )}
             <Button
               variant="outline"
               size="sm"
-              className="shrink-0"
+              className="shrink-0 relative z-10"
+              aria-label="Perguntar no WhatsApp"
               onClick={() => window.open(whatsappLink, "_blank")}
             >
               <MessageCircle className="h-4 w-4" />

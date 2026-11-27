@@ -25,6 +25,12 @@ describe("validarProduto", () => {
       alturaEmCm: 20,
     });
   });
+  it("campos da vitrine: opcionais, slug gerado e fotos filtradas", () => {
+    const d = validarProduto({ ...base, description: "  ", escala: "1/7", alturaFiguraCm: "23.5", images: [{ url: "https://x.com/2.webp", alt: "" }, { url: "javascript:x" }, null] });
+    expect(d).toMatchObject({ slug: "miku", description: null, escala: "1/7", alturaFiguraCm: 23.5, seoTitle: null });
+    expect(d.images).toEqual([{ url: "https://x.com/2.webp", alt: null }]);
+    expect(validarProduto({ ...base, slug: "Meu Link!" }).slug).toBe("meu-link");
+  });
   it("recusa preço fora do formato e imagem sem https", () => {
     expect(() => validarProduto({ ...base, price: "1260" })).toThrow(ErroAdmin);
     expect(() => validarProduto({ ...base, image: "javascript:alert(1)" })).toThrow(ErroAdmin);

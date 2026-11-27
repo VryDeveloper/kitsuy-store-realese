@@ -84,6 +84,7 @@ const routeLoaders: Record<string, () => Promise<{ default: Handler }>> = {
   "/api/meus-pedidos": () => import("../api/meus-pedidos.js"),
   "/api/webhook": () => import("../api/webhook.js"),
   "/api/admin": () => import("../api/admin.js"),
+  "/api/seo": () => import("../api/seo.js"),
   "/api/cron/limpar-pedidos-expirados": () =>
     import("../api/cron/limpar-pedidos-expirados.js"),
 };

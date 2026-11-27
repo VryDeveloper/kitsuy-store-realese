@@ -17,7 +17,8 @@ export default defineConfig({
       },
     },
   },
-  base: "./",
+  // Absoluto: com "./" os assets quebram em rotas aninhadas (/produto/x, /minha-conta/pedidos).
+  base: "/",
   plugins: [react()],
   resolve: {
     alias: {
