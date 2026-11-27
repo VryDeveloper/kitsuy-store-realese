@@ -18,6 +18,7 @@ const PedidoConfirmado = lazy(() => import("./pages/PedidoConfirmado"));
 const Entrar = lazy(() => import("./pages/Entrar"));
 const MinhaConta = lazy(() => import("./pages/MinhaConta"));
 const Admin = lazy(() => import("./pages/Admin"));
+const Produto = lazy(() => import("./pages/Produto"));
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
               <Route path="/" element={<Index />} />
               <Route path="/faqs" element={<FAQs />} />
               <Route path="/estoque" element={<Estoque />} />
+              <Route path="/produto/:slug" element={<Produto />} />
               <Route path="/sorteio" element={<Sorteio />} />
               <Route path="/checkout" element={<CheckoutPage />} />
               <Route path="/pedido-confirmado" element={<PedidoConfirmado />} />

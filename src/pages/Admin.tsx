@@ -2,7 +2,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { collection, getDocs } from "firebase/firestore";
-import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, Upload } from "lucide-react";
+import { ArrowDown, ArrowUp, ExternalLink, Pencil, Plus, Star, Trash2, Upload } from "lucide-react";
 import { db } from "@/firebaseConfig";
 import { CabecalhoSimples } from "@/components/CabecalhoSimples";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,8 @@ import { useToast } from "@/hooks/use-toast";
 import { useConfigSite } from "@/hooks/useConfigSite";
 import { useAcessoAdmin } from "@/hooks/useAcessoAdmin";
 import { chamarAdmin } from "@/lib/api";
+import { comprimirImagem } from "@/lib/comprimirImagem";
+import { caminhoProduto, descricaoSeo, gerarSlug, tituloSeo, type FotoProduto, type ProdutoSeo } from "@/lib/seoProduto";
 import type { Banner, ChaveFeature, ChaveTexto } from "@/config/site";
 import { AVALIACOES_PADRAO, BANNERS_PADRAO, GALERIA_PADRAO } from "@/config/imagensPadrao";
 
@@ -47,7 +49,7 @@ const ROTULOS_FEATURE: Record<ChaveFeature, string> = {
 
 const MAX_MB = 3; // a função da Vercel aceita até 4,5 MB de corpo; base64 aumenta ~33%
 
-function lerArquivo(arquivo: File): Promise<string> {
+function lerArquivo(arquivo: Blob): Promise<string> {
   return new Promise((ok, erro) => {
     const leitor = new FileReader();
     leitor.onload = () => ok(String(leitor.result));
@@ -57,8 +59,11 @@ function lerArquivo(arquivo: File): Promise<string> {
 }
 
 async function subirImagem(arquivo: File): Promise<string> {
-  if (arquivo.size > MAX_MB * 1024 * 1024) throw new Error(`Imagem acima de ${MAX_MB} MB — comprima em webp antes`);
-  const { url } = await chamarAdmin<{ url: string }>("upload", { nome: arquivo.name, dataUrl: await lerArquivo(arquivo) });
+  const leve = await comprimirImagem(arquivo);
+  if (leve.size > MAX_MB * 1024 * 1024) throw new Error(`Imagem acima de ${MAX_MB} MB mesmo comprimida — use uma foto menor`);
+  const extensao = leve.type === "image/webp" ? ".webp" : leve.type === "image/jpeg" ? ".jpg" : "";
+  const nome = extensao ? arquivo.name.replace(/\.\w+$/, "") + extensao : arquivo.name;
+  const { url } = await chamarAdmin<{ url: string }>("upload", { nome, dataUrl: await lerArquivo(leve) });
   return url;
 }
 
@@ -92,7 +97,7 @@ function BotaoUpload({ aoSubir, children }: { aoSubir: (url: string) => void; ch
 }
 
 // ─── Estoque ──────────────────────────────────────────────────────────────────
-interface Produto {
+interface Produto extends Omit<ProdutoSeo, "id"> {
   id: string;
   title: string;
   price: string;
@@ -198,7 +203,7 @@ function AbaEstoque() {
                   <td className="p-3">
                     <div className="flex items-center gap-3">
                       <img src={p.image} alt="" className="w-10 h-10 rounded object-cover bg-gray-100" />
-                      <span className="font-medium">{p.title}</span>
+                      <button type="button" className="font-medium text-left hover:underline" onClick={() => setEditando({ ...PRODUTO_VAZIO, ...p })}>{p.title}</button>
                     </div>
                   </td>
                   <td className="p-3">
@@ -227,7 +232,7 @@ function AbaEstoque() {
       )}
 
       <Dialog open={!!editando} onOpenChange={(aberto) => !aberto && setEditando(null)}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editando?.id ? "Editar figure" : "Nova figure"}</DialogTitle>
           </DialogHeader>
@@ -248,13 +253,31 @@ function AbaEstoque() {
                 </div>
               </div>
               <div>
-                <Label htmlFor="p-imagem">Imagem</Label>
+                <Label htmlFor="p-imagem">Foto de capa</Label>
                 <div className="flex gap-2 items-center">
                   {editando.image && <img src={editando.image} alt="" className="w-12 h-12 rounded object-cover" />}
                   <Input id="p-imagem" required placeholder="https://..." {...campo("image")} />
-                  <BotaoUpload aoSubir={(url) => setEditando((p) => p && { ...p, image: url })}>Subir</BotaoUpload>
+                  <BotaoUpload aoSubir={(url) => setEditando((p) => p && { ...p, image: url })}>{editando.image ? "Trocar" : "Subir"}</BotaoUpload>
+                  {editando.image && (
+                    <Button type="button" variant="ghost" size="icon" aria-label="Remover capa" title="Remover capa (a 1ª foto adicional vira capa)"
+                      onClick={() => setEditando((p) => p && { ...p, image: p.images?.[0]?.url ?? "", imageAlt: p.images?.[0]?.alt ?? "", images: p.images?.slice(1) ?? [] })}>
+                      <Trash2 className="h-4 w-4 text-red-600" />
+                    </Button>
+                  )}
                 </div>
+                <Input aria-label="Texto alternativo da capa" className="mt-2" placeholder={`Texto alternativo (vazio = "${editando.title || "nome da figure"}")`} {...campo("imageAlt")} />
               </div>
+              <FotosExtras
+                titulo={editando.title}
+                fotos={editando.images ?? []}
+                aoMudar={(images) => setEditando((p) => p && { ...p, images })}
+                usarComoCapa={(i) => setEditando((p) => {
+                  if (!p) return p;
+                  const extras = [...(p.images ?? [])];
+                  const [nova] = extras.splice(i, 1, ...(p.image ? [{ url: p.image, alt: p.imageAlt ?? null }] : []));
+                  return { ...p, image: nova.url, imageAlt: nova.alt ?? "", images: extras };
+                })}
+              />
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <Label htmlFor="p-situacao">Situação</Label>
@@ -277,7 +300,47 @@ function AbaEstoque() {
                   </div>
                 ))}
               </fieldset>
-              <div className="flex gap-2 justify-end pt-2">
+              <fieldset className="space-y-3 border-t pt-3">
+                <legend className="text-sm font-medium">Página da figure (opcional — vazio não aparece)</legend>
+                <div>
+                  <Label htmlFor="p-descricao">Descrição</Label>
+                  <Textarea id="p-descricao" rows={4} value={editando.description ?? ""} onChange={(e) => setEditando({ ...editando, description: e.target.value })} />
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {([["fabricante", "Fabricante", "Good Smile"], ["serie", "Série / anime", "Vocaloid"], ["escala", "Escala", "1/7"], ["alturaFiguraCm", "Altura da figure (cm)", "23"], ["material", "Material", "PVC e ABS"]] as const).map(([k, rotulo, ex]) => (
+                    <div key={k}>
+                      <Label htmlFor={`p-${k}`}>{rotulo}</Label>
+                      <Input id={`p-${k}`} placeholder={ex} type={k === "alturaFiguraCm" ? "number" : "text"} step="0.1" min={0} {...campo(k)} />
+                    </div>
+                  ))}
+                </div>
+              </fieldset>
+              <fieldset className="space-y-3 border-t pt-3">
+                <legend className="text-sm font-medium">SEO (vazio = gerado automaticamente)</legend>
+                <div>
+                  <Label htmlFor="p-slug">Endereço</Label>
+                  <div className="flex items-center gap-1 text-sm text-gray-500">
+                    /produto/<Input id="p-slug" placeholder={gerarSlug(editando.title) || "nome-da-figure"} value={editando.slug ?? ""} onChange={(e) => setEditando({ ...editando, slug: e.target.value })} />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Mudar o endereço quebra links já compartilhados.</p>
+                </div>
+                <div>
+                  <Label htmlFor="p-seo-titulo">Título no Google ({(editando.seoTitle || "").length}/70)</Label>
+                  <Input id="p-seo-titulo" maxLength={70} placeholder={tituloSeo({ ...editando, id: "", seoTitle: null })} {...campo("seoTitle")} />
+                </div>
+                <div>
+                  <Label htmlFor="p-seo-descricao">Descrição no Google ({(editando.seoDescription || "").length}/170)</Label>
+                  <Textarea id="p-seo-descricao" rows={3} maxLength={170} placeholder={descricaoSeo({ ...editando, id: "", seoDescription: null })} value={editando.seoDescription ?? ""} onChange={(e) => setEditando({ ...editando, seoDescription: e.target.value })} />
+                </div>
+              </fieldset>
+              <div className="flex gap-2 justify-end pt-2 flex-wrap">
+                {editando.id && (
+                  <Button asChild variant="ghost" className="mr-auto gap-2">
+                    <a href={caminhoProduto({ id: editando.id, slug: editando.slug })} target="_blank" rel="noreferrer">
+                      <ExternalLink className="h-4 w-4" /> Ver página pública
+                    </a>
+                  </Button>
+                )}
                 <Button type="button" variant="outline" onClick={() => setEditando(null)}>Cancelar</Button>
                 <Button type="submit" disabled={salvando}>{salvando ? "Salvando..." : "Salvar"}</Button>
               </div>
@@ -315,6 +378,33 @@ function ListaImagens({ titulo, urls, aoMudar }: { titulo: string; urls: string[
               <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Mover para trás" onClick={() => aoMudar(mover(urls, i, -1))}><ArrowUp className="h-3 w-3 -rotate-90" /></Button>
               <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Remover" onClick={() => aoMudar(urls.filter((_, k) => k !== i))}><Trash2 className="h-3 w-3 text-red-600" /></Button>
               <Button variant="ghost" size="icon" className="h-7 w-7" aria-label="Mover para frente" onClick={() => aoMudar(mover(urls, i, 1))}><ArrowDown className="h-3 w-3 -rotate-90" /></Button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function FotosExtras({ titulo, fotos, aoMudar, usarComoCapa }: { titulo: string; fotos: FotoProduto[]; aoMudar: (f: FotoProduto[]) => void; usarComoCapa: (i: number) => void }) {
+  const alterar = (i: number, alt: string) => aoMudar(fotos.map((f, k) => (k === i ? { ...f, alt } : f)));
+  return (
+    <section className="space-y-2">
+      <div className="flex items-center justify-between">
+        <Label>Fotos adicionais (outros ângulos)</Label>
+        <BotaoUpload aoSubir={(url) => aoMudar([...fotos, { url, alt: "" }])}>Adicionar</BotaoUpload>
+      </div>
+      {fotos.length === 0 && <p className="text-xs text-gray-500">Nenhuma. No card, as fotos se alternam quando o mouse passa por cima.</p>}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+        {fotos.map((f, i) => (
+          <div key={f.url + i} className="border rounded-lg overflow-hidden">
+            <img src={f.url} alt="" className="w-full aspect-square object-cover bg-gray-100" />
+            <Input aria-label={`Texto alternativo da foto ${i + 2}`} className="h-8 text-xs rounded-none border-x-0" placeholder={`${titulo || "Figure"} — foto ${i + 2}`} value={f.alt ?? ""} onChange={(e) => alterar(i, e.target.value)} />
+            <div className="flex justify-between p-1">
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Mover para trás" onClick={() => aoMudar(mover(fotos, i, -1))}><ArrowUp className="h-3 w-3 -rotate-90" /></Button>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Usar como capa" title="Usar como capa" onClick={() => usarComoCapa(i)}><Star className="h-3 w-3" /></Button>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Remover" onClick={() => aoMudar(fotos.filter((_, k) => k !== i))}><Trash2 className="h-3 w-3 text-red-600" /></Button>
+              <Button type="button" variant="ghost" size="icon" className="h-7 w-7" aria-label="Mover para frente" onClick={() => aoMudar(mover(fotos, i, 1))}><ArrowDown className="h-3 w-3 -rotate-90" /></Button>
             </div>
           </div>
         ))}

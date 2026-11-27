@@ -1,5 +1,6 @@
 import type { DecodedIdToken } from "firebase-admin/auth";
 import { TEXTOS_PADRAO, FEATURES_PADRAO, type ConfigSalva } from "../../src/config/site.js";
+import { gerarSlug } from "../../src/lib/seoProduto.js";
 
 /** Erro com mensagem para mostrar ao admin (vira 400). */
 export class ErroAdmin extends Error {}
@@ -40,6 +41,7 @@ const numeroOuNull = (v: unknown) => {
   return v === "" || v == null || !Number.isFinite(n) || n <= 0 ? null : n;
 };
 const urlValida = (v: unknown) => /^(https:\/\/|\/(?!\/))/.test(texto(v)) ? texto(v) : "";
+const opcional = (v: unknown, max: number) => texto(v, max) || null;
 
 /** Valida o produto vindo do painel. Lança Error com a mensagem para o usuário. */
 export function validarProduto(d: Record<string, unknown>) {
@@ -61,6 +63,21 @@ export function validarProduto(d: Record<string, unknown>) {
     alturaEmCm: numeroOuNull(d.alturaEmCm),
     larguraEmCm: numeroOuNull(d.larguraEmCm),
     comprimentoEmCm: numeroOuNull(d.comprimentoEmCm),
+    // Vitrine (/produto/:slug): tudo opcional; vazio vira null e não aparece na página.
+    slug: gerarSlug(texto(d.slug, 120) || title) || null,
+    imageAlt: opcional(d.imageAlt, 200),
+    images: (Array.isArray(d.images) ? d.images : [])
+      .map((f) => ({ url: urlValida(f?.url), alt: opcional(f?.alt, 200) }))
+      .filter((f) => f.url)
+      .slice(0, 20),
+    description: opcional(d.description, 5000),
+    fabricante: opcional(d.fabricante, 100),
+    serie: opcional(d.serie, 100),
+    escala: opcional(d.escala, 30),
+    alturaFiguraCm: numeroOuNull(d.alturaFiguraCm),
+    material: opcional(d.material, 100),
+    seoTitle: opcional(d.seoTitle, 70),
+    seoDescription: opcional(d.seoDescription, 170),
   };
 }
 
