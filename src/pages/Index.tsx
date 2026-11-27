@@ -41,6 +41,8 @@ import { BotaoConta } from "@/components/BotaoConta";
 import { useProdutos } from "@/hooks/useProdutos";
 import { comDestaque, useConfigSite } from "@/hooks/useConfigSite";
 import { BotaoPainel } from "@/components/BotaoPainel";
+import { DestaquePromocao } from "@/components/DestaquePromocao";
+import { figuresEmPromocao } from "@/lib/promocao";
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
@@ -61,6 +63,7 @@ const Index = () => {
   const instagramLink = INSTAGRAM_URL;
 
   const stockFigures = figures.filter((fig) => fig.source === "products");
+  const emPromocao = features.destaquePromocao ? figuresEmPromocao(figures) : [];
   const filteredStock = stockFigures;
 
   // ─── JSX ─────────────────────────────────────────────────────────────────────
@@ -274,6 +277,10 @@ const Index = () => {
           <CarouselNext className="right-3 bg-[#EA3E83] text-white border-none hover:bg-[#c72e6c]" />
         </Carousel>
       </section>
+
+      {emPromocao.length > 0 && (
+        <DestaquePromocao figures={emPromocao} titulo={textos.promoTitulo} subtitulo={textos.promoSubtitulo} />
+      )}
 
       {/* ══════════════════════════════════════════════════
           HERO — O QUE É A KITSUY STORE

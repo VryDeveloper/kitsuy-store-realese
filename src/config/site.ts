@@ -13,6 +13,8 @@ export interface Banner {
 export const TEXTOS_PADRAO = {
   sorteioTitulo: "Sorteio de 1.500 seguidores!",
   sorteioSubtitulo: "Siga no Instagram e concorra a uma figure japonesa original - Grátis!",
+  promoTitulo: "Desconto Especial em até *3 Figures!*",
+  promoSubtitulo: "Garanta suas figures favoritas com um *desconto imperdível!*",
   heroTitulo: "Sua figure dos sonhos, *direto do Japão* até você.",
   heroTexto:
     "A Kitsuy Store é especializada em *Action Figures* originais do *Japão*. Mais do que uma loja, nós buscamos para você as melhores peças diretamente em sites japoneses, cuidando de todo o processo de importação. Você não precisa se preocupar em navegar em sites internacionais, calcular frete ou lidar com a alfândega, trazendo cada peça com segurança, atenção e todo o cuidado que a sua coleção merece! - *a gente faz tudo isso por você!*",

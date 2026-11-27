@@ -27,6 +27,8 @@ const vaziaSePadrao = <T,>(lista: T[], padrao: T[]) => (JSON.stringify(lista) ==
 const ROTULOS_TEXTO: Record<ChaveTexto, string> = {
   sorteioTitulo: "Faixa do sorteio — título",
   sorteioSubtitulo: "Faixa do sorteio — subtítulo",
+  promoTitulo: "Destaque de promoções — título",
+  promoSubtitulo: "Destaque de promoções — subtítulo",
   heroTitulo: "Título principal",
   heroTexto: "Texto \"Sobre a Kitsuy\"",
   galeriaTitulo: "Galeria — título",
@@ -41,7 +43,7 @@ const ROTULOS_TEXTO: Record<ChaveTexto, string> = {
 
 const ROTULOS_FEATURE: Record<ChaveFeature, string> = {
   faixaSorteio: "Faixa azul do sorteio no topo da home",
-  destaquePromocao: "Destaque de promoções (seção preta com até 3 figures)",
+  destaquePromocao: "Destaque de promoções (seção preta com as até 3 figures disponíveis de maior desconto; só aparece se alguma tiver preço antigo)",
 };
 
 const MAX_MB = 3; // a função da Vercel aceita até 4,5 MB de corpo; base64 aumenta ~33%
