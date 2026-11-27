@@ -73,15 +73,15 @@ const Index = () => {
           HEADER
       ══════════════════════════════════════════════════ */}
       <header className="sticky top-0 z-50 bg-white border-b border-pink-100 shadow-sm">
-        <nav className="container mx-auto px-4 h-20 flex justify-between items-center gap-4">
+        <nav className="container mx-auto px-4 h-20 flex justify-between items-center gap-2 sm:gap-4">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 min-w-fit">
             <img
               src={kitsuyIcon}
-              alt="Kitsuy Icon"
-              className="w-14 h-14 object-contain animate-float"
+              alt=""
+              className="w-10 h-10 sm:w-14 sm:h-14 object-contain animate-float"
             />
-            <span className="fredoka text-2xl md:text-3xl font-bold text-[#FF9AB4]">
+            <span className="fredoka text-xl sm:text-2xl md:text-3xl font-bold text-[#FF9AB4]">
               KITSUY STORE
             </span>
           </a>
@@ -124,13 +124,14 @@ const Index = () => {
           </div>
 
           {/* Ações */}
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-1 sm:gap-2 items-center">
             <CarrinhoSheet />
             <BotaoConta />
             <Button
               variant="ghost"
               size="icon"
               onClick={() => window.open(instagramLink, "_blank")}
+              aria-label="Instagram"
               className="hidden sm:flex hover:bg-pink-50 hover:text-[#EA3E83]"
             >
               <Instagram className="h-5 w-5" />
@@ -152,6 +153,7 @@ const Index = () => {
                   variant="outline"
                   size="sm"
                   className="md:hidden gap-2 border-[#EA3E83] text-[#EA3E83]"
+                  aria-label="Abrir menu"
                 >
                   <Menu className="h-4 w-4" />
                 </Button>

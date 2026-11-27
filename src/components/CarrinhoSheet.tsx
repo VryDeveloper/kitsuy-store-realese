@@ -21,7 +21,7 @@ export function CarrinhoSheet() {
   return (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative" aria-label={contador > 0 ? `Carrinho, ${contador} ${contador === 1 ? "item" : "itens"}` : "Carrinho"}>
           <ShoppingCart className="h-5 w-5" />
           {contador > 0 && (
             <span className="absolute -top-1 -right-1 bg-[#EA3E83] text-white text-[10px] font-bold rounded-full h-5 w-5 flex items-center justify-center">
