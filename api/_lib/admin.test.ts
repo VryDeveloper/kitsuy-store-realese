@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ErroAdmin, ehAdmin, validarConfig, validarProduto } from "./admin.js";
+import { ErroAdmin, ehAdmin, explicarErro, validarConfig, validarProduto } from "./admin.js";
 
 describe("ehAdmin", () => {
   const lista = " Loja@Gmail.com , outra@x.com";
@@ -51,5 +51,18 @@ describe("validarConfig", () => {
       textos: { heroTitulo: "Oi" },
       features: { destaquePromocao: true },
     });
+  });
+});
+
+describe("explicarErro", () => {
+  it("explica o Blob privado em vez de um erro genérico", () => {
+    const msg = explicarErro("upload", new Error("Vercel Blob: Cannot use public access on a private store."));
+    expect(msg).toMatch(/^Enviar a imagem falhou: .*privado.*acesso público/);
+  });
+  it("aponta a variável que falta", () => {
+    expect(explicarErro("upload", new Error("No token found"))).toContain("BLOB_READ_WRITE_TOKEN");
+  });
+  it("nos outros casos repassa a mensagem original", () => {
+    expect(explicarErro("salvarConfig", new Error("deadline exceeded"))).toBe("Salvar o site falhou: deadline exceeded");
   });
 });

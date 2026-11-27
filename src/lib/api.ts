@@ -8,12 +8,17 @@ import { auth } from "@/firebaseConfig";
 const BASE = ""; // rotas relativas — funciona em qualquer ambiente (dev/prod)
 
 async function parseErro(res: Response, fallback: string): Promise<never> {
-  let mensagem = fallback;
+  // sem JSON (ex.: a própria Vercel recusou) — pelo menos diz o código e o motivo mais comum
+  const semDetalhe =
+    res.status === 413
+      ? `${fallback}: arquivo grande demais para enviar (limite de 4,5 MB da Vercel)`
+      : `${fallback} (HTTP ${res.status})`;
+  let mensagem = semDetalhe;
   try {
     const data = await res.json();
-    mensagem = data.error || fallback;
+    mensagem = data.error || semDetalhe;
   } catch {
-    // resposta sem JSON — mantém a mensagem padrão
+    // resposta sem JSON — fica a mensagem com o código HTTP
   }
   throw new Error(mensagem);
 }

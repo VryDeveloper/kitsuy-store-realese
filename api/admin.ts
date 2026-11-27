@@ -3,7 +3,7 @@ import { put } from "@vercel/blob";
 import { FieldValue } from "firebase-admin/firestore";
 import { db } from "./_lib/firebase-admin.js";
 import { usuarioDoToken } from "./_lib/auth.js";
-import { ErroAdmin, ehAdmin, validarConfig, validarProduto } from "./_lib/admin.js";
+import { ErroAdmin, ehAdmin, explicarErro, validarConfig, validarProduto } from "./_lib/admin.js";
 import { handleCORS } from "../lib/cors.js";
 
 /**
@@ -86,6 +86,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   } catch (error) {
     if (error instanceof ErroAdmin) return res.status(400).json({ error: error.message });
     console.error("[admin] ❌ Erro:", error);
-    return res.status(500).json({ error: "Erro ao salvar" });
+    return res.status(500).json({ error: explicarErro(body.acao, error) });
   }
 }
