@@ -24,4 +24,17 @@ describe("figuresEmPromocao", () => {
       ["20pct", 20],
     ]);
   });
+
+  it("com figures escolhidas, usa elas na ordem e pula as indisponíveis", () => {
+    const lista = [
+      p("a", "R$ 900,00", "R$ 1.000,00"),
+      p("b", "R$ 500,00", ""),
+      p("c", "R$ 100,00", "R$ 1.000,00", { inStock: "indisponível" }),
+      p("d", "R$ 700,00", "R$ 1.000,00"),
+    ];
+    expect(figuresEmPromocao(lista, ["b", "c", "sumiu", "a"]).map((x) => [x.id, x.descontoPct])).toEqual([
+      ["b", 0],
+      ["a", 10],
+    ]);
+  });
 });

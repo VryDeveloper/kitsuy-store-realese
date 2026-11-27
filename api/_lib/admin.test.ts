@@ -32,6 +32,9 @@ describe("validarProduto", () => {
 });
 
 describe("validarConfig", () => {
+  it("guarda até 3 ids de destaque válidos", () => {
+    expect(validarConfig({ destaques: ["a1", "b/../x", 5, "c2", "d3", "e4"] }).destaques).toEqual(["a1", "c2", "d3"]);
+  });
   it("descarta chaves desconhecidas e URLs inválidas", () => {
     const c = validarConfig({
       galeria: ["https://ok.com/a.webp", "javascript:x", "//evil.com/x.webp", "/assets/c.webp"],
@@ -44,6 +47,7 @@ describe("validarConfig", () => {
       galeria: ["https://ok.com/a.webp", "/assets/c.webp"],
       banners: [{ image: "https://ok.com/b.webp", alt: "b", href: "" }],
       avaliacoes: [],
+      destaques: [],
       textos: { heroTitulo: "Oi" },
       features: { destaquePromocao: true },
     });

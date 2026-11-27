@@ -50,6 +50,7 @@ export function validarConfig(c: Record<string, unknown>): ConfigSalva {
       .filter((b) => b.image),
     galeria: lista(c.galeria).map(urlValida).filter(Boolean),
     avaliacoes: lista(c.avaliacoes).map(urlValida).filter(Boolean),
+    destaques: lista(c.destaques).filter((id) => typeof id === "string" && /^[\w-]{1,100}$/.test(id)).slice(0, 3),
     textos: {},
     features: {},
   };

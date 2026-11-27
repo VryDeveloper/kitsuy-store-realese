@@ -54,7 +54,7 @@ const Index = () => {
   const { produtos: figures, carregando: loading } = useProdutos();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const { banners, galeria, textos, features } = useConfigSite();
+  const { banners, galeria, textos, features, destaques } = useConfigSite();
   const negrito = (t: string) => <strong>{t}</strong>;
 
   const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.conhecer);
@@ -63,7 +63,7 @@ const Index = () => {
   const instagramLink = INSTAGRAM_URL;
 
   const stockFigures = figures.filter((fig) => fig.source === "products");
-  const emPromocao = features.destaquePromocao ? figuresEmPromocao(figures) : [];
+  const emPromocao = features.destaquePromocao ? figuresEmPromocao(figures, destaques) : [];
   const filteredStock = stockFigures;
 
   // ─── JSX ─────────────────────────────────────────────────────────────────────

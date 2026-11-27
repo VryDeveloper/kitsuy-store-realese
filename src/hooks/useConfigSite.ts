@@ -21,6 +21,7 @@ export function useConfigSite() {
     banners: ou(data.banners, BANNERS_PADRAO),
     galeria: ou(data.galeria, GALERIA_PADRAO),
     avaliacoes: ou(data.avaliacoes, AVALIACOES_PADRAO),
+    destaques: data.destaques ?? [],
     textos: { ...TEXTOS_PADRAO, ...data.textos },
     features: { ...FEATURES_PADRAO, ...data.features },
   };

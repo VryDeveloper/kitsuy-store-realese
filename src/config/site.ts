@@ -43,6 +43,8 @@ export interface ConfigSalva {
   banners?: Banner[];
   galeria?: string[];
   avaliacoes?: string[];
+  /** ids de products para o destaque de promoções (até 3, nesta ordem); vazio = automático por maior desconto */
+  destaques?: string[];
   textos?: Partial<Record<ChaveTexto, string>>;
   features?: Partial<Record<ChaveFeature, boolean>>;
 }

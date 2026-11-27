@@ -107,9 +107,11 @@ export function DestaquePromocao({ figures, titulo }: Props) {
                 >
                   <motion.img layout src={f.image} alt="" loading="lazy" className="h-full w-full object-cover" />
                 </button>
-                <span className="pointer-events-none absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-black" style={{ background: ROSA }}>
-                  -{f.descontoPct}%
-                </span>
+                {f.descontoPct > 0 && (
+                  <span className="pointer-events-none absolute left-2 top-2 rounded-full px-2.5 py-0.5 text-xs font-black" style={{ background: ROSA }}>
+                    -{f.descontoPct}%
+                  </span>
+                )}
               </motion.li>
             ))}
           </ul>
@@ -128,6 +130,7 @@ export function DestaquePromocao({ figures, titulo }: Props) {
               </span>
             </p>
 
+            {maiorDesconto > 0 && (
             <div className="mx-auto lg:mx-0 mb-7 flex max-w-sm items-center gap-4 rounded-3xl border-2 px-5 py-3" style={{ borderColor: ROSA }}>
               <span className="grid h-12 w-12 shrink-0 -rotate-12 place-items-center rounded-2xl" style={{ background: ROSA }}>
                 <Percent className="h-6 w-6" strokeWidth={3} />
@@ -139,6 +142,7 @@ export function DestaquePromocao({ figures, titulo }: Props) {
                 <span className="text-3xl md:text-4xl font-black" style={{ color: ROSA }}>OFF</span>
               </p>
             </div>
+            )}
 
             <ul className="mb-8 flex flex-wrap justify-center lg:justify-start gap-x-6 gap-y-3 text-sm text-white/85">
               {[

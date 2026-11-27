@@ -42,7 +42,7 @@ const ROTULOS_TEXTO: Record<ChaveTexto, string> = {
 
 const ROTULOS_FEATURE: Record<ChaveFeature, string> = {
   faixaSorteio: "Faixa azul do sorteio no topo da home",
-  destaquePromocao: "Destaque de promoções (seção preta com as até 3 figures disponíveis de maior desconto; só aparece se alguma tiver preço antigo)",
+  destaquePromocao: "Destaque de promoções (seção preta com até 3 figures de pronta entrega)",
 };
 
 const MAX_MB = 3; // a função da Vercel aceita até 4,5 MB de corpo; base64 aumenta ~33%
@@ -116,10 +116,8 @@ function mascaraReais(v: string): string {
   return `R$ ${(centavos / 100).toLocaleString("pt-BR", { minimumFractionDigits: 2 })}`;
 }
 
-function AbaEstoque() {
-  const { toast } = useToast();
-  const qc = useQueryClient();
-  const { data: produtos = [], isLoading } = useQuery({
+function useProdutosAdmin() {
+  return useQuery({
     queryKey: ["admin-produtos"],
     queryFn: async () => {
       const snap = await getDocs(collection(db, "products"));
@@ -128,6 +126,12 @@ function AbaEstoque() {
         .sort((a, b) => (a.displayOrder ?? 999) - (b.displayOrder ?? 999));
     },
   });
+}
+
+function AbaEstoque() {
+  const { toast } = useToast();
+  const qc = useQueryClient();
+  const { data: produtos = [], isLoading } = useProdutosAdmin();
   const [editando, setEditando] = useState<(Omit<Produto, "id"> & { id?: string }) | null>(null);
   const [salvando, setSalvando] = useState(false);
 
@@ -345,6 +349,51 @@ function ListaBanners({ banners, aoMudar }: { banners: Banner[]; aoMudar: (b: Ba
   );
 }
 
+function SeletorDestaques({ escolhidos, aoMudar }: { escolhidos: string[]; aoMudar: (ids: string[]) => void }) {
+  const { data: produtos = [] } = useProdutosAdmin();
+  const alternar = (id: string) =>
+    aoMudar(escolhidos.includes(id) ? escolhidos.filter((x) => x !== id) : [...escolhidos, id]);
+
+  return (
+    <section className="space-y-3 border rounded-xl p-4">
+      <div>
+        <h3 className="font-bold">Figures do destaque de promoções</h3>
+        <p className="text-sm text-gray-500">
+          Escolha até 3, na ordem em que devem aparecer. Sem nenhuma escolhida, o site mostra sozinho as 3 com maior desconto.
+          Figures indisponíveis ficam de fora automaticamente.
+        </p>
+      </div>
+      <ul className="grid sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {produtos.map((p) => {
+          const posicao = escolhidos.indexOf(p.id);
+          const lotado = posicao === -1 && escolhidos.length >= 3;
+          const indisponivel = p.inStock === "indisponível" || p.estoqueStatus === "vendido";
+          return (
+            <li key={p.id}>
+              <label className={`flex items-center gap-3 rounded-lg border p-2 cursor-pointer ${posicao > -1 ? "border-[#EA3E83] bg-pink-50" : ""} ${lotado ? "opacity-40 cursor-not-allowed" : ""}`}>
+                <input type="checkbox" className="accent-[#EA3E83]" checked={posicao > -1} disabled={lotado} onChange={() => alternar(p.id)} />
+                <img src={p.image} alt="" className="w-10 h-10 rounded object-cover bg-gray-100" />
+                <span className="flex-1 min-w-0 text-sm">
+                  <span className="block truncate font-medium">{p.title}</span>
+                  <span className="text-gray-500">
+                    {p.price}
+                    {!p.discount && " · sem preço antigo (não mostra % off)"}
+                    {indisponivel && " · indisponível"}
+                  </span>
+                </span>
+                {posicao > -1 && <span className="text-xs font-bold text-[#EA3E83]">{posicao + 1}º</span>}
+              </label>
+            </li>
+          );
+        })}
+      </ul>
+      {escolhidos.length > 0 && (
+        <Button variant="outline" size="sm" onClick={() => aoMudar([])}>Voltar para o automático</Button>
+      )}
+    </section>
+  );
+}
+
 // ─── Página ───────────────────────────────────────────────────────────────────
 export default function Admin() {
   const { usuario, carregando } = useAuth();
@@ -440,6 +489,7 @@ export default function Admin() {
                   <Label htmlFor={`f-${k}`}>{ROTULOS_FEATURE[k]}</Label>
                 </div>
               ))}
+              <SeletorDestaques escolhidos={config.destaques} aoMudar={(destaques) => setConfig({ ...config, destaques })} />
               {salvar}
             </TabsContent>
           </>
