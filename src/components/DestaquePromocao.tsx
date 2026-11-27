@@ -8,7 +8,7 @@ import { comDestaque } from "@/hooks/useConfigSite";
 import type { ProdutoEmPromocao } from "@/lib/promocao";
 
 const ROSA = "#FF3E8E";
-const TROCA_MS = 4500;
+const TROCA_MS = 7000;
 
 // Círculos que sobem: [left, tamanho px, duração s, atraso s]
 const CIRCULOS: [string, number, number, number][] = [
@@ -92,10 +92,9 @@ export function DestaquePromocao({ figures, titulo }: Props) {
             {ordem.map((f, k) => (
               <li
                 key={k}
-                className={`relative overflow-hidden rounded-2xl border-2 bg-black ${
+                className={`relative overflow-hidden rounded-2xl bg-black ${
                   k === 0 ? "col-span-2 row-span-2" : figures.length === 2 ? "row-span-2 self-center aspect-[4/5]" : ""
                 }`}
-                style={{ borderColor: k === 0 ? ROSA : `${ROSA}66` }}
               >
                 <AnimatePresence initial={false}>
                   <motion.button
