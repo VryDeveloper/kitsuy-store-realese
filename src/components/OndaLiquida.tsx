@@ -1,10 +1,10 @@
 import { useEffect, useRef } from "react";
 
 const PONTOS = 72; // pontos da superfície simulada
-const RIGIDEZ = 0.018; // força que puxa cada ponto de volta ao nível
-const AMORTECE = 0.035; // quanto o movimento perde por quadro
-const ESPALHA = 0.14; // quanto cada ponto puxa os vizinhos (é o que faz a ondulação correr para os lados)
-const ALCANCE = 130; // px acima da superfície em que o líquido "procura" o cursor
+const RIGIDEZ = 0.012; // força que puxa cada ponto de volta ao nível (baixa = onda mais lenta, menos "gelatina")
+const AMORTECE = 0.05; // quanto o movimento perde por quadro (alto = para de balançar logo)
+const ESPALHA = 0.22; // quanto cada ponto puxa os vizinhos (é o que faz a ondulação correr para os lados)
+const CONTATO = 36; // px acima da superfície em que o cursor já empurra o líquido
 
 interface Gota {
   x: number;
@@ -16,10 +16,10 @@ interface Gota {
 
 /**
  * Onda rosa líquida no rodapé da seção de promoção (canvas).
- * Parada ela balança sozinha; com mouse (desktop) a superfície sobe atrás do cursor, ondula com o movimento
- * e espirra gotas ao ser atravessada rápido ou clicada. Sem animação com "reduzir movimento".
+ * Parada ela balança sozinha; com mouse (desktop) o cursor empurra o líquido ao passar por ele, deixando um
+ * rastro de ondas, e espirra gotas ao atravessar rápido ou clicar. Sem animação com "reduzir movimento".
  */
-export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; corFundo: string; className?: string }) {
+export function OndaLiquida({ cor, className = "" }: { cor: string; className?: string }) {
   const ref = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -33,7 +33,7 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
     const vel = new Float32Array(PONTOS);
     const delta = new Float32Array(PONTOS);
     let gotas: Gota[] = [];
-    const mouse = { x: 0, y: 0, vy: 0, dentro: false, acima: true };
+    const mouse = { x: 0, y: 0, vx: 0, vy: 0, dentro: false, acima: true };
     let w = 0;
     let h = 0;
     let t = 0;
@@ -43,15 +43,10 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
 
     const nivel = () => h * 0.42;
     const indice = (x: number) => Math.max(0, Math.min(PONTOS - 1, Math.round((x / w) * (PONTOS - 1))));
-    // Balanço de base (duas senoides) + a física; `fase`/`peso` diferenciam a camada de trás.
-    const superficie = (i: number, fase = 0, peso = 1) => {
+    // Balanço de base (duas senoides lentas) + a física.
+    const superficie = (i: number) => {
       const x = i / (PONTOS - 1);
-      return (
-        nivel() +
-        Math.sin(x * 6.3 + t * 0.9 + fase) * h * 0.06 +
-        Math.sin(x * 13.7 - t * 1.3 + fase * 2) * h * 0.03 +
-        alt[i] * peso
-      );
+      return nivel() + Math.sin(x * 6.3 + t * 0.7) * h * 0.05 + Math.sin(x * 13.7 - t) * h * 0.02 + alt[i];
     };
 
     function medir() {
@@ -84,11 +79,12 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
       if (mouse.dentro) {
         const iM = (mouse.x / w) * (PONTOS - 1);
         const distancia = superficie(indice(mouse.x)) - mouse.y; // > 0: cursor acima do líquido
-        if (distancia > -h && distancia < ALCANCE) {
-          for (let i = Math.max(0, Math.floor(iM - 8)); i <= Math.min(PONTOS - 1, Math.ceil(iM + 8)); i++) {
-            const g = Math.exp(-(((i - iM) / 2.4) ** 2));
-            if (distancia > 0) vel[i] -= g * (1 - distancia / ALCANCE) * 2.6; // sobe atrás do cursor
-            vel[i] += g * mouse.vy * 0.06; // empurrado pelo movimento vertical
+        if (distancia > -h && distancia < CONTATO) {
+          // Só o movimento empurra (cursor parado não faz nada); descer empurra mais que andar de lado.
+          const contato = distancia > 0 ? 1 - distancia / CONTATO : 1;
+          const empurrao = contato * (Math.min(Math.hypot(mouse.vx, mouse.vy), 40) * 0.07 + Math.max(0, mouse.vy) * 0.05);
+          for (let i = Math.max(0, Math.floor(iM - 6)); i <= Math.min(PONTOS - 1, Math.ceil(iM + 6)); i++) {
+            vel[i] += Math.exp(-(((i - iM) / 2) ** 2)) * empurrao; // + = para baixo
           }
         }
         const acima = distancia > 0;
@@ -98,6 +94,7 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
         }
         mouse.acima = acima;
       }
+      mouse.vx *= 0.85;
       mouse.vy *= 0.85;
 
       for (let i = 0; i < PONTOS; i++) {
@@ -124,15 +121,15 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
       });
     }
 
-    function camada(preenchimento: string, fase: number, peso: number, subir: number) {
+    function liquido() {
       ctx!.beginPath();
       ctx!.moveTo(0, h);
       let xAnt = 0;
-      let yAnt = superficie(0, fase, peso) - subir;
+      let yAnt = superficie(0);
       ctx!.lineTo(xAnt, yAnt);
       for (let i = 1; i < PONTOS; i++) {
         const x = (i / (PONTOS - 1)) * w;
-        const y = superficie(i, fase, peso) - subir;
+        const y = superficie(i);
         ctx!.quadraticCurveTo(xAnt, yAnt, (xAnt + x) / 2, (yAnt + y) / 2);
         xAnt = x;
         yAnt = y;
@@ -140,14 +137,13 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
       ctx!.lineTo(w, yAnt);
       ctx!.lineTo(w, h);
       ctx!.closePath();
-      ctx!.fillStyle = preenchimento;
+      ctx!.fillStyle = cor;
       ctx!.fill();
     }
 
     function desenhar() {
       ctx!.clearRect(0, 0, w, h);
-      camada(corFundo, 1.7, 0.6, h * 0.12);
-      camada(cor, 0, 1, 0);
+      liquido();
       // brilho fino na crista, dá cara de líquido
       ctx!.beginPath();
       for (let i = 0; i < PONTOS; i++) {
@@ -198,7 +194,10 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
     const mover = (e: PointerEvent) => {
       if (e.pointerType !== "mouse") return;
       const p = posicao(e);
-      if (mouse.dentro) mouse.vy = mouse.vy * 0.5 + (p.y - mouse.y) * 0.5;
+      if (mouse.dentro) {
+        mouse.vx = mouse.vx * 0.5 + (p.x - mouse.x) * 0.5;
+        mouse.vy = mouse.vy * 0.5 + (p.y - mouse.y) * 0.5;
+      }
       mouse.x = p.x;
       mouse.y = p.y;
       mouse.dentro = true;
@@ -208,7 +207,7 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
     };
     const clicar = (e: PointerEvent) => {
       const p = posicao(e);
-      if (e.pointerType === "mouse" && p.y > nivel() - ALCANCE) espirrar(p.x, 1.3);
+      if (e.pointerType === "mouse" && p.y > nivel() - CONTATO * 2) espirrar(p.x, 1.1);
     };
     area.addEventListener("pointermove", mover);
     area.addEventListener("pointerleave", sair);
@@ -222,7 +221,7 @@ export function OndaLiquida({ cor, corFundo, className = "" }: { cor: string; co
       area.removeEventListener("pointerleave", sair);
       area.removeEventListener("pointerdown", clicar);
     };
-  }, [cor, corFundo]);
+  }, [cor]);
 
   return <canvas ref={ref} aria-hidden className={className} />;
 }

@@ -197,7 +197,7 @@ export function DestaquePromocao({ figures, titulo }: Props) {
       </div>
 
       {/* Onda rosa líquida no rodapé (interativa com o mouse no desktop) */}
-      <OndaLiquida cor={ROSA} corFundo="#FF8FBC" className="pointer-events-none absolute bottom-0 left-0 h-32 md:h-44 w-full" />
+      <OndaLiquida cor={ROSA} className="pointer-events-none absolute bottom-0 left-0 h-32 md:h-44 w-full" />
     </section>
   );
 }
