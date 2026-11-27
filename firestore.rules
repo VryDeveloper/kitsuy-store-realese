@@ -11,6 +11,13 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    // ── Conteúdo do site (textos, imagens, features) ───────────────────
+    // Leitura pública; escrita só pelo painel /admin via /api/admin.
+    match /config/{docId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // ── Masterpiece (sob encomenda / orçamento via WhatsApp) ───────────
     // Não afetado por este checkout — mantém leitura pública.
     match /masterpiece/{productId} {

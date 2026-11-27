@@ -17,6 +17,7 @@ const CheckoutPage = lazy(() => import("./pages/CheckoutPage"));
 const PedidoConfirmado = lazy(() => import("./pages/PedidoConfirmado"));
 const Entrar = lazy(() => import("./pages/Entrar"));
 const MinhaConta = lazy(() => import("./pages/MinhaConta"));
+const Admin = lazy(() => import("./pages/Admin"));
 
 const queryClient = new QueryClient();
 
@@ -39,6 +40,7 @@ const App = () => (
               <Route path="/entrar" element={<Entrar />} />
               <Route path="/minha-conta" element={<MinhaConta />} />
               <Route path="/minha-conta/pedidos" element={<MinhaConta />} />
+              <Route path="/admin" element={<Admin />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
 
               <Route path="*" element={<Index />} />
