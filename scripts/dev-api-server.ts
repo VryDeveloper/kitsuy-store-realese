@@ -83,6 +83,7 @@ const routeLoaders: Record<string, () => Promise<{ default: Handler }>> = {
   "/api/verificar-pagamento": () => import("../api/verificar-pagamento.js"),
   "/api/meus-pedidos": () => import("../api/meus-pedidos.js"),
   "/api/webhook": () => import("../api/webhook.js"),
+  "/api/admin": () => import("../api/admin.js"),
   "/api/cron/limpar-pedidos-expirados": () =>
     import("../api/cron/limpar-pedidos-expirados.js"),
 };

@@ -39,35 +39,23 @@ import Autoplay from "embla-carousel-autoplay";
 import { CarrinhoSheet } from "@/components/CarrinhoSheet";
 import { BotaoConta } from "@/components/BotaoConta";
 import { useProdutos } from "@/hooks/useProdutos";
+import { comDestaque, useConfigSite } from "@/hooks/useConfigSite";
+import { BotaoPainel } from "@/components/BotaoPainel";
+import { DestaquePromocao } from "@/components/DestaquePromocao";
+import { figuresEmPromocao } from "@/lib/promocao";
 
 // ─── Assets ────────────────────────────────────────────────────────────────────
-import banner1 from "@/assets/banner-1.webp";
-import bannerSorteio from "@/assets/banner-sorteio.webp";
-import bannerInstagram from "@/assets/banner-instagram.webp";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
 import kitsuyIconBlack from "@/assets/KitsuyIconBlack.png";
-import figure1 from "@/assets/figure-1.webp";
-import figure2 from "@/assets/figure-2.webp";
-import figure3 from "@/assets/figure-3.webp";
-import figure4 from "@/assets/figure-4.webp";
-import figure5 from "@/assets/figure-5.webp";
-import figure6 from "@/assets/figure-6.webp";
-import figure7 from "@/assets/figure-7.webp";
 import { EMAIL_LOJA, INSTAGRAM_URL, MENSAGENS_WHATSAPP, WHATSAPP_EXIBICAO, linkWhatsApp } from "@/config/loja";
-
-// ─── Dados estáticos ───────────────────────────────────────────────────────────
-const GALERIA = [figure1, figure2, figure3, figure4, figure5, figure6, figure7];
 
 // ─── Componente ────────────────────────────────────────────────────────────────
 const Index = () => {
   const { produtos: figures, carregando: loading } = useProdutos();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
-  const banners = [
-    { image: banner1, alt: "Friren-Banner" },
-    { image: bannerSorteio, alt: "Sorteio especial Kitsuy Store: concorra à figure Hatsune Miku Clione pelo Instagram", href: INSTAGRAM_URL },
-    { image: bannerInstagram, alt: "Siga a Kitsuy Store no Instagram: @kitsuystore", href: INSTAGRAM_URL },
-  ];
+  const { banners, galeria, textos, features, destaques } = useConfigSite();
+  const negrito = (t: string) => <strong>{t}</strong>;
 
   const whatsappLink = linkWhatsApp(MENSAGENS_WHATSAPP.conhecer);
   const whatsappOrcamento = linkWhatsApp(MENSAGENS_WHATSAPP.orcamento);
@@ -75,6 +63,7 @@ const Index = () => {
   const instagramLink = INSTAGRAM_URL;
 
   const stockFigures = figures.filter((fig) => fig.source === "products");
+  const emPromocao = features.destaquePromocao ? figuresEmPromocao(figures, destaques) : [];
   const filteredStock = stockFigures;
 
   // ─── JSX ─────────────────────────────────────────────────────────────────────
@@ -84,15 +73,15 @@ const Index = () => {
           HEADER
       ══════════════════════════════════════════════════ */}
       <header className="sticky top-0 z-50 bg-white border-b border-pink-100 shadow-sm">
-        <nav className="container mx-auto px-4 h-20 flex justify-between items-center gap-4">
+        <nav className="container mx-auto px-4 h-20 flex justify-between items-center gap-2 sm:gap-4">
           {/* Logo */}
           <a href="/" className="flex items-center gap-2 min-w-fit">
             <img
               src={kitsuyIcon}
-              alt="Kitsuy Icon"
-              className="w-14 h-14 object-contain animate-float"
+              alt=""
+              className="w-10 h-10 sm:w-14 sm:h-14 object-contain animate-float"
             />
-            <span className="fredoka text-2xl md:text-3xl font-bold text-[#FF9AB4]">
+            <span className="fredoka text-xl sm:text-2xl md:text-3xl font-bold text-[#FF9AB4]">
               KITSUY STORE
             </span>
           </a>
@@ -135,13 +124,14 @@ const Index = () => {
           </div>
 
           {/* Ações */}
-          <div className="flex gap-2 items-center">
+          <div className="flex gap-1 sm:gap-2 items-center">
             <CarrinhoSheet />
             <BotaoConta />
             <Button
               variant="ghost"
               size="icon"
               onClick={() => window.open(instagramLink, "_blank")}
+              aria-label="Instagram"
               className="hidden sm:flex hover:bg-pink-50 hover:text-[#EA3E83]"
             >
               <Instagram className="h-5 w-5" />
@@ -154,6 +144,7 @@ const Index = () => {
               <MessageCircle className="h-4 w-4" />
               WhatsApp
             </Button>
+            <BotaoPainel />
 
             {/* Menu mobile */}
             <Sheet>
@@ -162,6 +153,7 @@ const Index = () => {
                   variant="outline"
                   size="sm"
                   className="md:hidden gap-2 border-[#EA3E83] text-[#EA3E83]"
+                  aria-label="Abrir menu"
                 >
                   <Menu className="h-4 w-4" />
                 </Button>
@@ -212,6 +204,7 @@ const Index = () => {
         </nav>
       </header>
 
+      {features.faixaSorteio && (
       <section className="w-full px-4 md:px-6 mt-4">
         <a
           href="/sorteio"
@@ -232,11 +225,10 @@ const Index = () => {
             <div className="text-4xl select-none animate-bounce">🩵</div>
             <div>
               <p className="fredoka text-white text-xl md:text-2xl font-bold leading-tight">
-                Sorteio de 1.500 seguidores!
+                {textos.sorteioTitulo}
               </p>
               <p className="text-white/85 text-sm font-semibold">
-                Siga no Instagram e concorra a uma figure japonesa original -
-                Grátis!
+                {textos.sorteioSubtitulo}
               </p>
             </div>
           </div>
@@ -248,6 +240,7 @@ const Index = () => {
           </div>
         </a>
       </section>
+      )}
 
       {/* ══════════════════════════════════════════════════
           BANNER CAROUSEL
@@ -296,21 +289,13 @@ const Index = () => {
             Sobre a Kitsuy Store
           </span>
           <h2 className="fredoka text-4xl md:text-6xl font-bold text-gray-900 mb-6 leading-tight">
-            Sua figure dos sonhos,{" "}
-            <span className="text-[#EA3E83]">direto do Japão</span> até você.
+            {comDestaque(textos.heroTitulo, (t) => <span className="text-[#EA3E83]">{t}</span>)}
           </h2>
           <div className="w-124 h-1 mx-auto mb-6 rounded-full bg-[#EA3E83]/20 overflow-hidden relative">
             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-[#EA3E83] to-transparent animate-shimmer" />
           </div>
           <p className="text-lg text-gray-600 leading-relaxed max-w-2xl mx-auto mb-10">
-            A Kitsuy Store é especializada em <strong>Action Figures</strong>{" "}
-            originais do <strong>Japão</strong>. Mais do que uma loja, nós
-            buscamos para você as melhores peças diretamente em sites japoneses,
-            cuidando de todo o processo de importação. Você não precisa se
-            preocupar em navegar em sites internacionais, calcular frete ou
-            lidar com a alfândega, trazendo cada peça com segurança, atenção e
-            todo o cuidado que a sua coleção merece! -{" "}
-            <strong>a gente faz tudo isso por você! </strong>
+            {comDestaque(textos.heroTexto, negrito)}
           </p>
           {/* Diferenciais rápidos */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto mb-10">
@@ -460,9 +445,7 @@ const Index = () => {
       </section>
 
       {/* ══════════════════════════════════════════════════
-          GALERIA DE FIGURES
-          ⚠️  Substitua as imagens em src/assets/figure-*.png
-              pelas fotos que você quiser exibir aqui.
+          GALERIA DE FIGURES (imagens editáveis em /admin)
       ══════════════════════════════════════════════════ */}
       <section id="galeria" className="py-20 px-4 bg-white">
         <div className="container mx-auto max-w-6xl">
@@ -471,16 +454,15 @@ const Index = () => {
               Galeria
             </span>
             <h2 className="fredoka text-4xl md:text-5xl font-light text-gray-900 mb-3">
-              Figures que já passaram por aqui
+              {textos.galeriaTitulo}
             </h2>
             <p className="font-semibold text-gray-500 max-w-xl mx-auto">
-              Cada peça importada com cuidado. Clique para ampliar — e se quiser
-              uma dessas ou qualquer outra, é só chamar.
+              {textos.galeriaSubtitulo}
             </p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
-            {GALERIA.map((img, i) => (
+            {galeria.map((img, i) => (
               <TiltCard
                 key={i}
                 onClick={() => setSelectedImage(img)}
@@ -537,6 +519,10 @@ const Index = () => {
         </div>
       )}
 
+      {emPromocao.length > 0 && (
+        <DestaquePromocao figures={emPromocao} titulo={textos.promoTitulo} />
+      )}
+
       {/* ══════════════════════════════════════════════════
           ESTOQUE — PREVIEW (3 cards) + LINK PARA /estoque
       ══════════════════════════════════════════════════ */}
@@ -548,11 +534,10 @@ const Index = () => {
                 Pronta Entrega
               </span>
               <h2 className="fredoka text-4xl font-light text-gray-900">
-                Figures no estoque no Brasil
+                {textos.estoqueTitulo}
               </h2>
               <p className="font-semibold text-gray-500 mt-2">
-                Sem esperar importação! essas estão aqui e saem em até 4 dias
-                úteis direto para sua casa.
+                {textos.estoqueSubtitulo}
               </p>
             </div>
             <a
@@ -686,12 +671,10 @@ const Index = () => {
         <div className="container mx-auto max-w-6xl grid gap-12 lg:grid-cols-2 lg:items-center">
           <div className="text-center lg:text-left">
           <h2 className="fredoka text-4xl md:text-6xl font-bold mb-4">
-            Não encontrou o que procura?
+            {textos.encomendaTitulo}
           </h2>
           <p className="text-xl opacity-90 mb-4 max-w-2xl mx-auto lg:mx-0">
-            Se existe no Japão, a gente encontra. Manda o nome ou a foto da
-            figure e a gente já começa a pesquisar pra você —{" "}
-            <strong>sem compromisso.</strong>
+            {comDestaque(textos.encomendaTexto, negrito)}
           </p>
           <p className="text-base opacity-75 mb-10">
             Atendemos via WhatsApp de segunda a sábado. Orçamento grátis, sem

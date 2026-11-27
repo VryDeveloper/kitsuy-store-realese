@@ -1,39 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import img1 from "@/assets/avaliacoes/1.webp";
-import img2 from "@/assets/avaliacoes/2.webp";
-import img3 from "@/assets/avaliacoes/3.webp";
-import img4 from "@/assets/avaliacoes/4.webp";
-import img5 from "@/assets/avaliacoes/5.webp";
-import img6 from "@/assets/avaliacoes/6.webp";
-import img7 from "@/assets/avaliacoes/7.webp";
-import img8 from "@/assets/avaliacoes/8.webp";
-import img9 from "@/assets/avaliacoes/9.webp";
-import img10 from "@/assets/avaliacoes/10.webp";
-import img11 from "@/assets/avaliacoes/11.webp";
-import img12 from "@/assets/avaliacoes/12.webp";
-import img13 from "@/assets/avaliacoes/13.webp";
-import img14 from "@/assets/avaliacoes/14.webp";
-import img15 from "@/assets/avaliacoes/15.webp";
-const imagens = [
-  img1,
-  img2,
-  img3,
-  img4,
-  img5,
-  img6,
-  img7,
-  img8,
-  img9,
-  img10,
-  img11,
-  img12,
-  img13,
-  img14,
-  img15,
-];
+import { useConfigSite } from "@/hooks/useConfigSite";
 
 export default function DepoimentosCarousel() {
-  const [index, setIndex] = useState(0);
+  const { avaliacoes: imagens, textos } = useConfigSite();
+  const [indiceBruto, setIndex] = useState(0);
+  // a lista pode encolher quando a config do painel chega
+  const index = indiceBruto % imagens.length;
   const [isHovered, setIsHovered] = useState(false);
   const startX = useRef(0);
   const isDragging = useRef(false);
@@ -101,11 +73,10 @@ export default function DepoimentosCarousel() {
         </span>
 
         <h2 className="fredoka text-4xl md:text-5xl font-bold text-gray-900">
-          Clientes reais, Avaliações reais 🧡
+          {textos.avaliacoesTitulo}
         </h2>
         <p className="mt-4 text-gray-600 max-w-2xl mx-auto">
-          Veja o que nossos clientes têm a dizer sobre a Kitsuy! Nossas
-          avaliações no Instagram e Whatsapp!
+          {textos.avaliacoesSubtitulo}
         </p>
       </div>
 

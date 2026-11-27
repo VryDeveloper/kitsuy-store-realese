@@ -91,6 +91,17 @@ export async function meusPedidos(): Promise<PedidoDaConta[]> {
   return (await res.json()).pedidos;
 }
 
+/** Painel /admin — ver api/admin.ts para as ações. */
+export async function chamarAdmin<T = unknown>(acao: string, dados: Record<string, unknown> = {}): Promise<T> {
+  const res = await fetch(`${BASE}/api/admin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...(await headerAuth()) },
+    body: JSON.stringify({ acao, ...dados }),
+  });
+  if (!res.ok) return parseErro(res, "Erro no painel");
+  return res.json();
+}
+
 /**
  * Busca endereço pelo CEP usando a API gratuita ViaCEP.
  * Não expõe nenhuma credencial — API pública.
