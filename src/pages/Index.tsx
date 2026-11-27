@@ -278,10 +278,6 @@ const Index = () => {
         </Carousel>
       </section>
 
-      {emPromocao.length > 0 && (
-        <DestaquePromocao figures={emPromocao} titulo={textos.promoTitulo} />
-      )}
-
       {/* ══════════════════════════════════════════════════
           HERO — O QUE É A KITSUY STORE
       ══════════════════════════════════════════════════ */}
@@ -519,6 +515,10 @@ const Index = () => {
             ✕
           </button>
         </div>
+      )}
+
+      {emPromocao.length > 0 && (
+        <DestaquePromocao figures={emPromocao} titulo={textos.promoTitulo} />
       )}
 
       {/* ══════════════════════════════════════════════════

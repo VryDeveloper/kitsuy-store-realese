@@ -7,6 +7,7 @@ import { useToast } from "@/hooks/use-toast";
 import { comDestaque } from "@/hooks/useConfigSite";
 import { Button } from "@/components/ui/button";
 import MagneticBounce from "@/components/MagneticBounce";
+import { OndaLiquida } from "@/components/OndaLiquida";
 import type { ProdutoEmPromocao } from "@/lib/promocao";
 
 const ROSA = "#FF3E8E";
@@ -66,7 +67,7 @@ export function DestaquePromocao({ figures, titulo }: Props) {
   }
 
   return (
-    <section aria-labelledby="titulo-promocao" className="relative overflow-hidden bg-[#0b0a0f] text-white pt-14 pb-28 px-4 mt-6">
+    <section aria-labelledby="titulo-promocao" className="relative overflow-hidden bg-[#0b0a0f] text-white pt-14 pb-36 md:pb-48 px-4">
       {!semMovimento && (
         <div aria-hidden className="pointer-events-none absolute inset-0">
           {CIRCULOS.map(([left, tam, dur, atraso], i) => (
@@ -195,10 +196,8 @@ export function DestaquePromocao({ figures, titulo }: Props) {
         </div>
       </div>
 
-      {/* Onda rosa no rodapé */}
-      <svg aria-hidden viewBox="0 0 1440 120" preserveAspectRatio="none" className="absolute bottom-0 left-0 h-20 md:h-28 w-full">
-        <path d="M0,60 C240,0 420,10 640,70 C860,130 1100,110 1260,60 C1340,35 1400,40 1440,50 L1440,120 L0,120 Z" fill={ROSA} />
-      </svg>
+      {/* Onda rosa líquida no rodapé (interativa com o mouse no desktop) */}
+      <OndaLiquida cor={ROSA} corFundo="#FF8FBC" className="pointer-events-none absolute bottom-0 left-0 h-32 md:h-44 w-full" />
     </section>
   );
 }
