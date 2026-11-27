@@ -28,7 +28,6 @@ const ROTULOS_TEXTO: Record<ChaveTexto, string> = {
   sorteioTitulo: "Faixa do sorteio — título",
   sorteioSubtitulo: "Faixa do sorteio — subtítulo",
   promoTitulo: "Destaque de promoções — título",
-  promoSubtitulo: "Destaque de promoções — subtítulo",
   heroTitulo: "Título principal",
   heroTexto: "Texto \"Sobre a Kitsuy\"",
   galeriaTitulo: "Galeria — título",

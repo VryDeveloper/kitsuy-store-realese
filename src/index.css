@@ -424,3 +424,16 @@ html {
     background-position: 200% 50%;
   }
 }
+
+/* Círculos da seção de promoção: nascem embaixo, sobem e somem ao sair (overflow-hidden). */
+@keyframes circulo-subir {
+  0% { bottom: -40px; opacity: 0; transform: translateX(0); }
+  10% { opacity: 0.55; }
+  50% { transform: translateX(18px); }
+  85% { opacity: 0.55; }
+  100% { bottom: 105%; opacity: 0; transform: translateX(-12px); }
+}
+.circulo-subindo {
+  bottom: -40px;
+  animation: circulo-subir linear infinite both;
+}

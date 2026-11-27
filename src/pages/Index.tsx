@@ -279,7 +279,7 @@ const Index = () => {
       </section>
 
       {emPromocao.length > 0 && (
-        <DestaquePromocao figures={emPromocao} titulo={textos.promoTitulo} subtitulo={textos.promoSubtitulo} />
+        <DestaquePromocao figures={emPromocao} titulo={textos.promoTitulo} />
       )}
 
       {/* ══════════════════════════════════════════════════
