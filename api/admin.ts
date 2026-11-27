@@ -76,6 +76,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           access: "public",
           contentType: m[1],
           addRandomSuffix: true,
+          // store público (prefixo BLOB2); o BLOB_ antigo é privado e não serve para imagens do site
+          token: process.env.BLOB2_READ_WRITE_TOKEN || process.env.BLOB_READ_WRITE_TOKEN,
         });
         return res.status(200).json({ url: blob.url });
       }

@@ -16,10 +16,10 @@ export function explicarErro(acao: unknown, erro: unknown): string {
   const msg = erro instanceof Error ? erro.message : String(erro);
   const oQue = ACOES[String(acao)] ?? "A ação";
   if (/private access|private store/i.test(msg)) {
-    return `${oQue} falhou: o armazenamento de imagens (Vercel Blob) está como privado. Crie na Vercel um Blob store com acesso público e conecte ao projeto (ele troca o BLOB_READ_WRITE_TOKEN).`;
+    return `${oQue} falhou: o armazenamento de imagens (Vercel Blob) está como privado. Crie na Vercel um Blob store com acesso público e conecte ao projeto com o prefixo BLOB2 (vira BLOB2_READ_WRITE_TOKEN).`;
   }
   if (/no token found|BLOB_READ_WRITE_TOKEN/i.test(msg)) {
-    return `${oQue} falhou: falta a variável BLOB_READ_WRITE_TOKEN neste ambiente da Vercel.`;
+    return `${oQue} falhou: falta a variável BLOB2_READ_WRITE_TOKEN neste ambiente da Vercel (Production e Preview).`;
   }
   if (/PERMISSION_DENIED|credential|private key/i.test(msg)) {
     return `${oQue} falhou: o servidor não conseguiu acessar o Firebase (confira FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY). Detalhe: ${msg}`;

@@ -60,7 +60,7 @@ describe("explicarErro", () => {
     expect(msg).toMatch(/^Enviar a imagem falhou: .*privado.*acesso público/);
   });
   it("aponta a variável que falta", () => {
-    expect(explicarErro("upload", new Error("No token found"))).toContain("BLOB_READ_WRITE_TOKEN");
+    expect(explicarErro("upload", new Error("No token found"))).toContain("BLOB2_READ_WRITE_TOKEN");
   });
   it("nos outros casos repassa a mensagem original", () => {
     expect(explicarErro("salvarConfig", new Error("deadline exceeded"))).toBe("Salvar o site falhou: deadline exceeded");
