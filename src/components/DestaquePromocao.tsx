@@ -5,6 +5,8 @@ import { ChevronRight, CreditCard, Percent, ShieldCheck, ShoppingCart, Tag, Truc
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { comDestaque } from "@/hooks/useConfigSite";
+import { Button } from "@/components/ui/button";
+import MagneticBounce from "@/components/MagneticBounce";
 import type { ProdutoEmPromocao } from "@/lib/promocao";
 
 const ROSA = "#FF3E8E";
@@ -16,15 +18,15 @@ const CIRCULOS: [string, number, number, number][] = [
   ["58%", 8, 13, 4], ["66%", 22, 17, 2], ["78%", 12, 15, 7], ["88%", 18, 19, 5], ["95%", 9, 12, 9],
 ];
 
-/** Escreve `texto` letra a letra sempre que ele muda. */
-function useDigitacao(texto: string, desligado: boolean) {
+/** Escreve `texto` letra a letra sempre que ele (ou a `chave`) muda. */
+function useDigitacao(texto: string, desligado: boolean, chave = "") {
   const [n, setN] = useState(0);
   useEffect(() => {
     setN(0);
     if (desligado) return;
     const id = setInterval(() => setN((atual) => (atual >= texto.length ? atual : atual + 1)), 45);
     return () => clearInterval(id);
-  }, [texto, desligado]);
+  }, [texto, desligado, chave]);
   return desligado ? texto : texto.slice(0, n);
 }
 
@@ -52,6 +54,8 @@ export function DestaquePromocao({ figures, titulo }: Props) {
   // Destacada primeiro; o resto na ordem em que vem depois dela.
   const ordem = figures.map((_, k) => figures[(atual + k) % figures.length]);
   const nome = useDigitacao(destaque.title, semMovimento);
+  // chave = id: duas figures com o mesmo preço também redigitam
+  const preco = useDigitacao(destaque.price, semMovimento, destaque.id);
   const noCarrinho = itens.some((item) => item.id === destaque.id);
   const maiorDesconto = Math.max(...figures.map((f) => f.descontoPct));
 
@@ -125,15 +129,6 @@ export function DestaquePromocao({ figures, titulo }: Props) {
             <h2 id="titulo-promocao" className="fredoka text-2xl md:text-3xl font-bold leading-tight mb-3">
               {comDestaque(titulo, (t) => <span style={{ color: ROSA }}>{t}</span>)}
             </h2>
-            {/* Nome da figure destacada, digitado. O texto completo fica para leitores de tela. */}
-            <p className="h-14 md:h-16 overflow-hidden line-clamp-2 text-xl md:text-2xl font-semibold text-white/90 mb-6">
-              <span className="sr-only" aria-live="polite">{destaque.title}</span>
-              <span aria-hidden>
-                {nome}
-                <span className="ml-0.5 inline-block w-[2px] h-[1em] align-middle animate-pulse" style={{ background: ROSA }} />
-              </span>
-            </p>
-
             {maiorDesconto > 0 && (
             <div className="mx-auto lg:mx-0 mb-7 flex max-w-sm items-center gap-4 rounded-3xl border-2 px-5 py-3" style={{ borderColor: ROSA }}>
               <span className="grid h-12 w-12 shrink-0 -rotate-12 place-items-center rounded-2xl" style={{ background: ROSA }}>
@@ -160,22 +155,38 @@ export function DestaquePromocao({ figures, titulo }: Props) {
               ))}
             </ul>
 
+            {/* Nome da figure destacada, digitado, logo acima do botão. O texto completo fica para leitores de tela. */}
+            <p className="h-14 md:h-16 overflow-hidden line-clamp-2 text-xl md:text-2xl font-semibold text-white/90 mb-4">
+              <span className="sr-only" aria-live="polite">{destaque.title}</span>
+              <span aria-hidden>
+                {nome}
+                <span className="ml-0.5 inline-block w-[2px] h-[1em] align-middle animate-pulse" style={{ background: ROSA }} />
+              </span>
+            </p>
+
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
-              <button
-                type="button"
-                onClick={comprar}
-                disabled={noCarrinho}
-                onMouseEnter={() => setPausado(true)}
-                onMouseLeave={() => setPausado(false)}
-                onFocus={() => setPausado(true)}
-                onBlur={() => setPausado(false)}
-                aria-label={noCarrinho ? `${destaque.title} já está no carrinho` : `Comprar ${destaque.title} por ${destaque.price}`}
-                className="inline-flex items-center gap-3 rounded-full px-8 py-4 text-lg font-black tracking-wide transition-transform hover:scale-105 disabled:opacity-60 disabled:hover:scale-100"
-                style={{ background: ROSA }}
-              >
-                <ShoppingCart className="h-5 w-5" />
-                {noCarrinho ? "No carrinho" : destaque.price}
-              </button>
+              {/* Mesmo visual e efeito do "Pedir um orçamento grátis" da home */}
+              <MagneticBounce>
+                <Button
+                  size="lg"
+                  onClick={comprar}
+                  disabled={noCarrinho}
+                  onMouseEnter={() => setPausado(true)}
+                  onMouseLeave={() => setPausado(false)}
+                  onFocus={() => setPausado(true)}
+                  onBlur={() => setPausado(false)}
+                  aria-label={noCarrinho ? `${destaque.title} já está no carrinho` : `Comprar ${destaque.title} por ${destaque.price}`}
+                  className="min-w-[12rem] justify-start bg-[#EA3E83] hover:bg-[#c72e6c] text-white gap-2 text-base px-8 py-6 rounded-full shadow-lg hover:shadow-xl transition-all"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  <span aria-hidden>
+                    {noCarrinho ? "No carrinho" : preco}
+                    {!noCarrinho && preco.length < destaque.price.length && (
+                      <span className="ml-0.5 inline-block w-[2px] h-[1em] align-middle bg-white animate-pulse" />
+                    )}
+                  </span>
+                </Button>
+              </MagneticBounce>
               <Link to="/estoque" className="inline-flex items-center gap-1 text-sm font-bold text-white/80 hover:text-white">
                 Ver todo o estoque <ChevronRight className="h-4 w-4" />
               </Link>
