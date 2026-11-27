@@ -4,6 +4,29 @@ import { TEXTOS_PADRAO, FEATURES_PADRAO, type ConfigSalva } from "../../src/conf
 /** Erro com mensagem para mostrar ao admin (vira 400). */
 export class ErroAdmin extends Error {}
 
+const ACOES: Record<string, string> = {
+  salvarProduto: "Salvar a figure",
+  apagarProduto: "Apagar a figure",
+  salvarConfig: "Salvar o site",
+  upload: "Enviar a imagem",
+};
+
+/** Erro inesperado → frase que diz o que falhou e por quê (o painel é só para admins, então pode detalhar). */
+export function explicarErro(acao: unknown, erro: unknown): string {
+  const msg = erro instanceof Error ? erro.message : String(erro);
+  const oQue = ACOES[String(acao)] ?? "A ação";
+  if (/private access|private store/i.test(msg)) {
+    return `${oQue} falhou: o armazenamento de imagens (Vercel Blob) está como privado. Crie na Vercel um Blob store com acesso público e conecte ao projeto com o prefixo BLOB2 (vira BLOB2_READ_WRITE_TOKEN).`;
+  }
+  if (/no token found|BLOB_READ_WRITE_TOKEN/i.test(msg)) {
+    return `${oQue} falhou: falta a variável BLOB2_READ_WRITE_TOKEN neste ambiente da Vercel (Production e Preview).`;
+  }
+  if (/PERMISSION_DENIED|credential|private key/i.test(msg)) {
+    return `${oQue} falhou: o servidor não conseguiu acessar o Firebase (confira FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL e FIREBASE_PRIVATE_KEY). Detalhe: ${msg}`;
+  }
+  return `${oQue} falhou: ${msg}`;
+}
+
 /** ADMIN_EMAILS="a@x.com,b@y.com" — só contas com e-mail verificado da lista. */
 export function ehAdmin(usuario: Pick<DecodedIdToken, "email" | "email_verified"> | null, lista = process.env.ADMIN_EMAILS ?? ""): boolean {
   if (!usuario?.email || !usuario.email_verified) return false;
