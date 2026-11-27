@@ -80,6 +80,9 @@ export function DestaquePromocao({ figures, titulo }: Props) {
         </div>
       )}
 
+      {/* Líquido rosa: forma a onda do rodapé e, com o mouse, espirra pela seção inteira (fica atrás do conteúdo) */}
+      <OndaLiquida cor={ROSA} className="pointer-events-none absolute inset-0 h-full w-full" />
+
       <div className="relative container mx-auto max-w-7xl">
         {/* Selo "Oferta especial" */}
         <div className="flex items-center gap-4 mb-10">
@@ -195,9 +198,6 @@ export function DestaquePromocao({ figures, titulo }: Props) {
           </div>
         </div>
       </div>
-
-      {/* Onda rosa líquida no rodapé (interativa com o mouse no desktop) */}
-      <OndaLiquida cor={ROSA} className="pointer-events-none absolute bottom-0 left-0 h-32 md:h-44 w-full" />
     </section>
   );
 }
