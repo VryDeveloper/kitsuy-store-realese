@@ -1,0 +1,4 @@
+# Testes nao vao para o deploy: na pasta api/ a Vercel trataria cada um como uma funcao (limite de 12 no Hobby)
+# e ainda checaria os tipos deles no build.
+**/*.test.ts
+**/*.test.tsx
