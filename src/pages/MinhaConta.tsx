@@ -5,6 +5,7 @@ import { auth } from "@/firebaseConfig";
 import { useAuth } from "@/contexts/AuthContext";
 import { meusPedidos } from "@/lib/api";
 import { formatarMoeda } from "@/lib/preco";
+import { esquecerUsuario } from "@/lib/analytics";
 import { CabecalhoSimples } from "@/components/CabecalhoSimples";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,7 +58,7 @@ const MinhaConta = () => {
               </CardTitle>
               <p className="text-sm text-gray-500 mt-1">{usuario.email}</p>
             </div>
-            <Button variant="outline" onClick={() => signOut(auth)}>
+            <Button variant="outline" onClick={() => { esquecerUsuario(); signOut(auth); }}>
               Sair
             </Button>
           </CardHeader>

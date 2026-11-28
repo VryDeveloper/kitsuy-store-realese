@@ -21,6 +21,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, Loader2, AlertTriangle } from "lucide-react";
 import kitsuyIcon from "@/assets/KitsuyIcon.png";
+import { rastrear } from "@/lib/analytics";
 
 const CheckoutPage = () => {
   const navigate = useNavigate();
@@ -29,6 +30,12 @@ const CheckoutPage = () => {
   const { usuario } = useAuth();
   // Dados salvos na conta (usuarios/{uid}) para já preencher o formulário.
   const [perfil, setPerfil] = useState<Partial<DadosCliente & Endereco> | null>(null);
+
+  useEffect(() => {
+    rastrear("iniciou_checkout", { itens: itensCarrinho.map((i) => i.nome) });
+    // só ao abrir a página
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!usuario) return;

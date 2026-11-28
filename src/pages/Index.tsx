@@ -745,6 +745,7 @@ const Index = () => {
                   { label: "Como funciona", href: "#como-funciona" },
                   { label: "Estoque", href: "/estoque" },
                   { label: "FAQs", href: "/faqs" },
+                  { label: "Privacidade e Termos", href: "/privacidade" },
                 ].map(({ label, href }) => (
                   <a
                     key={label}
