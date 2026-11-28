@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { verificarPagamento } from "@/lib/api";
 import { formatarMoeda } from "@/lib/preco";
+import { rastrear } from "@/lib/analytics";
 import { StatusPedido } from "@/types/checkout";
 import { useCart } from "@/contexts/CartContext";
 import { Button } from "@/components/ui/button";
@@ -51,6 +52,11 @@ const PedidoConfirmado = () => {
         // andamento ou vier a falhar depois.
         if (resultado.status === "paid") {
           limparCarrinho();
+          rastrear("compra_finalizada", {
+            pedido_id: resultado.pedidoId,
+            total: resultado.totalEmCentavos / 100,
+            produtos: resultado.produtos.map((p) => p.nome),
+          });
         }
 
         if (resolvido || tentativas >= maxTentativas) {

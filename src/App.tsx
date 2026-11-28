@@ -8,6 +8,10 @@ import { SpeedInsights } from "@vercel/speed-insights/react";
 import { CartProvider } from "./contexts/CartContext";
 import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
+import { BannerCookies } from "./components/BannerCookies";
+import { iniciarAnalytics } from "./lib/analytics";
+
+iniciarAnalytics(); // só liga se o visitante já aceitou os cookies antes
 
 // A home carrega junto com o app; as outras páginas só quando forem abertas.
 const FAQs = lazy(() => import("./pages/FAQs"));
@@ -19,6 +23,7 @@ const Entrar = lazy(() => import("./pages/Entrar"));
 const MinhaConta = lazy(() => import("./pages/MinhaConta"));
 const Admin = lazy(() => import("./pages/Admin"));
 const Produto = lazy(() => import("./pages/Produto"));
+const Privacidade = lazy(() => import("./pages/Privacidade"));
 
 const queryClient = new QueryClient();
 
@@ -43,11 +48,13 @@ const App = () => (
               <Route path="/minha-conta" element={<MinhaConta />} />
               <Route path="/minha-conta/pedidos" element={<MinhaConta />} />
               <Route path="/admin" element={<Admin />} />
+              <Route path="/privacidade" element={<Privacidade />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
 
               <Route path="*" element={<Index />} />
             </Routes>
           </Suspense>
+          <BannerCookies />
         </BrowserRouter>
         <SpeedInsights />
       </TooltipProvider>

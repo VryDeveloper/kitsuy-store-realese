@@ -1,3 +1,4 @@
+import { rastrear } from "@/lib/analytics";
 import {
   createContext,
   useContext,
@@ -56,6 +57,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [itens]);
 
   const adicionar = (item: ItemCarrinho) => {
+    if (!itens.some((i) => i.id === item.id))
+      rastrear("adicionou_ao_carrinho", { produto_id: item.id, produto: item.nome, preco: item.preco });
     setItens((atual) => {
       if (atual.some((i) => i.id === item.id)) return atual; // já está no carrinho
       return [...atual, item];
@@ -63,6 +66,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   };
 
   const remover = (produtoId: string) => {
+    rastrear("removeu_do_carrinho", { produto_id: produtoId });
     setItens((atual) => atual.filter((i) => i.id !== produtoId));
   };
 
